@@ -1,0 +1,24 @@
+# AI Rules
+
+- Read [MASTER_CONTEXT.md](./MASTER_CONTEXT.md) before coding.
+- Read [UI_PAGES.md](./UI_PAGES.md) before implementing UI.
+- Follow [DECISIONS.md](./DECISIONS.md).
+- Never invent product features.
+- Never change business logic without request.
+- Never add backend functionality unless explicitly requested.
+- Reuse existing components.
+- Keep components small.
+- Prefer composition over duplication.
+- Use shadcn/ui where appropriate.
+- Use TypeScript.
+- Keep the MVP as a simple monolithic Next.js app.
+- Do not introduce Redux or complex state managers without request.
+- Do not add dependencies unless necessary.
+- Do not rename folders, files, or routes without reason.
+- Do not rewrite working components without reason.
+- Keep mock data in `src/data` during the UI-only stage.
+- Run `pnpm lint` after meaningful changes.
+- Run `pnpm build` after meaningful changes.
+- Commit only completed work.
+- Keep commits focused on one logical change.
+- If unsure, ask for clarification instead of guessing.

@@ -1,537 +1,111 @@
-# UI Pages Specification
+# UI Pages
 
-Status: Draft
-Version: 0.1
+## Landing
 
----
+Purpose: explain the product and convert professionals into registered specialists.
 
-# Purpose
+Main sections: hero, features, how it works, audience, benefits, testimonials, pricing preview, FAQ, footer.
 
-This document describes every page that exists in the MVP.
+Primary actions: create workspace, see demo, login, register.
 
-It explains:
+Navigation: features, pricing, FAQ, login, register.
 
-- page purpose
-- user
-- components
-- actions
-- navigation
-- future improvements
+## Login
 
-This document is the primary UI specification.
+Purpose: authenticate returning specialists.
 
----
+Main sections: email field, password field, remember me, forgot password.
 
-# Page List
+Primary actions: sign in, register, recover password.
 
-MVP pages:
+Navigation: register, forgot password, landing page.
 
-/
+## Register
 
-/login
+Purpose: create a specialist account.
 
-/register
+Main sections: name, email, password, confirm password, agreement checkbox.
 
-/dashboard
+Primary actions: create account.
 
-/dashboard/calendar
+Navigation: login, landing page.
 
-/dashboard/services
+## Dashboard
 
-/dashboard/profile
+Purpose: provide the specialist's main workspace overview.
 
-/dashboard/sessions
+Main sections: today's sessions, upcoming sessions, recent bookings, quick actions, profile completion.
 
-/dashboard/settings
+Primary actions: open session, copy profile link, create service, edit profile.
 
-/profile/[slug]
+Navigation: calendar, services, profile, sessions, settings.
 
-/profile/[slug]/book
+## Calendar
 
-/session/[id]
+Purpose: manage availability.
 
-/archive
+Main sections: month view, week view, available slots, blocked dates, working hours.
 
----
+Primary actions: add availability, block time, edit working hours.
 
-# Landing Page (/)
+Navigation: dashboard, services, sessions, settings.
 
-Purpose:
+## Services
 
-Convert visitors into registered specialists.
+Purpose: manage bookable services.
 
-Primary audience:
+Main sections: service cards, duration, price, status, actions.
 
-Professionals.
+Primary actions: create service, edit, duplicate, delete, activate, deactivate.
 
-The landing page should answer:
+Navigation: dashboard, calendar, profile.
 
-- What is this?
-- Who is it for?
-- Why should I use it?
-- How does it work?
-- What makes it different?
+## Profile
 
-Sections:
+Purpose: manage the specialist profile and preview client-facing information.
 
-Hero
+Main sections: avatar, name, profession, bio, services, rules, contact links, visibility.
 
-Features
+Primary actions: edit profile, publish profile, copy profile link.
 
-How it works
+Navigation: dashboard, services, public profile preview.
 
-Who it's for
+## Booking
 
-Benefits
+Purpose: let a client book or request a session.
 
-Testimonials (mock)
+Main sections: service selection, date selection, time selection, client details, comment, confirmation.
 
-Pricing preview
+Primary actions: select service, select time, confirm booking.
 
-FAQ
+Navigation: public profile, session workspace after confirmation.
 
-Footer
+## Session Workspace
 
-Hero CTA:
+Purpose: provide the collaboration space for one specific booked session.
 
-Create your workspace
+Main sections: session summary, chat, materials, files, meeting link, status, client information, archive action.
 
-Secondary CTA:
+Primary actions: join meeting, send message, open material, upload or view file, archive session.
 
-See demo
+Navigation: dashboard, sessions, archive.
 
-Navigation:
+## Archive
 
-Login
+Purpose: show completed sessions and preserved history.
 
-Register
+Main sections: filters, search, archived session cards, materials, history.
 
-Features
+Primary actions: search, filter, open archived session.
 
-Pricing
+Navigation: dashboard, sessions.
 
-FAQ
+## Settings
 
----
+Purpose: manage account and workspace preferences.
 
-# Login
+Main sections: profile, password, notifications, availability, billing future, integrations future, danger zone.
 
-Purpose:
+Primary actions: update account settings, update password, manage preferences.
 
-Authenticate specialists.
-
-Fields:
-
-Email
-
-Password
-
-Remember me
-
-Forgot password
-
-Button:
-
-Sign in
-
-Links:
-
-Register
-
-Forgot password
-
-Future:
-
-Google
-
-Apple
-
-Microsoft
-
----
-
-# Register
-
-Purpose:
-
-Create specialist account.
-
-Fields:
-
-Name
-
-Email
-
-Password
-
-Confirm password
-
-Agreement checkbox
-
-Primary button:
-
-Create account
-
----
-
-# Dashboard
-
-Purpose:
-
-Main workspace.
-
-Cards:
-
-Today's sessions
-
-Upcoming sessions
-
-Recent bookings
-
-Quick actions
-
-Profile completion
-
-Sidebar:
-
-Dashboard
-
-Calendar
-
-Services
-
-Profile
-
-Sessions
-
-Settings
-
----
-
-# Calendar
-
-Purpose:
-
-Manage availability.
-
-Contains:
-
-Month view
-
-Week view
-
-Available slots
-
-Blocked dates
-
-Working hours
-
-Future:
-
-Drag and drop
-
-Recurring schedule
-
-Google Calendar sync
-
----
-
-# Services
-
-Purpose:
-
-Manage services.
-
-Each service card contains:
-
-Title
-
-Duration
-
-Price
-
-Status
-
-Actions
-
-Edit
-
-Duplicate
-
-Delete
-
-Create Service button
-
----
-
-# Public Profile
-
-Purpose:
-
-Client-facing page.
-
-Contains:
-
-Photo
-
-Name
-
-Profession
-
-Bio
-
-Services
-
-Prices
-
-Available times
-
-Booking button
-
-Rules
-
-FAQ
-
-Contact links
-
-Future:
-
-Reviews
-
-Custom domain
-
-Themes
-
----
-
-# Booking Page
-
-Purpose:
-
-Client books a session.
-
-Flow:
-
-Select service
-
-↓
-
-Select date
-
-↓
-
-Select time
-
-↓
-
-Client details
-
-↓
-
-Comment
-
-↓
-
-Confirmation
-
-Future:
-
-Payment
-
-Coupons
-
-Reschedule
-
----
-
-# Session Workspace
-
-Purpose:
-
-Main collaboration space.
-
-Layout:
-
-Session summary
-
-Chat
-
-Materials
-
-Files
-
-Meeting link
-
-Status
-
-Client information
-
-Archive button
-
-Tabs:
-
-Overview
-
-Chat
-
-Materials
-
-Files
-
-Notes (future)
-
----
-
-# Archive
-
-Purpose:
-
-Display completed sessions.
-
-Filters:
-
-Date
-
-Client
-
-Service
-
-Status
-
-Search
-
-Cards:
-
-Completed session
-
-Archived materials
-
-History
-
-Future:
-
-Export
-
-Restore
-
-Statistics
-
----
-
-# Settings
-
-Purpose:
-
-Manage account.
-
-Sections:
-
-Profile
-
-Password
-
-Notifications
-
-Availability
-
-Billing (future)
-
-Integrations (future)
-
-Danger zone
-
----
-
-# Navigation Principles
-
-Users should never be more than three clicks away from:
-
-Dashboard
-
-Current session
-
-Calendar
-
-Services
-
-Profile
-
----
-
-# Mobile Principles
-
-Sidebar becomes bottom navigation.
-
-Cards stack vertically.
-
-Tables become lists.
-
-Buttons become full width.
-
----
-
-# Empty States
-
-Every page must have a designed empty state.
-
-Examples:
-
-No services yet
-
-No sessions today
-
-No archived sessions
-
-No materials
-
-No upcoming bookings
-
----
-
-# Loading States
-
-Every async page should have skeleton loading.
-
----
-
-# Error States
-
-Friendly messages.
-
-Recovery actions.
-
-Retry buttons.
-
----
-
-# Future Pages
-
-Analytics
-
-Billing
-
-Team
-
-Notifications
-
-Templates
-
-Marketplace (optional, not decided)
-
-Mobile app screens
-
----
-
-# Related Documents
-
-MASTER_CONTEXT.md
-
-PRODUCT.md
-
-FEATURES.md
-
-USER_FLOWS.md
-
-DESIGN_SYSTEM.md
-
-ROADMAP.md
+Navigation: dashboard, profile, calendar.

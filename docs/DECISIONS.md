@@ -1,35 +1,22 @@
 # Decisions
 
-## Purpose
-
-This document will record confirmed product and technical decisions so the rationale remains available over time.
-
-## Table of Contents
-
-- [Decision Log Format](#decision-log-format)
-- [Accepted Decisions](#accepted-decisions)
-- [Proposed Decisions](#proposed-decisions)
-- [Rejected Decisions](#rejected-decisions)
-- [Related Documents](#related-documents)
-
-## Decision Log Format
-
-TODO: Define the decision record format.
-
-## Accepted Decisions
-
-TODO: Add accepted decisions with date, context, decision, and consequences.
-
-## Proposed Decisions
-
-TODO: Add decisions under review.
-
-## Rejected Decisions
-
-TODO: Add rejected options and reasons.
-
-## Related Documents
-
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Roadmap: [ROADMAP.md](./ROADMAP.md)
-- Stack: [STACK.md](./STACK.md)
+- Product name is not finalized.
+- The platform is not a marketplace.
+- The platform is not a social network.
+- The platform is not a general messenger.
+- Session Workspace is the core feature.
+- Chat exists only inside a session.
+- Materials are separate from chat.
+- Google Meet, Zoom, or similar external links are used instead of built-in video calls.
+- MVP is frontend-first.
+- UI flows should be stable before backend work starts.
+- The project remains a simple monolithic Next.js app during MVP.
+- Next.js is the application framework.
+- TypeScript is required.
+- Tailwind CSS is the styling foundation.
+- shadcn/ui is the primary component library.
+- pnpm is the package manager.
+- Supabase is planned after UI completion for auth, database, storage, and realtime.
+- Payment provider is not decided.
+- Vercel is the deployment target.
+- Do not add major dependencies without discussion.
