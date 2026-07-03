@@ -694,3 +694,251 @@ The goal is to preserve history.
 - `ARCHITECTURE.md`
 - `DATABASE.md`
 - `DESIGN_SYSTEM.md`
+
+---
+
+# 14. Functional Requirements
+
+The following functional requirements describe what the platform must eventually support.
+
+These are not implementation tasks.
+They define product capabilities.
+
+## FR-1 User Accounts
+
+The platform shall allow specialists to create an account.
+
+The platform shall allow clients to participate in bookings.
+
+Client authentication model is still open for discussion.
+
+---
+
+## FR-2 Specialist Profile
+
+The platform shall allow specialists to:
+
+- upload avatar
+- enter name
+- profession
+- biography
+- languages
+- contact links
+- working rules
+- timezone
+
+Profile visibility:
+
+- public
+- private by invitation
+- hidden
+
+---
+
+## FR-3 Services
+
+The platform shall allow specialists to create multiple services.
+
+Each service contains:
+
+- title
+- description
+- duration
+- price
+- currency
+- format (online/offline)
+- active status
+
+Future:
+
+- service categories
+- service tags
+
+---
+
+## FR-4 Availability
+
+The platform shall support:
+
+- working days
+- working hours
+- holidays
+- unavailable dates
+- vacation mode
+- breaks
+- booking buffers
+
+---
+
+## FR-5 Booking
+
+Booking should include:
+
+- selected service
+- selected date
+- selected time
+- client information
+- optional message
+- booking status
+
+Possible statuses:
+
+- pending
+- confirmed
+- cancelled
+- completed
+
+---
+
+## FR-6 Dashboard
+
+Dashboard should display:
+
+- today's sessions
+- upcoming sessions
+- recent bookings
+- quick actions
+- service overview
+- profile completion
+- notifications (future)
+
+---
+
+## FR-7 Session Workspace
+
+Session Workspace shall support:
+
+- session summary
+- client information
+- booking status
+- payment status
+- meeting link
+- chat
+- materials
+- files
+- archive
+
+The Session Workspace is the heart of the application.
+
+---
+
+## FR-8 Chat
+
+Chat belongs ONLY to a specific session.
+
+No global messaging.
+
+Messages may support:
+
+- text
+- attachments
+- timestamps
+
+Future:
+
+- reactions
+- editing
+- message search
+
+---
+
+## FR-9 Materials
+
+Materials are structured content.
+
+Possible material types:
+
+- text
+- file
+- checklist
+- link
+- homework
+- exercise
+- meal plan
+- reading
+- action plan
+
+Future:
+
+- templates
+- reusable materials
+
+---
+
+## FR-10 Files
+
+Files belong to:
+
+- session
+- material
+
+Future:
+
+- version history
+- previews
+
+---
+
+## FR-11 Archive
+
+Completed sessions move to archive.
+
+Archive preserves:
+
+- chat
+- files
+- materials
+- meeting link
+- notes
+- timestamps
+
+Archive is mostly read-only.
+
+---
+
+## FR-12 Notifications
+
+Future notifications:
+
+- booking created
+- booking cancelled
+- reminder
+- material shared
+- session starts soon
+
+Notification channels:
+
+- email
+- push
+- Telegram (future)
+
+---
+
+## FR-13 Payments
+
+Payment system is intentionally postponed.
+
+Architecture should allow future integration.
+
+Possible providers:
+
+- Stripe
+- WayForPay
+- LiqPay
+- Fondy
+
+Decision not finalized.
+
+---
+
+## FR-14 Analytics
+
+Future dashboard metrics:
+
+- sessions
+- revenue
+- completed bookings
+- cancellations
+- client count
+
+---
