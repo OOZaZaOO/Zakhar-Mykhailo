@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const publicLinks = [
-  { href: "/", label: "Home" },
-  { href: "/profile/maya-sterling", label: "Demo profile" },
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/#features", label: "Features" },
+  { href: "/#pricing", label: "Pricing" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/profile/maya-sterling", label: "Demo" },
 ];
 
 export function Header() {
@@ -26,7 +27,9 @@ export function Header() {
             <Link
               className={cn(
                 "transition hover:text-[#1f5f55]",
-                pathname === link.href && "text-[#1f5f55]",
+                !link.href.includes("#") &&
+                  pathname === link.href &&
+                  "text-[#1f5f55]",
               )}
               href={link.href}
               key={link.href}

@@ -1,40 +1,45 @@
 import Link from "next/link";
 
+import { AuthShell } from "@/components/auth/auth-shell";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authProviders } from "@/data/mock";
 
 export default function RegisterPage() {
   return (
-    <PublicLayout>
-      <section className="mx-auto grid max-w-7xl gap-8 px-5 pb-12 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="flex flex-col justify-center">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
-            Start free
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-normal text-[#18211f]">
-            Create a workspace around your client sessions.
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-[#5a6865]">
-            Set up a profile, define services, and preview how clients will
-            book and access their session workspace.
-          </p>
-        </div>
-
-        <Card className="rounded-3xl border-[#ded5c8] bg-white">
-          <CardHeader>
-            <CardTitle>Create account</CardTitle>
-            <p className="text-sm text-[#66736f]">
-              Mock form only. Account creation is not connected yet.
+    <PublicLayout showBreadcrumbs={false}>
+      <AuthShell
+        eyebrow="Create workspace"
+        title="Set up the place where your client sessions will live."
+        description="Start with a profile, services, and a clean workspace model. The current screen is a polished UI mock without real account creation."
+      >
+        <Card className="w-full max-w-xl rounded-[2rem] border-[#ded5c8] bg-white shadow-xl shadow-[#9c7d5520]">
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-3xl">Create account</CardTitle>
+            <p className="text-sm leading-6 text-[#66736f]">
+              Build the first specialist workspace preview in a few fields.
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {authProviders.map((provider) => (
+                <Button
+                  className="rounded-full border-[#d9ceb9]"
+                  key={provider}
+                  variant="outline"
+                >
+                  {provider}
+                </Button>
+              ))}
+            </div>
+
             <div>
               <Label>Name</Label>
               <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 readOnly
                 value="Maya Sterling"
               />
@@ -42,7 +47,7 @@ export default function RegisterPage() {
             <div>
               <Label>Email</Label>
               <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 readOnly
                 value="maya@example.com"
               />
@@ -51,7 +56,7 @@ export default function RegisterPage() {
               <div>
                 <Label>Password</Label>
                 <Input
-                  className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                  className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                   readOnly
                   type="password"
                   value="workspace"
@@ -60,20 +65,42 @@ export default function RegisterPage() {
               <div>
                 <Label>Confirm password</Label>
                 <Input
-                  className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                  className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                   readOnly
                   type="password"
                   value="workspace"
                 />
               </div>
             </div>
-            <p className="rounded-2xl bg-[#f7f3ec] p-4 text-sm text-[#5a6865]">
-              By continuing, the specialist agrees to use this as a UI-only
-              prototype until authentication is added.
-            </p>
+            <div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-semibold text-[#24312f]">
+                  Password strength
+                </span>
+                <span className="font-semibold text-[#5d6b2f]">Strong</span>
+              </div>
+              <div className="mt-2 grid grid-cols-4 gap-2">
+                {[1, 2, 3, 4].map((item) => (
+                  <div
+                    className="h-2 rounded-full bg-[#a9b66f]"
+                    key={item}
+                  />
+                ))}
+              </div>
+            </div>
+            <label className="flex items-start gap-3 rounded-2xl bg-[#f7f3ec] p-4 text-sm leading-6 text-[#5a6865]">
+              <input
+                className="mt-1 size-4 rounded border-[#d9ceb9]"
+                type="checkbox"
+              />
+              <span>
+                I agree to use this as a UI-only prototype until authentication
+                and account storage are implemented.
+              </span>
+            </label>
             <Button
               asChild
-              className="w-full rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+              className="h-12 w-full rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
             >
               <Link href="/dashboard">Create account</Link>
             </Button>
@@ -85,7 +112,7 @@ export default function RegisterPage() {
             </p>
           </CardContent>
         </Card>
-      </section>
+      </AuthShell>
     </PublicLayout>
   );
 }

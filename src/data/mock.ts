@@ -172,3 +172,106 @@ export const settingsSections = [
   "Meeting links",
   "Danger zone",
 ];
+
+export const howItWorksSteps = [
+  {
+    title: "Publish your profile",
+    text: "Share a polished link with services, prices, rules, and availability.",
+  },
+  {
+    title: "Clients choose a slot",
+    text: "They select a service, time, and add context before the session.",
+  },
+  {
+    title: "Run the workspace",
+    text: "Keep chat, meeting links, materials, files, and notes together.",
+  },
+  {
+    title: "Archive the history",
+    text: "Completed sessions remain organized and easy to revisit.",
+  },
+];
+
+export const landingFeatures = [
+  {
+    title: "Booking without back-and-forth",
+    text: "Clients see only available times and understand what they are booking.",
+  },
+  {
+    title: "Session-specific communication",
+    text: "Every message is connected to one appointment, not buried in a general chat.",
+  },
+  {
+    title: "Materials that stay visible",
+    text: "Exercises, links, briefs, plans, and files live beside the session.",
+  },
+  {
+    title: "External meeting links",
+    text: "Use Meet, Zoom, or another call tool without building video into the MVP.",
+  },
+  {
+    title: "Professional client experience",
+    text: "A calm workspace makes solo professionals feel organized and prepared.",
+  },
+  {
+    title: "Readable session archive",
+    text: "Past conversations, files, and materials remain available after completion.",
+  },
+];
+
+export const audienceGroups = [
+  "Psychologists",
+  "Tutors",
+  "Consultants",
+  "Lawyers",
+  "Accountants",
+  "Coaches",
+  "Dietitians",
+  "Trainers",
+];
+
+export const pricingPlans = [
+  {
+    name: "Starter",
+    price: "$0",
+    description: "For validating a profile and booking workflow.",
+    features: ["Public profile", "Mock bookings", "Session workspace preview"],
+  },
+  {
+    name: "Professional",
+    price: "$19",
+    description: "Future plan for independent specialists.",
+    features: ["Unlimited sessions", "Materials library", "Archive history"],
+  },
+  {
+    name: "Studio",
+    price: "$49",
+    description: "Future plan for small practices.",
+    features: ["Multiple services", "Advanced availability", "Team-ready settings"],
+  },
+];
+
+export const faqs = [
+  {
+    question: "Is this a marketplace?",
+    answer:
+      "No. The specialist brings their own clients and uses the platform to organize the work.",
+  },
+  {
+    question: "Does it include built-in video calls?",
+    answer:
+      "No. The workspace supports external meeting links such as Google Meet or Zoom.",
+  },
+  {
+    question: "Is authentication connected now?",
+    answer:
+      "Not yet. Stage 1 remains a frontend-only prototype with realistic mock data.",
+  },
+  {
+    question: "What is the main product object?",
+    answer:
+      "The session workspace. Booking, chat, materials, files, and archive all support it.",
+  },
+];
+
+export const authProviders = ["Google", "Apple", "Microsoft"];

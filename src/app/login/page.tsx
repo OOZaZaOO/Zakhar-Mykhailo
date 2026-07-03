@@ -1,40 +1,50 @@
 import Link from "next/link";
 
+import { AuthShell } from "@/components/auth/auth-shell";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authProviders } from "@/data/mock";
 
 export default function LoginPage() {
   return (
-    <PublicLayout>
-      <section className="mx-auto grid max-w-7xl gap-8 px-5 pb-12 sm:px-8 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="flex flex-col justify-center">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
-            Welcome back
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-normal text-[#18211f]">
-            Open your client workspace.
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-[#5a6865]">
-            Sign in to review bookings, prepare sessions, share materials, and
-            keep client work organized in one place.
-          </p>
-        </div>
-
-        <Card className="rounded-3xl border-[#ded5c8] bg-white">
-          <CardHeader>
-            <CardTitle>Sign in</CardTitle>
-            <p className="text-sm text-[#66736f]">
-              Mock form only. Authentication is not implemented yet.
+    <PublicLayout showBreadcrumbs={false}>
+      <AuthShell
+        eyebrow="Welcome back"
+        title="Pick up every session exactly where you left it."
+        description="Open your workspace to review bookings, prepare materials, and continue client communication in the right session context."
+      >
+        <Card className="w-full max-w-xl rounded-[2rem] border-[#ded5c8] bg-white shadow-xl shadow-[#9c7d5520]">
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-3xl">Sign in</CardTitle>
+            <p className="text-sm leading-6 text-[#66736f]">
+              UI-only authentication preview. No credentials are submitted.
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {authProviders.map((provider) => (
+                <Button
+                  className="rounded-full border-[#d9ceb9]"
+                  key={provider}
+                  variant="outline"
+                >
+                  {provider}
+                </Button>
+              ))}
+            </div>
+
+            <div className="relative text-center text-sm text-[#7b8884]">
+              <span className="relative z-10 bg-white px-3">or use email</span>
+              <div className="absolute left-0 top-1/2 h-px w-full bg-[#eee5d9]" />
+            </div>
+
             <div>
               <Label>Email</Label>
               <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 readOnly
                 value="maya@example.com"
               />
@@ -42,20 +52,29 @@ export default function LoginPage() {
             <div>
               <Label>Password</Label>
               <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 readOnly
                 type="password"
                 value="workspace"
               />
             </div>
-            <div className="flex items-center justify-between text-sm text-[#66736f]">
-              <span>Remember me</span>
-              <Link className="font-semibold text-[#1f5f55]" href="/register">
+            <div className="flex flex-col gap-3 text-sm text-[#66736f] sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex items-center gap-2 font-medium">
+                <input
+                  className="size-4 rounded border-[#d9ceb9]"
+                  type="checkbox"
+                />
+                Remember me
+              </label>
+              <Link className="font-semibold text-[#1f5f55]" href="/login">
                 Forgot password
               </Link>
             </div>
-            <Button className="w-full rounded-full bg-[#1f5f55] hover:bg-[#174a43]">
-              Sign in
+            <Button
+              asChild
+              className="h-12 w-full rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+            >
+              <Link href="/dashboard">Sign in</Link>
             </Button>
             <p className="text-center text-sm text-[#66736f]">
               New here?{" "}
@@ -65,7 +84,7 @@ export default function LoginPage() {
             </p>
           </CardContent>
         </Card>
-      </section>
+      </AuthShell>
     </PublicLayout>
   );
 }
