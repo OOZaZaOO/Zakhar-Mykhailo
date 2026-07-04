@@ -401,19 +401,7 @@ export function SpecialistProfileForm({
                 value={bio}
               />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-3xl border-[#ded5c8] bg-white">
-          <CardHeader>
-            <CardTitle>Working rules</CardTitle>
-            <p className="text-sm leading-6 text-[#66736f]">
-              Explain cancellation rules, preparation notes, and how clients
-              should use the session workspace.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div>
+            <div className="sm:col-span-2">
               <Label htmlFor="working_rules">Working rules</Label>
               <Textarea
                 className="mt-2 min-h-28 rounded-xl border-[#d9ceb9]"
@@ -422,6 +410,10 @@ export function SpecialistProfileForm({
                 placeholder="Tell clients how you work, cancellation rules, and what to prepare..."
                 value={workingRules}
               />
+              <p className="mt-2 text-xs font-medium text-[#66736f]">
+                Explain cancellation rules, preparation notes, and how clients
+                should use the session workspace.
+              </p>
             </div>
           </CardContent>
         </Card>
