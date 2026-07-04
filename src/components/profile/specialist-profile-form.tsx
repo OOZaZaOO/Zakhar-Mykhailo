@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfileSlugAvailability } from "@/hooks/use-profile-slug-availability";
 import { useSpecialistProfile } from "@/hooks/use-specialist-profile";
+import { languageOptions, normalizeLanguageList } from "@/lib/languages";
 import {
   generateProfileSlugFromIdentity,
   normalizeProfileSlug,
@@ -33,13 +34,6 @@ type SpecialistProfileFormProps = {
   userId: string;
   userLastName: string;
 };
-
-function parseLanguages(value: string) {
-  return value
-    .split(",")
-    .map((language) => language.trim())
-    .filter(Boolean);
-}
 
 function getInitials(value: string) {
   return value
@@ -88,9 +82,10 @@ export function SpecialistProfileForm({
   );
   const [timezone, setTimezone] = useState(initialProfile?.timezone ?? "");
   const [timezoneError, setTimezoneError] = useState<string | null>(null);
-  const [languages, setLanguages] = useState(
-    initialProfile?.languages.join(", ") ?? "",
+  const [selectedLanguages, setSelectedLanguages] = useState(
+    normalizeLanguageList(initialProfile?.languages ?? []),
   );
+  const [languageSearch, setLanguageSearch] = useState("");
   const [workingRules, setWorkingRules] = useState(
     initialProfile?.working_rules ?? "",
   );
@@ -122,6 +117,18 @@ export function SpecialistProfileForm({
         slugAvailabilityStatus === "checking"));
   const countryTimezonesForSelection = getTimezonesByCountry(country);
   const shouldShowTimezoneSelector = countryTimezonesForSelection.length > 1;
+  const languageSuggestions = languageOptions
+    .filter((language) => {
+      const normalizedLanguage = language.toLowerCase();
+      const normalizedSearch = languageSearch.trim().toLowerCase();
+
+      return (
+        normalizedSearch &&
+        normalizedLanguage.includes(normalizedSearch) &&
+        !selectedLanguages.includes(language)
+      );
+    })
+    .slice(0, 6);
 
   function handleSlugChange(value: string) {
     setHasUserEditedSlug(true);
@@ -155,6 +162,24 @@ export function SpecialistProfileForm({
     setAvatarUrl("");
   }
 
+  function addLanguage(language: string) {
+    if (selectedLanguages.length >= 10 || selectedLanguages.includes(language)) {
+      return;
+    }
+
+    setSelectedLanguages((currentLanguages) => [
+      ...currentLanguages,
+      language,
+    ]);
+    setLanguageSearch("");
+  }
+
+  function removeLanguage(language: string) {
+    setSelectedLanguages((currentLanguages) =>
+      currentLanguages.filter((item) => item !== language),
+    );
+  }
+
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -179,7 +204,7 @@ export function SpecialistProfileForm({
       bio,
       contactLinks: (initialProfile?.contact_links ?? {}) as Json,
       displayName,
-      languages: parseLanguages(languages),
+      languages: selectedLanguages,
       profession,
       slug,
       timezone,
@@ -380,15 +405,62 @@ export function SpecialistProfileForm({
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="languages">Languages</Label>
-              <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                id="languages"
-                onChange={(event) => setLanguages(event.target.value)}
-                placeholder="English, Slovak"
-                value={languages}
-              />
+              <div className="relative mt-2">
+                <Input
+                  className="h-11 rounded-xl border-[#d9ceb9]"
+                  disabled={selectedLanguages.length >= 10}
+                  id="languages"
+                  onChange={(event) => setLanguageSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && languageSuggestions[0]) {
+                      event.preventDefault();
+                      addLanguage(languageSuggestions[0]);
+                    }
+                  }}
+                  placeholder={
+                    selectedLanguages.length >= 10
+                      ? "Maximum 10 languages selected"
+                      : "Search language..."
+                  }
+                  value={languageSearch}
+                />
+                {languageSuggestions.length > 0 ? (
+                  <div className="absolute left-0 right-0 top-12 z-20 overflow-hidden rounded-2xl border border-[#ded5c8] bg-white shadow-lg">
+                    {languageSuggestions.map((language) => (
+                      <button
+                        className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#24312f] transition hover:bg-[#f7f3ec]"
+                        key={language}
+                        onClick={() => addLanguage(language)}
+                        type="button"
+                      >
+                        {language}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              {selectedLanguages.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedLanguages.map((language) => (
+                    <span
+                      className="inline-flex items-center gap-2 rounded-full bg-[#eef1da] px-3 py-2 text-sm font-bold text-[#5d6b2f]"
+                      key={language}
+                    >
+                      {language}
+                      <button
+                        aria-label={`Remove ${language}`}
+                        className="rounded-full text-[#5d6b2f] transition hover:text-[#9a4c2f]"
+                        onClick={() => removeLanguage(language)}
+                        type="button"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               <p className="mt-2 text-xs font-medium text-[#66736f]">
-                Separate languages with commas.
+                Choose up to 10 languages from the list.
               </p>
             </div>
             <div className="sm:col-span-2">
