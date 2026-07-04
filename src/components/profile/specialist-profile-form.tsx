@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProfileSlugAvailability } from "@/hooks/use-profile-slug-availability";
 import { useSpecialistProfile } from "@/hooks/use-specialist-profile";
 import {
-  generateProfileSlugFromEmail,
+  generateProfileSlugFromIdentity,
   normalizeProfileSlug,
 } from "@/lib/profile/service";
 import type { SpecialistProfile } from "@/lib/profile/types";
@@ -27,7 +27,10 @@ type SpecialistProfileFormProps = {
   initialError: string | null;
   initialProfile: SpecialistProfile | null;
   userEmail: string | null;
+  userFirstName: string;
+  userFullName: string;
   userId: string;
+  userLastName: string;
 };
 
 function stringifyContactLinks(value: Json) {
@@ -49,7 +52,10 @@ export function SpecialistProfileForm({
   initialError,
   initialProfile,
   userEmail,
+  userFirstName,
+  userFullName,
   userId,
+  userLastName,
 }: SpecialistProfileFormProps) {
   const { error, isSaving, profile, saveProfile, success } =
     useSpecialistProfile({
@@ -58,10 +64,15 @@ export function SpecialistProfileForm({
     });
   const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url ?? "");
   const [displayName, setDisplayName] = useState(
-    initialProfile?.display_name ?? "",
+    initialProfile?.display_name ?? userFirstName,
   );
   const [slug, setSlug] = useState(
-    initialProfile?.slug ?? generateProfileSlugFromEmail(userEmail),
+    initialProfile?.slug ??
+      generateProfileSlugFromIdentity({
+        email: userEmail,
+        firstName: userFirstName,
+        lastName: userLastName,
+      }),
   );
   const [hasUserEditedSlug, setHasUserEditedSlug] = useState(false);
   const [profession, setProfession] = useState(
@@ -240,14 +251,18 @@ export function SpecialistProfileForm({
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="display_name">Display name</Label>
+              <Label htmlFor="display_name">Visible name</Label>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="display_name"
                 onChange={(event) => setDisplayName(event.target.value)}
-                placeholder="John Smith"
+                placeholder="Anna, Dr. Anna, Psychologist Anna"
                 value={displayName}
               />
+              <p className="mt-2 text-xs font-medium text-[#66736f]">
+                Visible name is public. Legal account name:{" "}
+                {userFullName || "Not available"}
+              </p>
             </div>
             <div>
               <Label htmlFor="slug">Public slug</Label>

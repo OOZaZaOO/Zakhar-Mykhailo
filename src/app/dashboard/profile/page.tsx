@@ -5,7 +5,10 @@ import { SpecialistProfileForm } from "@/components/profile/specialist-profile-f
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getOwnSpecialistProfile } from "@/lib/profile/service";
+import {
+  getOwnSpecialistProfile,
+  getProfileIdentityFromMetadata,
+} from "@/lib/profile/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +29,7 @@ export default async function DashboardProfilePage() {
   const { data: profile, error } = isSpecialistAccount
     ? await getOwnSpecialistProfile(supabase, user.id)
     : { data: null, error: null };
+  const identity = getProfileIdentityFromMetadata(user.user_metadata);
 
   return (
     <DashboardLayout>
@@ -33,6 +37,9 @@ export default async function DashboardProfilePage() {
         <SpecialistProfileForm
           initialError={error?.message ?? null}
           initialProfile={profile}
+          userFirstName={identity.firstName}
+          userFullName={identity.fullName}
+          userLastName={identity.lastName}
           userEmail={user.email ?? null}
           userId={user.id}
         />

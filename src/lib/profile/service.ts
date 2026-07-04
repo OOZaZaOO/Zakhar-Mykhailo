@@ -30,6 +30,69 @@ export function generateProfileSlugFromEmail(value?: string | null) {
   return generateProfileSlug(emailName);
 }
 
+export function splitFullName(value?: string | null) {
+  const nameParts = value?.trim().split(/\s+/).filter(Boolean) ?? [];
+
+  if (nameParts.length < 2) {
+    return {
+      firstName: nameParts[0] ?? "",
+      lastName: "",
+    };
+  }
+
+  const [firstName, ...lastNameParts] = nameParts;
+
+  return {
+    firstName,
+    lastName: lastNameParts.join(" "),
+  };
+}
+
+export function getProfileIdentityFromMetadata(metadata: {
+  first_name?: unknown;
+  full_name?: unknown;
+  last_name?: unknown;
+}) {
+  const firstName =
+    typeof metadata.first_name === "string" ? metadata.first_name.trim() : "";
+  const lastName =
+    typeof metadata.last_name === "string" ? metadata.last_name.trim() : "";
+  const fullName =
+    typeof metadata.full_name === "string" ? metadata.full_name.trim() : "";
+
+  if (firstName || lastName) {
+    return {
+      firstName,
+      fullName: `${firstName} ${lastName}`.trim() || fullName,
+      lastName,
+    };
+  }
+
+  const fallback = splitFullName(fullName);
+
+  return {
+    firstName: fallback.firstName,
+    fullName,
+    lastName: fallback.lastName,
+  };
+}
+
+export function generateProfileSlugFromIdentity({
+  email,
+  firstName,
+  lastName,
+}: {
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+}) {
+  const nameSlug = generateProfileSlug(
+    `${firstName ?? ""} ${lastName ?? ""}`.trim(),
+  );
+
+  return nameSlug || generateProfileSlugFromEmail(email);
+}
+
 export function validateSpecialistProfileForm(
   values: Pick<
     SpecialistProfileFormValues,
@@ -39,7 +102,7 @@ export function validateSpecialistProfileForm(
   const slug = normalizeProfileSlug(values.slug);
 
   if (!values.displayName.trim()) {
-    return "Display name is required.";
+    return "Visible name is required.";
   }
 
   if (!slug) {

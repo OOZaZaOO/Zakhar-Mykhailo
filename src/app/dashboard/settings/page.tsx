@@ -47,10 +47,17 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>Name</Label>
+              <Label>First name</Label>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                placeholder="John Smith"
+                placeholder="John"
+              />
+            </div>
+            <div>
+              <Label>Last name</Label>
+              <Input
+                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                placeholder="Smith"
               />
             </div>
             <div>

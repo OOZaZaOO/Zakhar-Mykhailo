@@ -26,8 +26,9 @@ const accountTypes = {
     title: "Build the workspace where your client sessions will live.",
     body: "Set up a specialist account to manage services, bookings, session workspaces, materials, and client communication.",
     button: "Create specialist account",
-    namePlaceholder: "John Smith",
     emailPlaceholder: "john@example.com",
+    firstNamePlaceholder: "John",
+    lastNamePlaceholder: "Smith",
   },
   client: {
     label: "Client",
@@ -37,8 +38,9 @@ const accountTypes = {
     title: "Create a calm place for every session you book.",
     body: "Set up a client account to access your session history, archived sessions, materials, files, and workspace updates.",
     button: "Create client account",
-    namePlaceholder: "John Smith",
     emailPlaceholder: "john@example.com",
+    firstNamePlaceholder: "John",
+    lastNamePlaceholder: "Smith",
   },
 } as const satisfies Record<
   AccountType,
@@ -49,8 +51,9 @@ const accountTypes = {
     title: string;
     body: string;
     button: string;
-    namePlaceholder: string;
     emailPlaceholder: string;
+    firstNamePlaceholder: string;
+    lastNamePlaceholder: string;
   }
 >;
 
@@ -120,7 +123,8 @@ function getPasswordStrength(password: string) {
 export default function RegisterPage() {
   const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>("specialist");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -141,6 +145,20 @@ export default function RegisterPage() {
     event.preventDefault();
     setError(null);
     setSuccess(null);
+
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const fullName = `${trimmedFirstName} ${trimmedLastName}`.trim();
+
+    if (!trimmedFirstName) {
+      setError("First name is required.");
+      return;
+    }
+
+    if (!trimmedLastName) {
+      setError("Last name is required.");
+      return;
+    }
 
     if (!acceptedTerms) {
       setError("Please accept the prototype terms before creating an account.");
@@ -167,7 +185,9 @@ export default function RegisterPage() {
       options: {
         data: {
           account_type: accountType,
-          full_name: name,
+          first_name: trimmedFirstName,
+          full_name: fullName,
+          last_name: trimmedLastName,
         },
         emailRedirectTo: redirectTo,
       },
@@ -258,14 +278,25 @@ export default function RegisterPage() {
               ))}
             </div>
 
-            <div>
-              <Label>Name</Label>
-              <Input
-                className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                onChange={(event) => setName(event.target.value)}
-                placeholder={selectedAccountType.namePlaceholder}
-                value={name}
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>First name</Label>
+                <Input
+                  className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
+                  onChange={(event) => setFirstName(event.target.value)}
+                  placeholder={selectedAccountType.firstNamePlaceholder}
+                  value={firstName}
+                />
+              </div>
+              <div>
+                <Label>Last name</Label>
+                <Input
+                  className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
+                  onChange={(event) => setLastName(event.target.value)}
+                  placeholder={selectedAccountType.lastNamePlaceholder}
+                  value={lastName}
+                />
+              </div>
             </div>
             <div>
               <Label>Email</Label>
