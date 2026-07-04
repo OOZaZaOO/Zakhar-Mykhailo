@@ -54,6 +54,69 @@ const accountTypes = {
   }
 >;
 
+function getPasswordStrength(password: string) {
+  if (!password) {
+    return {
+      color: "bg-[#eee5d9]",
+      label: "Enter password",
+      score: 0,
+      textColor: "text-[#7d8a86]",
+    };
+  }
+
+  let score = 0;
+
+  if (password.length >= 8) {
+    score += 1;
+  }
+
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) {
+    score += 1;
+  }
+
+  if (/\d/.test(password)) {
+    score += 1;
+  }
+
+  if (/[^A-Za-z0-9]/.test(password)) {
+    score += 1;
+  }
+
+  if (score <= 1) {
+    return {
+      color: "bg-[#d66b4d]",
+      label: "Weak",
+      score: 1,
+      textColor: "text-[#9a4c2f]",
+    };
+  }
+
+  if (score === 2) {
+    return {
+      color: "bg-[#d9a441]",
+      label: "Fair",
+      score: 2,
+      textColor: "text-[#9a6a1f]",
+    };
+  }
+
+  if (score === 3) {
+    return {
+      color: "bg-[#a9b66f]",
+      label: "Good",
+      score: 3,
+      textColor: "text-[#5d6b2f]",
+    };
+  }
+
+  return {
+    color: "bg-[#1f5f55]",
+    label: "Strong",
+    score: 4,
+    textColor: "text-[#1f5f55]",
+  };
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>("specialist");
@@ -66,6 +129,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const selectedAccountType = accountTypes[accountType];
+  const passwordStrength = getPasswordStrength(password);
 
   function handleAccountTypeChange(nextAccountType: AccountType) {
     setAccountType(nextAccountType);
@@ -240,18 +304,26 @@ export default function RegisterPage() {
                 <span className="font-semibold text-[#24312f]">
                   Password strength
                 </span>
-                <span className="font-semibold text-[#7d8a86]">
-                  Enter password
+                <span className={`font-semibold ${passwordStrength.textColor}`}>
+                  {passwordStrength.label}
                 </span>
               </div>
               <div className="mt-2 grid grid-cols-4 gap-2">
                 {[1, 2, 3, 4].map((item) => (
                   <div
-                    className="h-2 rounded-full bg-[#eee5d9]"
+                    className={`h-2 rounded-full ${
+                      item <= passwordStrength.score
+                        ? passwordStrength.color
+                        : "bg-[#eee5d9]"
+                    }`}
                     key={item}
                   />
                 ))}
               </div>
+              <p className="mt-2 text-xs leading-5 text-[#66736f]">
+                Use at least 8 characters with uppercase, lowercase, a number,
+                and a symbol.
+              </p>
             </div>
             <label className="flex items-start gap-3 rounded-2xl bg-[#f7f3ec] p-4 text-sm leading-6 text-[#5a6865]">
               <input
