@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { PublicLayout } from "@/components/layout/public-layout";
@@ -7,8 +11,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authProviders } from "@/data/mock";
+import { getDashboardPathForAccountType } from "@/lib/auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("maya@example.com");
+  const [password, setPassword] = useState("workspace");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setIsLoading(true);
+
+    const supabase = createSupabaseBrowserClient();
+    const { data, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+    if (signInError) {
+      setError(signInError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    const redirectedFrom = new URLSearchParams(window.location.search).get(
+      "redirectedFrom",
+    );
+    const accountPath = getDashboardPathForAccountType(
+      data.user.user_metadata.account_type,
+    );
+    const redirectPath =
+      redirectedFrom?.startsWith("/") && !redirectedFrom.startsWith("//")
+        ? redirectedFrom
+        : accountPath;
+
+    setSuccess("Logged in. Opening your workspace...");
+    router.replace(redirectPath);
+    router.refresh();
+  }
+
   return (
     <PublicLayout showBreadcrumbs={false}>
       <AuthShell
@@ -20,18 +69,21 @@ export default function LoginPage() {
           <CardHeader className="space-y-2">
             <CardTitle className="text-3xl">Log in</CardTitle>
             <p className="text-sm leading-6 text-[#66736f]">
-              UI-only authentication preview. No credentials are submitted.
+              Supabase Auth is connected. Workspace data remains mocked until
+              profile persistence is implemented.
             </p>
             <p className="rounded-2xl bg-[#f7f3ec] px-4 py-3 text-sm leading-6 text-[#5a6865]">
               Your workspace opens based on your account type.
             </p>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent>
+            <form className="space-y-5" onSubmit={handleLogin}>
             <div className="grid gap-3 sm:grid-cols-3">
               {authProviders.map((provider) => (
                 <Button
                   className="rounded-full border-[#d9ceb9]"
                   key={provider}
+                  type="button"
                   variant="outline"
                 >
                   {provider}
@@ -48,23 +100,26 @@ export default function LoginPage() {
               <Label>Email</Label>
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                readOnly
-                value="maya@example.com"
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                value={email}
               />
             </div>
             <div>
               <Label>Password</Label>
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                readOnly
+                onChange={(event) => setPassword(event.target.value)}
                 type="password"
-                value="workspace"
+                value={password}
               />
             </div>
             <div className="flex flex-col gap-3 text-sm text-[#66736f] sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 font-medium">
                 <input
                   className="size-4 rounded border-[#d9ceb9]"
+                  checked={rememberMe}
+                  onChange={(event) => setRememberMe(event.target.checked)}
                   type="checkbox"
                 />
                 Remember me
@@ -73,11 +128,22 @@ export default function LoginPage() {
                 Forgot password
               </Link>
             </div>
+            {error ? (
+              <p className="rounded-2xl bg-[#f6ddd4] px-4 py-3 text-sm font-medium leading-6 text-[#9a4c2f]">
+                {error}
+              </p>
+            ) : null}
+            {success ? (
+              <p className="rounded-2xl bg-[#eef1da] px-4 py-3 text-sm font-medium leading-6 text-[#5d6b2f]">
+                {success}
+              </p>
+            ) : null}
             <Button
-              asChild
               className="h-12 w-full rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+              disabled={isLoading}
+              type="submit"
             >
-              <Link href="/dashboard">Log in</Link>
+              {isLoading ? "Logging in..." : "Log in"}
             </Button>
             <p className="text-center text-sm text-[#66736f]">
               New here?{" "}
@@ -85,6 +151,7 @@ export default function LoginPage() {
                 Create account
               </Link>
             </p>
+            </form>
           </CardContent>
         </Card>
       </AuthShell>

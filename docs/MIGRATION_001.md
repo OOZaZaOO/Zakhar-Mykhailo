@@ -32,8 +32,8 @@ No booking, session, message, material, file, payment, subscription, or notifica
 
 This migration follows the current database decisions:
 
-- Supabase `auth.users` initially represents specialists.
-- Client profiles are not part of the MVP foundation.
+- Supabase `auth.users` represents authenticated users.
+- This first migration creates the specialist foundation only; client profiles are part of the MVP model and should be added in a later migration.
 - Public users can read public profiles, active services, and active availability only for public specialists.
 - Specialists can manage only their own profile, services, and availability.
 - Availability is split into recurring weekly blocks and one-off exceptions.
@@ -182,12 +182,12 @@ Supports date-range lookup of active one-off availability changes during schedul
 
 Future migrations should build on this foundation in this order:
 
-1. Bookings with guest client contact fields.
-2. Sessions created from bookings with unique `booking_id`.
-3. Session messages with guest-client sender support.
-4. Session materials.
-5. Session files and Supabase Storage policies.
-6. Optional client profiles when a client portal becomes necessary.
+1. Client profiles for authenticated client accounts.
+2. Bookings that reference client profiles.
+3. Sessions created from bookings with unique `booking_id`.
+4. Session messages with specialist, client, and system sender support.
+5. Session materials.
+6. Session files and Supabase Storage policies.
 7. Payments and subscriptions after the provider decision is made.
 8. Notifications and integrations after channels are selected.
 

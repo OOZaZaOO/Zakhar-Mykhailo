@@ -5,12 +5,12 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default function SupabaseDevPage() {
+export default async function SupabaseDevPage() {
   let status = "Supabase connected ✅";
   let error: string | null = null;
 
   try {
-    createSupabaseServerClient();
+    await createSupabaseServerClient();
   } catch (caughtError) {
     status = "Supabase initialization failed";
     error =

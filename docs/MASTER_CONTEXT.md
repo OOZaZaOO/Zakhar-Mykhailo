@@ -65,9 +65,9 @@ Prefer simple components, mock data, clear routes, and practical UI over prematu
 
 The project is in the UI-only MVP prototype stage.
 
-Current implementation includes a single composed landing/mock page with domain components, mock data, shadcn/ui setup, and documentation.
+Current implementation includes multi-page mock UI, domain components, mock data, shadcn/ui setup, Supabase Auth, protected dashboard routes, and documentation.
 
-Backend, auth, database, payments, real file storage, and real chat are not implemented yet.
+Profile CRUD, database-backed product data, payments, real file storage, and real chat are not implemented yet.
 
 ## Things That Must Not Change Without Discussion
 

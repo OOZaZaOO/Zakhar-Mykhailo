@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { LogoutButton } from "@/components/auth/logout-button";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/calendar", label: "Calendar" },
   { href: "/dashboard/services", label: "Services" },
+  { href: "/dashboard/profile", label: "Profile" },
+  { href: "/dashboard/client", label: "Client cabinet" },
   { href: "/dashboard/settings", label: "Settings" },
   { href: "/dashboard/archive", label: "Archive" },
   { href: "/profile/maya-sterling", label: "Public profile" },
@@ -38,6 +41,9 @@ export function Sidebar() {
             </Link>
           );
         })}
+        <div className="lg:pt-4">
+          <LogoutButton />
+        </div>
       </nav>
     </aside>
   );

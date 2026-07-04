@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -10,6 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authProviders } from "@/data/mock";
+import {
+  type AccountType,
+  getDashboardPathForAccountType,
+} from "@/lib/auth";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const accountTypes = {
   specialist: {
@@ -34,20 +40,94 @@ const accountTypes = {
     email: "nina@example.com",
     button: "Create client account",
   },
-} as const;
-
-type AccountType = keyof typeof accountTypes;
+} as const satisfies Record<
+  AccountType,
+  {
+    label: string;
+    description: string;
+    eyebrow: string;
+    title: string;
+    body: string;
+    name: string;
+    email: string;
+    button: string;
+  }
+>;
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>("specialist");
+  const [name, setName] = useState<string>(accountTypes.specialist.name);
+  const [email, setEmail] = useState<string>(accountTypes.specialist.email);
+  const [password, setPassword] = useState("workspace");
+  const [confirmPassword, setConfirmPassword] = useState("workspace");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const selectedAccountType = accountTypes[accountType];
+
+  function handleAccountTypeChange(nextAccountType: AccountType) {
+    setAccountType(nextAccountType);
+    setName(accountTypes[nextAccountType].name);
+    setEmail(accountTypes[nextAccountType].email);
+    setError(null);
+    setSuccess(null);
+  }
+
+  async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!acceptedTerms) {
+      setError("Please accept the prototype terms before creating an account.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const supabase = createSupabaseBrowserClient();
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          account_type: accountType,
+          full_name: name,
+        },
+        emailRedirectTo: redirectTo,
+      },
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setIsLoading(false);
+      return;
+    }
+
+    setSuccess("Account created. Opening your workspace...");
+    router.replace(getDashboardPathForAccountType(accountType));
+    router.refresh();
+  }
 
   return (
     <PublicLayout showBreadcrumbs={false}>
       <AuthShell
         eyebrow={selectedAccountType.eyebrow}
         title={selectedAccountType.title}
-        description={`${selectedAccountType.body} The current screen is a polished UI mock without real account creation.`}
+        description={`${selectedAccountType.body} Profile data remains mocked until profile setup is implemented.`}
       >
         <Card className="w-full max-w-xl rounded-[2rem] border-[#ded5c8] bg-white shadow-xl shadow-[#9c7d5520]">
           <CardHeader className="space-y-2">
@@ -56,7 +136,8 @@ export default function RegisterPage() {
               {selectedAccountType.body}
             </p>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent>
+            <form className="space-y-5" onSubmit={handleRegister}>
             <div className="space-y-3">
               <Label>Account type</Label>
               <div className="grid gap-3">
@@ -71,7 +152,9 @@ export default function RegisterPage() {
                           : "border-[#d9ceb9] bg-white hover:bg-[#f7f3ec]"
                       }`}
                       key={key}
-                      onClick={() => setAccountType(key as AccountType)}
+                      onClick={() =>
+                        handleAccountTypeChange(key as AccountType)
+                      }
                       type="button"
                     >
                       <span className="flex items-center gap-3">
@@ -104,6 +187,7 @@ export default function RegisterPage() {
                 <Button
                   className="rounded-full border-[#d9ceb9]"
                   key={provider}
+                  type="button"
                   variant="outline"
                 >
                   {provider}
@@ -115,16 +199,17 @@ export default function RegisterPage() {
               <Label>Name</Label>
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                readOnly
-                value={selectedAccountType.name}
+                onChange={(event) => setName(event.target.value)}
+                value={name}
               />
             </div>
             <div>
               <Label>Email</Label>
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                readOnly
-                value={selectedAccountType.email}
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                value={email}
               />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -132,18 +217,18 @@ export default function RegisterPage() {
                 <Label>Password</Label>
                 <Input
                   className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                  readOnly
+                  onChange={(event) => setPassword(event.target.value)}
                   type="password"
-                  value="workspace"
+                  value={password}
                 />
               </div>
               <div>
                 <Label>Confirm password</Label>
                 <Input
                   className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                  readOnly
+                  onChange={(event) => setConfirmPassword(event.target.value)}
                   type="password"
-                  value="workspace"
+                  value={confirmPassword}
                 />
               </div>
             </div>
@@ -166,18 +251,31 @@ export default function RegisterPage() {
             <label className="flex items-start gap-3 rounded-2xl bg-[#f7f3ec] p-4 text-sm leading-6 text-[#5a6865]">
               <input
                 className="mt-1 size-4 rounded border-[#d9ceb9]"
+                checked={acceptedTerms}
+                onChange={(event) => setAcceptedTerms(event.target.checked)}
                 type="checkbox"
               />
               <span>
-                I agree to use this as a UI-only prototype until authentication
-                and account storage are implemented.
+                I understand this creates an auth account only. Profile setup
+                and account data storage will be implemented later.
               </span>
             </label>
+            {error ? (
+              <p className="rounded-2xl bg-[#f6ddd4] px-4 py-3 text-sm font-medium leading-6 text-[#9a4c2f]">
+                {error}
+              </p>
+            ) : null}
+            {success ? (
+              <p className="rounded-2xl bg-[#eef1da] px-4 py-3 text-sm font-medium leading-6 text-[#5d6b2f]">
+                {success}
+              </p>
+            ) : null}
             <Button
-              asChild
               className="h-12 w-full rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+              disabled={isLoading}
+              type="submit"
             >
-              <Link href="/dashboard">{selectedAccountType.button}</Link>
+              {isLoading ? "Creating account..." : selectedAccountType.button}
             </Button>
             <p className="text-center text-sm text-[#66736f]">
               Already have an account?{" "}
@@ -185,6 +283,7 @@ export default function RegisterPage() {
                 Sign in
               </Link>
             </p>
+            </form>
           </CardContent>
         </Card>
       </AuthShell>
