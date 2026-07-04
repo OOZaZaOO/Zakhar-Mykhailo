@@ -12,6 +12,8 @@
 - Registration stores `account_type` in Supabase user metadata with `specialist` or `client`.
 - Added specialist profile create, read, and update flow at `/dashboard/profile`.
 - Specialist profile CRUD uses the existing `specialist_profiles` table and Supabase RLS.
+- Specialist profile timezone is selected through a country/timezone UI and stored as an IANA timezone string in `specialist_profiles.timezone`.
+- Client timezone conversion is intentionally delayed; future `client_profiles` should store the client's selected IANA timezone for booking slot display.
 
 ## Environment Variables
 

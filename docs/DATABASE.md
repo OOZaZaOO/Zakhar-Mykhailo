@@ -198,7 +198,7 @@ Stores public and private profile information for specialists.
 | profession | text | Public professional title. |
 | bio | text | Profile biography. |
 | avatar_url | text | Optional avatar file URL. |
-| timezone | text | IANA timezone. |
+| timezone | text | IANA timezone string selected through country/timezone UI. Stores values such as `Europe/Bratislava`, not display labels. |
 | languages | text[] | Optional language list. |
 | contact_links | jsonb | Optional public links. |
 | working_rules | text | Rules shown to clients. |

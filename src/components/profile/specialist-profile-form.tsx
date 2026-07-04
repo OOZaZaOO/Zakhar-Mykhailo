@@ -16,6 +16,12 @@ import {
 } from "@/lib/profile/service";
 import type { SpecialistProfile } from "@/lib/profile/types";
 import type { Json } from "@/lib/supabase/types";
+import {
+  countryTimezones,
+  getCountryByTimezone,
+  getTimezonesByCountry,
+  isValidIanaTimezone,
+} from "@/lib/timezones";
 
 type SpecialistProfileFormProps = {
   initialError: string | null;
@@ -62,7 +68,13 @@ export function SpecialistProfileForm({
     initialProfile?.profession ?? "",
   );
   const [bio, setBio] = useState(initialProfile?.bio ?? "");
+  const [country, setCountry] = useState(
+    initialProfile?.timezone
+      ? getCountryByTimezone(initialProfile.timezone)
+      : "",
+  );
   const [timezone, setTimezone] = useState(initialProfile?.timezone ?? "");
+  const [timezoneError, setTimezoneError] = useState<string | null>(null);
   const [languages, setLanguages] = useState(
     initialProfile?.languages.join(", ") ?? "",
   );
@@ -98,10 +110,25 @@ export function SpecialistProfileForm({
       (slugAvailabilityStatus === "taken" ||
         slugAvailabilityStatus === "invalid" ||
         slugAvailabilityStatus === "checking"));
+  const countryTimezonesForSelection = getTimezonesByCountry(country);
+  const shouldShowTimezoneSelector = countryTimezonesForSelection.length > 1;
 
   function handleSlugChange(value: string) {
     setHasUserEditedSlug(true);
     setSlug(normalizeProfileSlug(value));
+  }
+
+  function handleCountryChange(value: string) {
+    const nextTimezones = getTimezonesByCountry(value);
+
+    setCountry(value);
+    setTimezoneError(null);
+    setTimezone(nextTimezones.length === 1 ? nextTimezones[0] : "");
+  }
+
+  function handleTimezoneChange(value: string) {
+    setTimezone(value);
+    setTimezoneError(null);
   }
 
   function parseContactLinks() {
@@ -141,6 +168,17 @@ export function SpecialistProfileForm({
     }
 
     setContactLinksError(null);
+    setTimezoneError(null);
+
+    if (!timezone) {
+      setTimezoneError("Select a timezone before saving your profile.");
+      return;
+    }
+
+    if (!isValidIanaTimezone(timezone)) {
+      setTimezoneError("Select a valid IANA timezone before saving.");
+      return;
+    }
 
     const parsedContactLinks = parseContactLinks();
 
@@ -247,14 +285,52 @@ export function SpecialistProfileForm({
               />
             </div>
             <div>
-              <Label htmlFor="timezone">Timezone</Label>
-              <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                id="timezone"
-                onChange={(event) => setTimezone(event.target.value)}
-                placeholder="Europe/Bratislava"
-                value={timezone}
-              />
+              <Label htmlFor="country">Country</Label>
+              <select
+                className="mt-2 h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm text-[#24312f]"
+                id="country"
+                onChange={(event) => handleCountryChange(event.target.value)}
+                value={country}
+              >
+                <option value="">Select country...</option>
+                {countryTimezones.map((item) => (
+                  <option key={item.country} value={item.country}>
+                    {item.country}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {shouldShowTimezoneSelector ? (
+              <div>
+                <Label htmlFor="timezone">Timezone</Label>
+                <select
+                  className="mt-2 h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm text-[#24312f]"
+                  id="timezone"
+                  onChange={(event) =>
+                    handleTimezoneChange(event.target.value)
+                  }
+                  value={timezone}
+                >
+                  <option value="">Select timezone...</option>
+                  {countryTimezonesForSelection.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+            <div className="sm:col-span-2">
+              <div className="rounded-2xl bg-[#f7f3ec] p-4 text-sm leading-6 text-[#5a6865]">
+                <p className="font-semibold text-[#24312f]">
+                  Stored timezone: {timezone || "Select country first"}
+                </p>
+                <p className="mt-2">
+                  Your availability will be created in this timezone. Clients
+                  will later see available times converted to their own
+                  timezone.
+                </p>
+              </div>
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="bio">Bio</Label>
@@ -336,9 +412,9 @@ export function SpecialistProfileForm({
           </CardContent>
         </Card>
 
-        {error || contactLinksError ? (
+        {error || contactLinksError || timezoneError ? (
           <p className="rounded-2xl bg-[#f6ddd4] px-4 py-3 text-sm font-medium leading-6 text-[#9a4c2f]">
-            {error ?? contactLinksError}
+            {error ?? contactLinksError ?? timezoneError}
           </p>
         ) : null}
         {success ? (
