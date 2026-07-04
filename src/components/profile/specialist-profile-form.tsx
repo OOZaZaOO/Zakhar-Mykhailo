@@ -1,5 +1,6 @@
 "use client";
 
+import { Upload, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -33,19 +34,20 @@ type SpecialistProfileFormProps = {
   userLastName: string;
 };
 
-function stringifyContactLinks(value: Json) {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return JSON.stringify(value, null, 2);
-  }
-
-  return "";
-}
-
 function parseLanguages(value: string) {
   return value
     .split(",")
     .map((language) => language.trim())
     .filter(Boolean);
+}
+
+function getInitials(value: string) {
+  return value
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 export function SpecialistProfileForm({
@@ -92,11 +94,8 @@ export function SpecialistProfileForm({
   const [workingRules, setWorkingRules] = useState(
     initialProfile?.working_rules ?? "",
   );
-  const [contactLinks, setContactLinks] = useState(
-    stringifyContactLinks(initialProfile?.contact_links ?? {}),
-  );
-  const [contactLinksError, setContactLinksError] = useState<string | null>(
-    null,
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
+    initialProfile?.avatar_url ?? "",
   );
 
   const mode = profile ? "edit" : "create";
@@ -142,33 +141,18 @@ export function SpecialistProfileForm({
     setTimezoneError(null);
   }
 
-  function parseContactLinks() {
-    try {
-      const parsedContactLinks = contactLinks.trim()
-        ? JSON.parse(contactLinks)
-        : {};
+  function handleAvatarPreviewChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
 
-      if (
-        parsedContactLinks === null ||
-        typeof parsedContactLinks !== "object" ||
-        Array.isArray(parsedContactLinks)
-      ) {
-        return {
-          error: "Contact links must be a JSON object.",
-          value: null,
-        };
-      }
-
-      return {
-        error: null,
-        value: parsedContactLinks as Json,
-      };
-    } catch {
-      return {
-        error: "Contact links must be valid JSON.",
-        value: null,
-      };
+    if (!file) {
+      return;
     }
+
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreviewUrl(previewUrl);
+    setAvatarUrl("");
   }
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
@@ -178,7 +162,6 @@ export function SpecialistProfileForm({
       return;
     }
 
-    setContactLinksError(null);
     setTimezoneError(null);
 
     if (!timezone) {
@@ -191,17 +174,10 @@ export function SpecialistProfileForm({
       return;
     }
 
-    const parsedContactLinks = parseContactLinks();
-
-    if (parsedContactLinks.error) {
-      setContactLinksError(parsedContactLinks.error);
-      return;
-    }
-
     const savedProfile = await saveProfile({
       avatarUrl,
       bio,
-      contactLinks: parsedContactLinks.value ?? {},
+      contactLinks: (initialProfile?.contact_links ?? {}) as Json,
       displayName,
       languages: parseLanguages(languages),
       profession,
@@ -213,9 +189,9 @@ export function SpecialistProfileForm({
 
     if (savedProfile) {
       setAvatarUrl(savedProfile.avatar_url ?? "");
+      setAvatarPreviewUrl(savedProfile.avatar_url ?? "");
       setSlug(savedProfile.slug);
       setHasUserEditedSlug(false);
-      setContactLinks(stringifyContactLinks(savedProfile.contact_links));
     }
   }
 
@@ -250,6 +226,61 @@ export function SpecialistProfileForm({
             </p>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label>Avatar</Label>
+              <div className="mt-2 flex flex-col gap-4 rounded-2xl bg-[#f7f3ec] p-4 sm:flex-row sm:items-center">
+                <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1f5f55] text-2xl font-bold text-white">
+                  {avatarPreviewUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      alt=""
+                      className="size-full object-cover"
+                      src={avatarPreviewUrl}
+                    />
+                  ) : (
+                    getInitials(displayName || userFirstName || "Profile")
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm leading-6 text-[#5a6865]">
+                    Add a clear profile photo. Real upload will be connected
+                    later; for now this preview is local only.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      asChild
+                      className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+                      type="button"
+                    >
+                      <label>
+                        <Upload className="mr-2 size-4" />
+                        {avatarPreviewUrl ? "Change photo" : "Upload photo"}
+                        <input
+                          accept="image/*"
+                          className="sr-only"
+                          onChange={handleAvatarPreviewChange}
+                          type="file"
+                        />
+                      </label>
+                    </Button>
+                    {avatarPreviewUrl ? (
+                      <Button
+                        className="rounded-full"
+                        onClick={() => {
+                          setAvatarPreviewUrl("");
+                          setAvatarUrl("");
+                        }}
+                        type="button"
+                        variant="outline"
+                      >
+                        <X className="mr-2 size-4" />
+                        Remove
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
             <div>
               <Label htmlFor="display_name">Visible name</Label>
               <Input
@@ -348,6 +379,19 @@ export function SpecialistProfileForm({
               </div>
             </div>
             <div className="sm:col-span-2">
+              <Label htmlFor="languages">Languages</Label>
+              <Input
+                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                id="languages"
+                onChange={(event) => setLanguages(event.target.value)}
+                placeholder="English, Slovak"
+                value={languages}
+              />
+              <p className="mt-2 text-xs font-medium text-[#66736f]">
+                Separate languages with commas.
+              </p>
+            </div>
+            <div className="sm:col-span-2">
               <Label htmlFor="bio">Bio</Label>
               <Textarea
                 className="mt-2 min-h-28 rounded-xl border-[#d9ceb9]"
@@ -382,54 +426,9 @@ export function SpecialistProfileForm({
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-[#ded5c8] bg-white">
-          <CardHeader>
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="languages">Languages</Label>
-              <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                id="languages"
-                onChange={(event) => setLanguages(event.target.value)}
-                placeholder="English, Slovak"
-                value={languages}
-              />
-              <p className="mt-2 text-xs font-medium text-[#66736f]">
-                Separate languages with commas.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="avatar_url">Avatar URL</Label>
-              <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                id="avatar_url"
-                onChange={(event) => setAvatarUrl(event.target.value)}
-                placeholder="https://example.com/avatar.jpg"
-                type="url"
-                value={avatarUrl}
-              />
-            </div>
-            <div>
-              <Label htmlFor="contact_links">Contact links JSON</Label>
-              <Textarea
-                className="mt-2 min-h-32 rounded-xl border-[#d9ceb9] font-mono text-xs"
-                id="contact_links"
-                onChange={(event) => {
-                  setContactLinks(event.target.value);
-                  setContactLinksError(null);
-                }}
-                placeholder={`{"website":"https://example.com","linkedin":"https://linkedin.com/in/john-smith"}`}
-                value={contactLinks}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {error || contactLinksError || timezoneError ? (
+        {error || timezoneError ? (
           <p className="rounded-2xl bg-[#f6ddd4] px-4 py-3 text-sm font-medium leading-6 text-[#9a4c2f]">
-            {error ?? contactLinksError ?? timezoneError}
+            {error ?? timezoneError}
           </p>
         ) : null}
         {success ? (
@@ -440,8 +439,8 @@ export function SpecialistProfileForm({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm leading-6 text-[#66736f]">
-            Avatar upload, services, and payments are intentionally outside
-            this stage.
+            Real avatar upload, services, and payments are intentionally
+            outside this stage.
           </p>
           <Button
             className="h-12 rounded-full bg-[#1f5f55] px-6 hover:bg-[#174a43]"

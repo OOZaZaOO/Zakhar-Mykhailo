@@ -20,8 +20,18 @@ const publicLinks = [
 
 type HeaderUser = {
   accountType: unknown;
+  avatarUrl: string | null;
   name: string;
 };
+
+function getInitials(value: string) {
+  return value
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export function Header() {
   const pathname = usePathname();
@@ -37,11 +47,21 @@ export function Header() {
         data: { user },
       } = await supabase.auth.getUser();
 
+      const { data: profile } = user
+        ? await supabase
+            .from("specialist_profiles")
+            .select("avatar_url,display_name")
+            .eq("user_id", user.id)
+            .maybeSingle()
+        : { data: null };
+
       setHeaderUser(
         user
           ? {
               accountType: user.user_metadata.account_type,
+              avatarUrl: profile?.avatar_url ?? null,
               name:
+                profile?.display_name ||
                 user.user_metadata.full_name ||
                 user.email ||
                 "My profile",
@@ -58,17 +78,17 @@ export function Header() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const user = session?.user;
 
-      setHeaderUser(
-        user
-          ? {
-              accountType: user.user_metadata.account_type,
-              name:
-                user.user_metadata.full_name ||
-                user.email ||
-                "My profile",
-            }
-          : null,
-      );
+      if (!user) {
+        setHeaderUser(null);
+        setIsAuthLoading(false);
+        return;
+      }
+
+      setHeaderUser({
+        accountType: user.user_metadata.account_type,
+        avatarUrl: null,
+        name: user.user_metadata.full_name || user.email || "My profile",
+      });
       setIsAuthLoading(false);
     });
 
@@ -173,6 +193,18 @@ export function Header() {
                 >
                   <span className="hidden text-white/70 sm:inline">
                     Signed in
+                  </span>
+                  <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-xs font-bold text-white">
+                    {headerUser.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        alt=""
+                        className="size-full object-cover"
+                        src={headerUser.avatarUrl}
+                      />
+                    ) : (
+                      getInitials(headerUser.name)
+                    )}
                   </span>
                   <span className="block max-w-28 truncate sm:max-w-44">
                     {headerUser.name}
