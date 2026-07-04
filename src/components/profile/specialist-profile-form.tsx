@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useProfileSlugAvailability } from "@/hooks/use-profile-slug-availability";
 import { useSpecialistProfile } from "@/hooks/use-specialist-profile";
 import {
   generateProfileSlug,
@@ -94,6 +95,16 @@ export function SpecialistProfileForm({
     () => `${publicUrlBase}/profile/${slug || "your-slug"}`,
     [publicUrlBase, slug],
   );
+  const { message: slugAvailabilityMessage, status: slugAvailabilityStatus } =
+    useProfileSlugAvailability({
+      currentProfileId: profile?.id,
+      slug,
+    });
+  const isSlugUnavailable =
+    !slug ||
+    slugAvailabilityStatus === "taken" ||
+    slugAvailabilityStatus === "invalid" ||
+    slugAvailabilityStatus === "checking";
 
   function handleDisplayNameChange(value: string) {
     setDisplayName(value);
@@ -242,6 +253,18 @@ export function SpecialistProfileForm({
               <p className="mt-2 break-all text-xs font-medium text-[#66736f]">
                 Public URL: {previewUrl}
               </p>
+              <p
+                className={`mt-2 text-xs font-semibold ${
+                  slugAvailabilityStatus === "available"
+                    ? "text-[#1f5f55]"
+                    : slugAvailabilityStatus === "taken" ||
+                        slugAvailabilityStatus === "invalid"
+                      ? "text-[#9a4c2f]"
+                      : "text-[#66736f]"
+                }`}
+              >
+                {slugAvailabilityMessage}
+              </p>
             </div>
             <div>
               <Label htmlFor="profession">Profession</Label>
@@ -384,7 +407,7 @@ export function SpecialistProfileForm({
           </p>
           <Button
             className="h-12 rounded-full bg-[#1f5f55] px-6 hover:bg-[#174a43]"
-            disabled={isSaving}
+            disabled={isSaving || isSlugUnavailable}
             type="submit"
           >
             {isSaving ? "Saving..." : "Save profile"}
