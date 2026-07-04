@@ -20,6 +20,7 @@ import type { SpecialistProfile } from "@/lib/profile/types";
 import type { Json } from "@/lib/supabase/types";
 import {
   countryTimezones,
+  getAllTimezones,
   getCountryByTimezone,
   getTimezonesByCountry,
   isValidIanaTimezone,
@@ -80,7 +81,15 @@ export function SpecialistProfileForm({
       ? getCountryByTimezone(initialProfile.timezone)
       : "",
   );
+  const [countrySearch, setCountrySearch] = useState(
+    initialProfile?.timezone
+      ? getCountryByTimezone(initialProfile.timezone)
+      : "",
+  );
   const [timezone, setTimezone] = useState(initialProfile?.timezone ?? "");
+  const [timezoneSearch, setTimezoneSearch] = useState(
+    initialProfile?.timezone ?? "",
+  );
   const [timezoneError, setTimezoneError] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState(
     normalizeLanguageList(initialProfile?.languages ?? []),
@@ -116,7 +125,30 @@ export function SpecialistProfileForm({
         slugAvailabilityStatus === "invalid" ||
         slugAvailabilityStatus === "checking"));
   const countryTimezonesForSelection = getTimezonesByCountry(country);
-  const shouldShowTimezoneSelector = countryTimezonesForSelection.length > 1;
+  const timezoneOptions =
+    countryTimezonesForSelection.length > 0
+      ? countryTimezonesForSelection
+      : getAllTimezones();
+  const countrySuggestions = countryTimezones
+    .filter((item) => {
+      const normalizedCountry = item.country.toLowerCase();
+      const normalizedSearch = countrySearch.trim().toLowerCase();
+
+      return normalizedSearch && normalizedCountry.includes(normalizedSearch);
+    })
+    .slice(0, 6);
+  const timezoneSuggestions = timezoneOptions
+    .filter((item) => {
+      const normalizedTimezone = item.toLowerCase();
+      const normalizedSearch = timezoneSearch.trim().toLowerCase();
+
+      return (
+        normalizedSearch &&
+        normalizedTimezone.includes(normalizedSearch) &&
+        item !== timezone
+      );
+    })
+    .slice(0, 6);
   const languageSuggestions = languageOptions
     .filter((language) => {
       const normalizedLanguage = language.toLowerCase();
@@ -135,16 +167,19 @@ export function SpecialistProfileForm({
     setSlug(normalizeProfileSlug(value));
   }
 
-  function handleCountryChange(value: string) {
+  function selectCountry(value: string) {
     const nextTimezones = getTimezonesByCountry(value);
 
     setCountry(value);
+    setCountrySearch(value);
     setTimezoneError(null);
     setTimezone(nextTimezones.length === 1 ? nextTimezones[0] : "");
+    setTimezoneSearch(nextTimezones.length === 1 ? nextTimezones[0] : "");
   }
 
-  function handleTimezoneChange(value: string) {
+  function selectTimezone(value: string) {
     setTimezone(value);
+    setTimezoneSearch(value);
     setTimezoneError(null);
   }
 
@@ -357,40 +392,77 @@ export function SpecialistProfileForm({
             </div>
             <div>
               <Label htmlFor="country">Country</Label>
-              <select
-                className="mt-2 h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm text-[#24312f]"
-                id="country"
-                onChange={(event) => handleCountryChange(event.target.value)}
-                value={country}
-              >
-                <option value="">Select country...</option>
-                {countryTimezones.map((item) => (
-                  <option key={item.country} value={item.country}>
-                    {item.country}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {shouldShowTimezoneSelector ? (
-              <div>
-                <Label htmlFor="timezone">Timezone</Label>
-                <select
-                  className="mt-2 h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm text-[#24312f]"
-                  id="timezone"
-                  onChange={(event) =>
-                    handleTimezoneChange(event.target.value)
-                  }
-                  value={timezone}
-                >
-                  <option value="">Select timezone...</option>
-                  {countryTimezonesForSelection.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
+              <div className="relative mt-2">
+                <Input
+                  className="h-11 rounded-xl border-[#d9ceb9]"
+                  id="country"
+                  onChange={(event) => {
+                    setCountrySearch(event.target.value);
+                    setCountry("");
+                    setTimezone("");
+                    setTimezoneSearch("");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && countrySuggestions[0]) {
+                      event.preventDefault();
+                      selectCountry(countrySuggestions[0].country);
+                    }
+                  }}
+                  placeholder="Search country..."
+                  value={countrySearch}
+                />
+                {countrySuggestions.length > 0 ? (
+                  <div className="absolute left-0 right-0 top-12 z-30 overflow-hidden rounded-2xl border border-[#ded5c8] bg-white shadow-lg">
+                    {countrySuggestions.map((item) => (
+                      <button
+                        className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#24312f] transition hover:bg-[#f7f3ec]"
+                        key={item.country}
+                        onClick={() => selectCountry(item.country)}
+                        type="button"
+                      >
+                        {item.country}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
+            </div>
+            <div>
+              <Label htmlFor="timezone">Timezone</Label>
+              <div className="relative mt-2">
+                <Input
+                  className="h-11 rounded-xl border-[#d9ceb9]"
+                  id="timezone"
+                  onChange={(event) => {
+                    setTimezoneSearch(event.target.value);
+                    setTimezone("");
+                    setTimezoneError(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && timezoneSuggestions[0]) {
+                      event.preventDefault();
+                      selectTimezone(timezoneSuggestions[0]);
+                    }
+                  }}
+                  placeholder="Search timezone..."
+                  value={timezoneSearch}
+                />
+                {timezoneSuggestions.length > 0 ? (
+                  <div className="absolute left-0 right-0 top-12 z-30 overflow-hidden rounded-2xl border border-[#ded5c8] bg-white shadow-lg">
+                    {timezoneSuggestions.map((item) => (
+                      <button
+                        className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#24312f] transition hover:bg-[#f7f3ec]"
+                        key={item}
+                        onClick={() => selectTimezone(item)}
+                        type="button"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
             <div className="sm:col-span-2">
               <div className="rounded-2xl bg-[#f7f3ec] p-4 text-sm leading-6 text-[#5a6865]">
                 <p className="font-semibold text-[#24312f]">

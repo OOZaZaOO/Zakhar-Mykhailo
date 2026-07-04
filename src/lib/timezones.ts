@@ -65,6 +65,12 @@ export function getTimezonesByCountry(country: string) {
   );
 }
 
+export function getAllTimezones() {
+  return Array.from(
+    new Set(countryTimezones.flatMap((item) => item.timezones)),
+  ).sort();
+}
+
 export function getCountryByTimezone(timezone: string) {
   return (
     countryTimezones.find((item) => item.timezones.includes(timezone))
@@ -105,4 +111,3 @@ export function prepareBookingTimeForClientTimezone({
     specialistTimezone,
   };
 }
-
