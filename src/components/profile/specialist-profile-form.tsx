@@ -9,7 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSpecialistProfile } from "@/hooks/use-specialist-profile";
-import { normalizeProfileSlug } from "@/lib/profile/service";
+import {
+  generateProfileSlug,
+  normalizeProfileSlug,
+} from "@/lib/profile/service";
 import type {
   SpecialistProfile,
   SpecialistProfileVisibility,
@@ -54,6 +57,9 @@ export function SpecialistProfileForm({
     initialProfile?.display_name ?? "",
   );
   const [slug, setSlug] = useState(initialProfile?.slug ?? "");
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(
+    Boolean(initialProfile?.slug),
+  );
   const [profession, setProfession] = useState(
     initialProfile?.profession ?? "",
   );
@@ -79,11 +85,33 @@ export function SpecialistProfileForm({
   );
 
   const mode = profile ? "edit" : "create";
+  const publicUrlBase = (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    ""
+  ).replace(/\/+$/, "");
   const previewUrl = useMemo(
-    () =>
-      slug ? `/profile/${normalizeProfileSlug(slug)}` : "/profile/your-slug",
-    [slug],
+    () => `${publicUrlBase}/profile/${slug || "your-slug"}`,
+    [publicUrlBase, slug],
   );
+
+  function handleDisplayNameChange(value: string) {
+    setDisplayName(value);
+
+    if (!isSlugManuallyEdited) {
+      setSlug(generateProfileSlug(value));
+    }
+  }
+
+  function handleSlugChange(value: string) {
+    setSlug(normalizeProfileSlug(value));
+    setIsSlugManuallyEdited(true);
+  }
+
+  function resetSlugFromName() {
+    setSlug(generateProfileSlug(displayName));
+    setIsSlugManuallyEdited(false);
+  }
 
   function parseContactLinks() {
     try {
@@ -188,24 +216,31 @@ export function SpecialistProfileForm({
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="display_name"
-                onChange={(event) => setDisplayName(event.target.value)}
+                onChange={(event) => handleDisplayNameChange(event.target.value)}
                 placeholder="John Smith"
                 value={displayName}
               />
             </div>
             <div>
-              <Label htmlFor="slug">Public slug</Label>
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="slug">Public slug</Label>
+                <button
+                  className="text-xs font-bold text-[#1f5f55] transition hover:text-[#174a43]"
+                  onClick={resetSlugFromName}
+                  type="button"
+                >
+                  Reset from name
+                </button>
+              </div>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="slug"
-                onChange={(event) =>
-                  setSlug(normalizeProfileSlug(event.target.value))
-                }
+                onChange={(event) => handleSlugChange(event.target.value)}
                 placeholder="john-smith"
                 value={slug}
               />
-              <p className="mt-2 text-xs font-medium text-[#66736f]">
-                Preview: {previewUrl}
+              <p className="mt-2 break-all text-xs font-medium text-[#66736f]">
+                Public URL: {previewUrl}
               </p>
             </div>
             <div>

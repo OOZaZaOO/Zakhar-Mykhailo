@@ -11,7 +11,17 @@ type ProfileClient = SupabaseClient<Database>;
 export const profileSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export function normalizeProfileSlug(value: string) {
-  return value.trim().toLowerCase();
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function generateProfileSlug(value: string) {
+  return normalizeProfileSlug(value);
 }
 
 export function validateSpecialistProfileForm(
@@ -75,6 +85,27 @@ export async function getPublicSpecialistProfileBySlug(
     .maybeSingle();
 }
 
+export async function isSpecialistProfileSlugTaken(
+  supabase: ProfileClient,
+  slug: string,
+  currentProfileId?: string,
+) {
+  const { data, error } = await supabase
+    .from("specialist_profiles")
+    .select("id")
+    .eq("slug", normalizeProfileSlug(slug))
+    .maybeSingle();
+
+  if (error) {
+    return { error, isTaken: false };
+  }
+
+  return {
+    error: null,
+    isTaken: Boolean(data && data.id !== currentProfileId),
+  };
+}
+
 export async function saveSpecialistProfile(
   supabase: ProfileClient,
   values: SpecialistProfileFormValues,
@@ -106,4 +137,3 @@ export async function saveSpecialistProfile(
 
   return supabase.from("specialist_profiles").insert(payload).select().single();
 }
-

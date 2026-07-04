@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import {
+  isSpecialistProfileSlugTaken,
   saveSpecialistProfile,
   validateSpecialistProfileForm,
 } from "@/lib/profile/service";
@@ -58,6 +59,21 @@ export function useSpecialistProfile({
     setIsSaving(true);
 
     const supabase = createSupabaseBrowserClient();
+    const { error: slugCheckError, isTaken } =
+      await isSpecialistProfileSlugTaken(supabase, values.slug, profile?.id);
+
+    if (slugCheckError) {
+      setError(getFriendlyProfileError(slugCheckError.message));
+      setIsSaving(false);
+      return null;
+    }
+
+    if (isTaken) {
+      setError("This public slug is already taken. Choose another one.");
+      setIsSaving(false);
+      return null;
+    }
+
     const { data, error: saveError } = await saveSpecialistProfile(
       supabase,
       values,
@@ -71,7 +87,9 @@ export function useSpecialistProfile({
     }
 
     setProfile(data);
-    setSuccess(profile ? "Specialist profile updated." : "Specialist profile created.");
+    setSuccess(
+      profile ? "Specialist profile updated." : "Specialist profile created.",
+    );
     setIsSaving(false);
 
     return data;
@@ -85,4 +103,3 @@ export function useSpecialistProfile({
     success,
   };
 }
-
