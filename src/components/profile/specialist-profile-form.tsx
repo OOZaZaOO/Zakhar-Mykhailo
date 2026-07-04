@@ -8,22 +8,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { Database, Json } from "@/lib/supabase/types";
+import { useSpecialistProfile } from "@/hooks/use-specialist-profile";
+import { normalizeProfileSlug } from "@/lib/profile/service";
+import type {
+  SpecialistProfile,
+  SpecialistProfileVisibility,
+} from "@/lib/profile/types";
+import type { Json } from "@/lib/supabase/types";
 
-type SpecialistProfile =
-  Database["public"]["Tables"]["specialist_profiles"]["Row"];
-
-type Visibility = SpecialistProfile["visibility"];
-type VisibilityFormValue = Visibility | "";
+type VisibilityFormValue = SpecialistProfileVisibility | "";
 
 type SpecialistProfileFormProps = {
   initialError: string | null;
   initialProfile: SpecialistProfile | null;
   userId: string;
 };
-
-const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function stringifyContactLinks(value: Json) {
   if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -40,16 +39,17 @@ function parseLanguages(value: string) {
     .filter(Boolean);
 }
 
-function normalizeSlug(value: string) {
-  return value.trim().toLowerCase();
-}
-
 export function SpecialistProfileForm({
   initialError,
   initialProfile,
   userId,
 }: SpecialistProfileFormProps) {
-  const [profile, setProfile] = useState(initialProfile);
+  const { error, isSaving, profile, saveProfile, success } =
+    useSpecialistProfile({
+      initialError,
+      initialProfile,
+    });
+  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url ?? "");
   const [displayName, setDisplayName] = useState(
     initialProfile?.display_name ?? "",
   );
@@ -74,35 +74,18 @@ export function SpecialistProfileForm({
   const [contactLinks, setContactLinks] = useState(
     stringifyContactLinks(initialProfile?.contact_links ?? {}),
   );
-  const [error, setError] = useState<string | null>(initialError);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [contactLinksError, setContactLinksError] = useState<string | null>(
+    null,
+  );
 
   const mode = profile ? "edit" : "create";
   const previewUrl = useMemo(
-    () => (slug ? `/profile/${normalizeSlug(slug)}` : "/profile/your-slug"),
+    () =>
+      slug ? `/profile/${normalizeProfileSlug(slug)}` : "/profile/your-slug",
     [slug],
   );
 
-  function validateForm() {
-    const nextSlug = normalizeSlug(slug);
-
-    if (!displayName.trim()) {
-      return "Display name is required.";
-    }
-
-    if (!profession.trim()) {
-      return "Profession is required.";
-    }
-
-    if (!timezone.trim()) {
-      return "Timezone is required.";
-    }
-
-    if (!slugPattern.test(nextSlug)) {
-      return "Slug must be lowercase URL-safe text, for example maya-sterling.";
-    }
-
+  function parseContactLinks() {
     try {
       const parsedContactLinks = contactLinks.trim()
         ? JSON.parse(contactLinks)
@@ -113,74 +96,60 @@ export function SpecialistProfileForm({
         typeof parsedContactLinks !== "object" ||
         Array.isArray(parsedContactLinks)
       ) {
-        return "Contact links must be a JSON object.";
+        return {
+          error: "Contact links must be a JSON object.",
+          value: null,
+        };
       }
-    } catch {
-      return "Contact links must be valid JSON.";
-    }
 
-    return null;
+      return {
+        error: null,
+        value: parsedContactLinks as Json,
+      };
+    } catch {
+      return {
+        error: "Contact links must be valid JSON.",
+        value: null,
+      };
+    }
   }
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSuccess(null);
 
-    const validationError = validateForm();
-
-    if (validationError) {
-      setError(validationError);
+    if (isSaving) {
       return;
     }
 
-    setIsSaving(true);
+    setContactLinksError(null);
 
-    const nextSlug = normalizeSlug(slug);
-    const parsedContactLinks = (contactLinks.trim()
-      ? JSON.parse(contactLinks)
-      : {}) as Json;
-    const supabase = createSupabaseBrowserClient();
-    const payload = {
-      bio: bio.trim(),
-      contact_links: parsedContactLinks,
-      display_name: displayName.trim(),
-      is_accepting_bookings: isAcceptingBookings,
+    const parsedContactLinks = parseContactLinks();
+
+    if (parsedContactLinks.error) {
+      setContactLinksError(parsedContactLinks.error);
+      return;
+    }
+
+    const savedProfile = await saveProfile({
+      avatarUrl,
+      bio,
+      contactLinks: parsedContactLinks.value ?? {},
+      displayName,
+      isAcceptingBookings,
       languages: parseLanguages(languages),
-      profession: profession.trim(),
-      slug: nextSlug,
-      timezone: timezone.trim(),
-      user_id: userId,
+      profession,
+      slug,
+      timezone,
+      userId,
       visibility: visibility || "private",
-      working_rules: workingRules.trim(),
-    };
+      workingRules,
+    });
 
-    const request = profile
-      ? supabase
-          .from("specialist_profiles")
-          .update(payload)
-          .eq("id", profile.id)
-          .select()
-          .single()
-      : supabase.from("specialist_profiles").insert(payload).select().single();
-
-    const { data, error: saveError } = await request;
-
-    if (saveError) {
-      setError(saveError.message);
-      setIsSaving(false);
-      return;
+    if (savedProfile) {
+      setAvatarUrl(savedProfile.avatar_url ?? "");
+      setSlug(savedProfile.slug);
+      setContactLinks(stringifyContactLinks(savedProfile.contact_links));
     }
-
-    setProfile(data);
-    setSlug(data.slug);
-    setContactLinks(stringifyContactLinks(data.contact_links));
-    setSuccess(
-      profile
-        ? "Specialist profile updated."
-        : "Specialist profile created.",
-    );
-    setIsSaving(false);
   }
 
   return (
@@ -229,7 +198,9 @@ export function SpecialistProfileForm({
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="slug"
-                onChange={(event) => setSlug(normalizeSlug(event.target.value))}
+                onChange={(event) =>
+                  setSlug(normalizeProfileSlug(event.target.value))
+                }
                 placeholder="john-smith"
                 value={slug}
               />
@@ -334,11 +305,25 @@ export function SpecialistProfileForm({
               </p>
             </div>
             <div>
+              <Label htmlFor="avatar_url">Avatar URL</Label>
+              <Input
+                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                id="avatar_url"
+                onChange={(event) => setAvatarUrl(event.target.value)}
+                placeholder="https://example.com/avatar.jpg"
+                type="url"
+                value={avatarUrl}
+              />
+            </div>
+            <div>
               <Label htmlFor="contact_links">Contact links JSON</Label>
               <Textarea
                 className="mt-2 min-h-32 rounded-xl border-[#d9ceb9] font-mono text-xs"
                 id="contact_links"
-                onChange={(event) => setContactLinks(event.target.value)}
+                onChange={(event) => {
+                  setContactLinks(event.target.value);
+                  setContactLinksError(null);
+                }}
                 placeholder={`{"website":"https://example.com","linkedin":"https://linkedin.com/in/john-smith"}`}
                 value={contactLinks}
               />
@@ -346,9 +331,9 @@ export function SpecialistProfileForm({
           </CardContent>
         </Card>
 
-        {error ? (
+        {error || contactLinksError ? (
           <p className="rounded-2xl bg-[#f6ddd4] px-4 py-3 text-sm font-medium leading-6 text-[#9a4c2f]">
-            {error}
+            {error ?? contactLinksError}
           </p>
         ) : null}
         {success ? (

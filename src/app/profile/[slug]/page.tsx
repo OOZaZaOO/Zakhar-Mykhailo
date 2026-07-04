@@ -1,15 +1,17 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { PublicLayout } from "@/components/layout/public-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { services } from "@/data/mock";
+import {
+  getPublicSpecialistProfileBySlug,
+  getSpecialistProfileBySlug,
+} from "@/lib/profile/service";
+import type { SpecialistProfile } from "@/lib/profile/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/types";
-
-type SpecialistProfile =
-  Database["public"]["Tables"]["specialist_profiles"]["Row"];
 
 type PublicProfilePageProps = {
   params: Promise<{
@@ -28,30 +30,23 @@ function getInitials(name: string) {
 
 function ProfileUnavailableState({
   slug,
-  variant,
 }: {
   slug: string;
-  variant: "not-found" | "unavailable";
 }) {
-  const isUnavailable = variant === "unavailable";
-
   return (
     <PublicLayout>
       <section className="mx-auto max-w-3xl px-5 pb-12 sm:px-8">
         <Card className="rounded-3xl border-[#ded5c8] bg-white">
           <CardHeader>
             <Badge className="w-fit rounded-full bg-[#f6ddd4] text-[#9a4c2f] hover:bg-[#f6ddd4]">
-              {isUnavailable ? "Unavailable" : "Not found"}
+              Unavailable
             </Badge>
             <CardTitle className="pt-3 text-3xl">
-              {isUnavailable
-                ? "This profile is not public right now."
-                : "We could not find this specialist profile."}
+              This profile is not public right now.
             </CardTitle>
             <p className="text-sm leading-6 text-[#66736f]">
-              {isUnavailable
-                ? `The profile for ${slug} exists, but it is currently private or hidden.`
-                : `No public specialist profile is available for ${slug}. The link may be incorrect or the profile may not be published yet.`}
+              The profile for {slug} exists, but it is currently private or
+              hidden.
             </p>
           </CardHeader>
           <CardContent>
@@ -208,27 +203,23 @@ export default async function PublicProfilePage({
   const { slug } = await params;
   const supabase = await createSupabaseServerClient();
 
-  const { data: publicProfile } = await supabase
-    .from("specialist_profiles")
-    .select("*")
-    .eq("slug", slug)
-    .eq("visibility", "public")
-    .maybeSingle();
+  const { data: publicProfile } = await getPublicSpecialistProfileBySlug(
+    supabase,
+    slug,
+  );
 
   if (publicProfile) {
     return <PublicProfileContent profile={publicProfile} />;
   }
 
-  const { data: unavailableProfile } = await supabase
-    .from("specialist_profiles")
-    .select("id")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  return (
-    <ProfileUnavailableState
-      slug={slug}
-      variant={unavailableProfile ? "unavailable" : "not-found"}
-    />
+  const { data: unavailableProfile } = await getSpecialistProfileBySlug(
+    supabase,
+    slug,
   );
+
+  if (!unavailableProfile) {
+    notFound();
+  }
+
+  return <ProfileUnavailableState slug={slug} />;
 }
