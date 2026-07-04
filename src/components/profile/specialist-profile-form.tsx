@@ -14,13 +14,8 @@ import {
   generateProfileSlug,
   normalizeProfileSlug,
 } from "@/lib/profile/service";
-import type {
-  SpecialistProfile,
-  SpecialistProfileVisibility,
-} from "@/lib/profile/types";
+import type { SpecialistProfile } from "@/lib/profile/types";
 import type { Json } from "@/lib/supabase/types";
-
-type VisibilityFormValue = SpecialistProfileVisibility | "";
 
 type SpecialistProfileFormProps = {
   initialError: string | null;
@@ -71,12 +66,6 @@ export function SpecialistProfileForm({
   );
   const [workingRules, setWorkingRules] = useState(
     initialProfile?.working_rules ?? "",
-  );
-  const [visibility, setVisibility] = useState<VisibilityFormValue>(
-    initialProfile?.visibility ?? "",
-  );
-  const [isAcceptingBookings, setIsAcceptingBookings] = useState(
-    initialProfile?.is_accepting_bookings ?? false,
   );
   const [contactLinks, setContactLinks] = useState(
     stringifyContactLinks(initialProfile?.contact_links ?? {}),
@@ -174,13 +163,11 @@ export function SpecialistProfileForm({
       bio,
       contactLinks: parsedContactLinks.value ?? {},
       displayName,
-      isAcceptingBookings,
       languages: parseLanguages(languages),
       profession,
       slug,
       timezone,
       userId,
-      visibility: visibility || "private",
       workingRules,
     });
 
@@ -301,37 +288,14 @@ export function SpecialistProfileForm({
 
         <Card className="rounded-3xl border-[#ded5c8] bg-white">
           <CardHeader>
-            <CardTitle>Booking and visibility</CardTitle>
+            <CardTitle>Working rules</CardTitle>
+            <p className="text-sm leading-6 text-[#66736f]">
+              Explain cancellation rules, preparation notes, and how clients
+              should use the session workspace.
+            </p>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+          <CardContent>
             <div>
-              <Label htmlFor="visibility">Visibility</Label>
-              <select
-                className="mt-2 h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm text-[#24312f]"
-                id="visibility"
-                onChange={(event) =>
-                  setVisibility(event.target.value as VisibilityFormValue)
-                }
-                value={visibility}
-              >
-                <option value="">Select...</option>
-                <option value="private">Private</option>
-                <option value="public">Public</option>
-                <option value="hidden">Hidden</option>
-              </select>
-            </div>
-            <label className="flex items-center gap-3 rounded-2xl bg-[#f7f3ec] p-4 text-sm font-semibold text-[#4f5f5b]">
-              <input
-                checked={isAcceptingBookings}
-                className="size-4 rounded border-[#d9ceb9]"
-                onChange={(event) =>
-                  setIsAcceptingBookings(event.target.checked)
-                }
-                type="checkbox"
-              />
-              Accept bookings
-            </label>
-            <div className="sm:col-span-2">
               <Label htmlFor="working_rules">Working rules</Label>
               <Textarea
                 className="mt-2 min-h-28 rounded-xl border-[#d9ceb9]"
@@ -402,8 +366,8 @@ export function SpecialistProfileForm({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm leading-6 text-[#66736f]">
-            Avatar upload, services, booking, and payments are intentionally
-            outside this stage.
+            Avatar upload, services, and payments are intentionally outside
+            this stage.
           </p>
           <Button
             className="h-12 rounded-full bg-[#1f5f55] px-6 hover:bg-[#174a43]"

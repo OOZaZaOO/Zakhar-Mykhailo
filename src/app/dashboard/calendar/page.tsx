@@ -1,10 +1,26 @@
+import { redirect } from "next/navigation";
+
+import { BookingStatusToggle } from "@/components/calendar/booking-status-toggle";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calendarDays } from "@/data/mock";
+import { getOwnSpecialistProfile } from "@/lib/profile/service";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default function CalendarPage() {
+export default async function CalendarPage() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await getOwnSpecialistProfile(supabase, user.id);
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -23,6 +39,15 @@ export default function CalendarPage() {
         <Button className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]">
           Add availability
         </Button>
+      </div>
+
+      <div className="mt-8">
+        <BookingStatusToggle
+          initialIsAcceptingBookings={
+            profile?.is_accepting_bookings ?? false
+          }
+          profileId={profile?.id ?? null}
+        />
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_0.35fr]">

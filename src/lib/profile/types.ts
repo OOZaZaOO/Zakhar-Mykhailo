@@ -16,13 +16,10 @@ export type SpecialistProfileFormValues = {
   bio: string;
   contactLinks: Json;
   displayName: string;
-  isAcceptingBookings: boolean;
   languages: string[];
   profession: string;
   slug: string;
   timezone: string;
   userId: string;
-  visibility: SpecialistProfileVisibility;
   workingRules: string;
 };
-

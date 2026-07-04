@@ -116,13 +116,11 @@ export async function saveSpecialistProfile(
     bio: values.bio.trim(),
     contact_links: values.contactLinks,
     display_name: values.displayName.trim(),
-    is_accepting_bookings: values.isAcceptingBookings,
     languages: values.languages,
     profession: values.profession.trim(),
     slug: normalizeProfileSlug(values.slug),
     timezone: values.timezone.trim() || "UTC",
     user_id: values.userId,
-    visibility: values.visibility,
     working_rules: values.workingRules.trim(),
   };
 
@@ -135,5 +133,27 @@ export async function saveSpecialistProfile(
       .single();
   }
 
-  return supabase.from("specialist_profiles").insert(payload).select().single();
+  return supabase
+    .from("specialist_profiles")
+    .insert({
+      ...payload,
+      visibility: "public",
+    })
+    .select()
+    .single();
+}
+
+export async function updateSpecialistBookingStatus(
+  supabase: ProfileClient,
+  profileId: string,
+  isAcceptingBookings: boolean,
+) {
+  return supabase
+    .from("specialist_profiles")
+    .update({
+      is_accepting_bookings: isAcceptingBookings,
+    })
+    .eq("id", profileId)
+    .select("id,is_accepting_bookings")
+    .single();
 }
