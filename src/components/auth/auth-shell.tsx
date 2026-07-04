@@ -9,12 +9,22 @@ export function AuthShell({
   title,
   description,
   children,
+  showBrandPanel = true,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   children: React.ReactNode;
+  showBrandPanel?: boolean;
 }) {
+  if (!showBrandPanel) {
+    return (
+      <section className="mx-auto flex min-h-[calc(100vh-73px)] max-w-3xl items-center justify-center px-5 py-8 sm:px-8 lg:py-12">
+        {children}
+      </section>
+    );
+  }
+
   return (
     <section className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[0.95fr_1.05fr] lg:py-12">
       <div className="relative overflow-hidden rounded-[2rem] bg-[#1e2725] p-6 text-white shadow-xl shadow-[#9c7d5520] sm:p-8">

@@ -15,6 +15,7 @@ type SpecialistProfile =
   Database["public"]["Tables"]["specialist_profiles"]["Row"];
 
 type Visibility = SpecialistProfile["visibility"];
+type VisibilityFormValue = Visibility | "";
 
 type SpecialistProfileFormProps = {
   initialError: string | null;
@@ -29,7 +30,7 @@ function stringifyContactLinks(value: Json) {
     return JSON.stringify(value, null, 2);
   }
 
-  return "{}";
+  return "";
 }
 
 function parseLanguages(value: string) {
@@ -57,20 +58,18 @@ export function SpecialistProfileForm({
     initialProfile?.profession ?? "",
   );
   const [bio, setBio] = useState(initialProfile?.bio ?? "");
-  const [timezone, setTimezone] = useState(
-    initialProfile?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
-  );
+  const [timezone, setTimezone] = useState(initialProfile?.timezone ?? "");
   const [languages, setLanguages] = useState(
     initialProfile?.languages.join(", ") ?? "",
   );
   const [workingRules, setWorkingRules] = useState(
     initialProfile?.working_rules ?? "",
   );
-  const [visibility, setVisibility] = useState<Visibility>(
-    initialProfile?.visibility ?? "private",
+  const [visibility, setVisibility] = useState<VisibilityFormValue>(
+    initialProfile?.visibility ?? "",
   );
   const [isAcceptingBookings, setIsAcceptingBookings] = useState(
-    initialProfile?.is_accepting_bookings ?? true,
+    initialProfile?.is_accepting_bookings ?? false,
   );
   const [contactLinks, setContactLinks] = useState(
     stringifyContactLinks(initialProfile?.contact_links ?? {}),
@@ -105,7 +104,9 @@ export function SpecialistProfileForm({
     }
 
     try {
-      const parsedContactLinks = JSON.parse(contactLinks);
+      const parsedContactLinks = contactLinks.trim()
+        ? JSON.parse(contactLinks)
+        : {};
 
       if (
         parsedContactLinks === null ||
@@ -136,7 +137,9 @@ export function SpecialistProfileForm({
     setIsSaving(true);
 
     const nextSlug = normalizeSlug(slug);
-    const parsedContactLinks = JSON.parse(contactLinks) as Json;
+    const parsedContactLinks = (contactLinks.trim()
+      ? JSON.parse(contactLinks)
+      : {}) as Json;
     const supabase = createSupabaseBrowserClient();
     const payload = {
       bio: bio.trim(),
@@ -148,7 +151,7 @@ export function SpecialistProfileForm({
       slug: nextSlug,
       timezone: timezone.trim(),
       user_id: userId,
-      visibility,
+      visibility: visibility || "private",
       working_rules: workingRules.trim(),
     };
 
@@ -217,6 +220,7 @@ export function SpecialistProfileForm({
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="display_name"
                 onChange={(event) => setDisplayName(event.target.value)}
+                placeholder="John Smith"
                 value={displayName}
               />
             </div>
@@ -226,6 +230,7 @@ export function SpecialistProfileForm({
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="slug"
                 onChange={(event) => setSlug(normalizeSlug(event.target.value))}
+                placeholder="john-smith"
                 value={slug}
               />
               <p className="mt-2 text-xs font-medium text-[#66736f]">
@@ -238,6 +243,7 @@ export function SpecialistProfileForm({
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="profession"
                 onChange={(event) => setProfession(event.target.value)}
+                placeholder="Psychologist"
                 value={profession}
               />
             </div>
@@ -247,6 +253,7 @@ export function SpecialistProfileForm({
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="timezone"
                 onChange={(event) => setTimezone(event.target.value)}
+                placeholder="Europe/Bratislava"
                 value={timezone}
               />
             </div>
@@ -256,6 +263,7 @@ export function SpecialistProfileForm({
                 className="mt-2 min-h-28 rounded-xl border-[#d9ceb9]"
                 id="bio"
                 onChange={(event) => setBio(event.target.value)}
+                placeholder="Tell clients about yourself..."
                 value={bio}
               />
             </div>
@@ -273,10 +281,11 @@ export function SpecialistProfileForm({
                 className="mt-2 h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm text-[#24312f]"
                 id="visibility"
                 onChange={(event) =>
-                  setVisibility(event.target.value as Visibility)
+                  setVisibility(event.target.value as VisibilityFormValue)
                 }
                 value={visibility}
               >
+                <option value="">Select...</option>
                 <option value="private">Private</option>
                 <option value="public">Public</option>
                 <option value="hidden">Hidden</option>
@@ -299,6 +308,7 @@ export function SpecialistProfileForm({
                 className="mt-2 min-h-28 rounded-xl border-[#d9ceb9]"
                 id="working_rules"
                 onChange={(event) => setWorkingRules(event.target.value)}
+                placeholder="Tell clients how you work, cancellation rules, and what to prepare..."
                 value={workingRules}
               />
             </div>
@@ -316,7 +326,7 @@ export function SpecialistProfileForm({
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="languages"
                 onChange={(event) => setLanguages(event.target.value)}
-                placeholder="English, Ukrainian"
+                placeholder="English, Slovak"
                 value={languages}
               />
               <p className="mt-2 text-xs font-medium text-[#66736f]">
@@ -329,6 +339,7 @@ export function SpecialistProfileForm({
                 className="mt-2 min-h-32 rounded-xl border-[#d9ceb9] font-mono text-xs"
                 id="contact_links"
                 onChange={(event) => setContactLinks(event.target.value)}
+                placeholder={`{"website":"https://example.com","linkedin":"https://linkedin.com/in/john-smith"}`}
                 value={contactLinks}
               />
             </div>

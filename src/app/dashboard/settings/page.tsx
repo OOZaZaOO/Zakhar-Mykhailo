@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { settingsSections, specialist } from "@/data/mock";
+import { settingsSections } from "@/data/mock";
 
 export default function SettingsPage() {
   return (
@@ -50,32 +50,28 @@ export default function SettingsPage() {
               <Label>Name</Label>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                readOnly
-                value={specialist.name}
+                placeholder="John Smith"
               />
             </div>
             <div>
               <Label>Title</Label>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                readOnly
-                value={specialist.title}
+                placeholder="Psychologist"
               />
             </div>
             <div>
               <Label>Timezone</Label>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                readOnly
-                value={specialist.timezone}
+                placeholder="Europe/Bratislava"
               />
             </div>
             <div>
               <Label>Public slug</Label>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                readOnly
-                value={specialist.slug}
+                placeholder="john-smith"
               />
             </div>
             <div className="sm:col-span-2">

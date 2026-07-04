@@ -25,9 +25,9 @@ const accountTypes = {
     eyebrow: "Create specialist workspace",
     title: "Build the workspace where your client sessions will live.",
     body: "Set up a specialist account to manage services, bookings, session workspaces, materials, and client communication.",
-    name: "Maya Sterling",
-    email: "maya@example.com",
     button: "Create specialist account",
+    namePlaceholder: "John Smith",
+    emailPlaceholder: "john@example.com",
   },
   client: {
     label: "Client",
@@ -36,9 +36,9 @@ const accountTypes = {
     eyebrow: "Create client account",
     title: "Create a calm place for every session you book.",
     body: "Set up a client account to access your session history, archived sessions, materials, files, and workspace updates.",
-    name: "Nina Park",
-    email: "nina@example.com",
     button: "Create client account",
+    namePlaceholder: "John Smith",
+    emailPlaceholder: "john@example.com",
   },
 } as const satisfies Record<
   AccountType,
@@ -48,19 +48,19 @@ const accountTypes = {
     eyebrow: string;
     title: string;
     body: string;
-    name: string;
-    email: string;
     button: string;
+    namePlaceholder: string;
+    emailPlaceholder: string;
   }
 >;
 
 export default function RegisterPage() {
   const router = useRouter();
   const [accountType, setAccountType] = useState<AccountType>("specialist");
-  const [name, setName] = useState<string>(accountTypes.specialist.name);
-  const [email, setEmail] = useState<string>(accountTypes.specialist.email);
-  const [password, setPassword] = useState("workspace");
-  const [confirmPassword, setConfirmPassword] = useState("workspace");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -69,8 +69,6 @@ export default function RegisterPage() {
 
   function handleAccountTypeChange(nextAccountType: AccountType) {
     setAccountType(nextAccountType);
-    setName(accountTypes[nextAccountType].name);
-    setEmail(accountTypes[nextAccountType].email);
     setError(null);
     setSuccess(null);
   }
@@ -128,6 +126,7 @@ export default function RegisterPage() {
         eyebrow={selectedAccountType.eyebrow}
         title={selectedAccountType.title}
         description={`${selectedAccountType.body} Profile data remains mocked until profile setup is implemented.`}
+        showBrandPanel={false}
       >
         <Card className="w-full max-w-xl rounded-[2rem] border-[#ded5c8] bg-white shadow-xl shadow-[#9c7d5520]">
           <CardHeader className="space-y-2">
@@ -200,6 +199,7 @@ export default function RegisterPage() {
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 onChange={(event) => setName(event.target.value)}
+                placeholder={selectedAccountType.namePlaceholder}
                 value={name}
               />
             </div>
@@ -208,6 +208,7 @@ export default function RegisterPage() {
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 onChange={(event) => setEmail(event.target.value)}
+                placeholder={selectedAccountType.emailPlaceholder}
                 type="email"
                 value={email}
               />
@@ -218,6 +219,7 @@ export default function RegisterPage() {
                 <Input
                   className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                   onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Create a secure password"
                   type="password"
                   value={password}
                 />
@@ -227,6 +229,7 @@ export default function RegisterPage() {
                 <Input
                   className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                   onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Repeat your password"
                   type="password"
                   value={confirmPassword}
                 />
@@ -237,12 +240,14 @@ export default function RegisterPage() {
                 <span className="font-semibold text-[#24312f]">
                   Password strength
                 </span>
-                <span className="font-semibold text-[#5d6b2f]">Strong</span>
+                <span className="font-semibold text-[#7d8a86]">
+                  Enter password
+                </span>
               </div>
               <div className="mt-2 grid grid-cols-4 gap-2">
                 {[1, 2, 3, 4].map((item) => (
                   <div
-                    className="h-2 rounded-full bg-[#a9b66f]"
+                    className="h-2 rounded-full bg-[#eee5d9]"
                     key={item}
                   />
                 ))}

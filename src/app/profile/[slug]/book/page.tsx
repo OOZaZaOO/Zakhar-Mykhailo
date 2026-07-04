@@ -46,16 +46,14 @@ export default function BookingPage() {
               <Label>Service</Label>
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9] font-semibold"
-                readOnly
-                value={`${selectedService.name} · ${selectedService.duration} · ${selectedService.price}`}
+                placeholder="Individual Therapy - 50 min - 50"
               />
             </div>
             <div>
               <Label>Date</Label>
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9] font-semibold"
-                readOnly
-                value="July 10, 2026"
+                placeholder="Select a date"
               />
             </div>
             <div>
@@ -77,16 +75,14 @@ export default function BookingPage() {
                 <Label>Name</Label>
                 <Input
                   className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                  readOnly
-                  value="Nina Park"
+                  placeholder="John Smith"
                 />
               </div>
               <div>
                 <Label>Email</Label>
                 <Input
                   className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
-                  readOnly
-                  value="nina@example.com"
+                  placeholder="john@example.com"
                 />
               </div>
             </div>
@@ -94,8 +90,7 @@ export default function BookingPage() {
               <Label>Comment</Label>
               <Textarea
                 className="mt-2 rounded-2xl border-[#d9ceb9]"
-                readOnly
-                value="I want to clarify roadmap priorities before our next launch cycle."
+                placeholder="Tell the specialist what you want to focus on..."
               />
             </div>
             <Button

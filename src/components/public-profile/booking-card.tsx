@@ -16,8 +16,7 @@ export function BookingCard() {
           <Label className="text-sm font-bold text-[#5a6865]">Service</Label>
           <Input
             className="mt-2 h-12 rounded-2xl border-[#d9ceb9] font-semibold"
-            readOnly
-            value="Roadmap Reset · 60 min · $180"
+            placeholder="Individual Therapy - 50 min - 50"
           />
         </div>
         <div>
@@ -42,8 +41,7 @@ export function BookingCard() {
           </Label>
           <Textarea
             className="mt-2 rounded-2xl border-[#d9ceb9]"
-            readOnly
-            value="Mock intake field for the client's booking context."
+            placeholder="Tell the specialist what you want to focus on..."
           />
         </div>
         <div className="rounded-2xl bg-[#f7f3ec] p-4 text-sm leading-6 text-[#5a6865]">

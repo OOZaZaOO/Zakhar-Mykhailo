@@ -16,9 +16,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("maya@example.com");
-  const [password, setPassword] = useState("workspace");
-  const [rememberMe, setRememberMe] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +64,7 @@ export default function LoginPage() {
         eyebrow="Welcome back"
         title="Pick up every session exactly where you left it."
         description="Open your workspace to review bookings, prepare materials, and continue client communication in the right session context."
+        showBrandPanel={false}
       >
         <Card className="w-full max-w-xl rounded-[2rem] border-[#ded5c8] bg-white shadow-xl shadow-[#9c7d5520]">
           <CardHeader className="space-y-2">
@@ -101,6 +102,7 @@ export default function LoginPage() {
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 onChange={(event) => setEmail(event.target.value)}
+                placeholder="john@example.com"
                 type="email"
                 value={email}
               />
@@ -110,6 +112,7 @@ export default function LoginPage() {
               <Input
                 className="mt-2 h-12 rounded-2xl border-[#d9ceb9]"
                 onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter your password"
                 type="password"
                 value={password}
               />
