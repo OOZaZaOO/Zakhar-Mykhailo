@@ -14,6 +14,8 @@ The primary users are independent professionals such as psychologists, tutors, c
 
 These users usually bring clients from their own channels: social media, referrals, communities, personal websites, direct messages, or existing client relationships.
 
+The MVP supports both specialist profiles and client profiles. Specialists manage services, availability, bookings, sessions, and clients. Clients use their account to access their personal cabinet, session history, archived sessions, materials, files, and session workspaces.
+
 ## Core Idea
 
 The core idea is: one workspace for every client session.

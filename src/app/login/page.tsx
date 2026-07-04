@@ -22,6 +22,9 @@ export default function LoginPage() {
             <p className="text-sm leading-6 text-[#66736f]">
               UI-only authentication preview. No credentials are submitted.
             </p>
+            <p className="rounded-2xl bg-[#f7f3ec] px-4 py-3 text-sm leading-6 text-[#5a6865]">
+              Your workspace opens based on your account type.
+            </p>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-3">
