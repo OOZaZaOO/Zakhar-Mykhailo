@@ -18,22 +18,24 @@ Profile -> Service -> Availability -> Booking -> Session Workspace -> Archive
 
 The session workspace is the center of the product. Supporting tables should exist only when they help specialists manage this lifecycle more clearly.
 
-## Decision: Do Not Implement `client_profiles` In MVP
+## Decision: Include `client_profiles` In MVP
 
-- Clients may book as guests.
-- The MVP should store `client_name`, `client_email`, and `client_phone` directly on `bookings`.
-- `client_profiles` can be added later when a client portal becomes necessary.
-- Specialists should authenticate first; clients may not need accounts in the MVP.
+- Clients need access to their personal cabinet, session history, archived sessions, materials, files, and session workspaces.
+- `client_profiles` are required for client dashboard access and session history.
+- Bookings should reference `client_profiles`.
+- Sessions should reference `client_profiles`.
+- RLS should use `auth.uid()` through `client_profiles.user_id` for client access.
 
-This keeps booking simpler and avoids building account management for clients before there is a clear need.
+Guest booking may be considered later, but it is not the primary MVP model now.
 
-## Decision: Auth Users Are Primarily Specialists In MVP
+## Decision: Auth Users Represent Specialists And Clients In MVP
 
-- Supabase `auth.users` should initially represent specialists.
-- Client authentication is delayed.
-- This reduces complexity.
+- Supabase `auth.users` should represent authenticated specialists and authenticated clients.
+- Specialist ownership is resolved through `specialist_profiles.user_id`.
+- Client ownership is resolved through `client_profiles.user_id`.
+- Client authentication is required for client cabinet, session history, archive access, materials, files, and session workspace access.
 
-The first backend stage should focus on specialist accounts, specialist-owned data, and public booking flows.
+The backend should still remain simple: no teams, organizations, marketplace accounts, or complex role system in the MVP.
 
 ## Decision: Booking Creates Session
 
@@ -51,14 +53,15 @@ This preserves a clear one-to-one relationship between the scheduled appointment
 
 This keeps the product focused on session-specific work instead of becoming a general messenger or CRM.
 
-## Decision: Messages Should Support Guest Clients
+## Decision: Messages Should Support Specialist, Client, And System Senders
 
-- `sender_user_id` alone is not enough because clients may not have accounts.
+- `sender_user_id` alone is not enough because system messages may not have a human sender.
 - `messages` should include `sender_role` or `sender_type`.
 - Possible values: `specialist`, `client`, `system`.
-- `sender_user_id` can be nullable for guest clients.
+- `sender_user_id` should reference `auth.users.id` for specialist and client messages.
+- `sender_user_id` can be nullable for system messages.
 
-This allows a guest client to participate in session chat without requiring a full client account.
+This keeps session chat explicit while still allowing automated session events later.
 
 ## Decision: Add `availability_exceptions`
 
@@ -115,6 +118,7 @@ The MVP should prioritize the booking-to-session workflow over advanced organiza
 Recommended MVP schema:
 
 - `specialist_profiles`
+- `client_profiles`
 - `services`
 - `availability_blocks`
 - `availability_exceptions`
@@ -124,11 +128,10 @@ Recommended MVP schema:
 - `materials`
 - `files`
 
-Do not include `client_profiles` in the MVP.
+Include `client_profiles` in the MVP because client access control depends on it.
 
 ## Delayed Tables
 
-- `client_profiles`
 - `payments`
 - `subscriptions`
 - `notifications`
@@ -140,7 +143,7 @@ Do not include `client_profiles` in the MVP.
 ## Open Questions
 
 - Should booking require email verification?
-- Should clients receive magic links?
+- Should clients receive magic links in addition to password authentication?
 - Should sessions be created immediately on pending booking or only after confirmation?
 - Should archived sessions ever be reopened?
 - Which payment provider will be used first?
@@ -148,6 +151,6 @@ Do not include `client_profiles` in the MVP.
 
 ## Next Step
 
-After this document is reviewed, update [DATABASE.md](./DATABASE.md) to reflect the approved decisions.
+After this document is reviewed, keep [DATABASE.md](./DATABASE.md) aligned with the approved decisions.
 
-Then create the first Supabase SQL migration.
+Then update future Supabase migrations to include the approved client profile model.

@@ -63,10 +63,27 @@ files
 
 - Public users can read published specialist profiles and active public services.
 - Specialists can manage their own profile, services, availability, bookings, sessions, messages, materials, and files.
+- Clients can access their own cabinet, bookings, session history, archived sessions, session workspaces, materials, and files through `client_profiles.user_id = auth.uid()`.
 - Clients can read and participate only in their own bookings and session workspaces.
+- Guest booking may be considered later, but authenticated client profiles are the primary MVP model.
 - Chat is scoped to a session. There is no global messaging.
 - Materials are scoped to sessions and can optionally become reusable later.
 - Admin tables and admin permissions are delayed.
+
+## MVP Table List
+
+Recommended MVP schema:
+
+- `specialist_profiles`
+- `client_profiles`
+- `services`
+- `availability_blocks`
+- `availability_exceptions`
+- `bookings`
+- `sessions`
+- `messages`
+- `materials`
+- `files`
 
 ## Booking Lifecycle
 
@@ -156,7 +173,7 @@ Managed by Supabase Auth. Application tables should use `auth.uid()`.
 
 ### MVP
 
-- Use Supabase Auth user id as the owner id for profiles.
+- Use Supabase Auth user id as the owner id for specialist and client profiles.
 
 ### Delayed
 
@@ -251,14 +268,16 @@ Stores public and private profile information for specialists.
 
 ### Purpose
 
-Stores client identity information when a client has or later receives an account.
+Stores client identity information for authenticated client accounts in the MVP.
+
+Client profiles are required for client dashboard access, session history, archived sessions, materials, files, and session workspace access control.
 
 ### Columns
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | id | uuid | Primary key. |
-| user_id | uuid | Optional reference to `auth.users.id`. |
+| user_id | uuid | References `auth.users.id`. Unique. |
 | display_name | text | Client name. |
 | email | text | Client email. |
 | phone | text | Optional phone number. |
@@ -267,32 +286,33 @@ Stores client identity information when a client has or later receives an accoun
 
 ### Relationships
 
-- Optionally belongs to `auth.users`.
+- Belongs to `auth.users`.
 - Has many `bookings`.
 - Has many `sessions`.
 
 ### Indexes
 
-- Index on `user_id`.
+- Unique index on `user_id`.
 - Index on `email`.
 
 ### Row Level Security Rules
 
-- Client can read own profile if `user_id = auth.uid()`.
+- Client can read and update own profile if `user_id = auth.uid()`.
 - Specialist can read client profile only when connected through their own booking or session.
 - Public cannot list client profiles.
 
 ### Important Constraints
 
-- Client authentication model is not final.
-- Email may be required for guest booking even before client auth exists.
+- One auth user should have at most one client profile in MVP.
+- `user_id` is required for MVP client cabinet and session access control.
+- Guest booking may be considered later, but it is not the primary MVP model.
 
 ### Example Record
 
 ```json
 {
   "id": "cp_001",
-  "user_id": null,
+  "user_id": "00000000-0000-0000-0000-000000000002",
   "display_name": "Nina Park",
   "email": "nina@example.com"
 }
@@ -302,13 +322,17 @@ Stores client identity information when a client has or later receives an accoun
 
 - Client name.
 - Client email.
-- Optional link to auth user.
+- Required link to auth user.
+- Client dashboard access.
+- Session history access.
+- Archived session access.
+- Session workspace access control.
 
 ### Delayed
 
-- Client portal.
 - Client profile history.
 - Client preferences.
+- Guest booking.
 
 ## services
 
@@ -496,8 +520,8 @@ Stores the appointment request or confirmation that connects a specialist, clien
 ### Row Level Security Rules
 
 - Specialist can read and manage bookings for own profile.
-- Client can read bookings connected to own client profile.
-- Public can create a booking request only through controlled application logic later.
+- Client can read bookings connected to own client profile through `client_profiles.user_id = auth.uid()`.
+- Booking creation should require a valid client profile in the MVP.
 
 ### Important Constraints
 
@@ -524,6 +548,7 @@ Stores the appointment request or confirmation that connects a specialist, clien
 
 - Specialist.
 - Client.
+- Client profile reference.
 - Service.
 - Start/end time.
 - Client comment.
@@ -580,7 +605,7 @@ Stores the session workspace. This is the core product object.
 ### Row Level Security Rules
 
 - Specialist can read and manage sessions for own profile.
-- Client can read sessions connected to own client profile.
+- Client can read sessions connected to own client profile through `client_profiles.user_id = auth.uid()`.
 - Client can participate only while session is not archived or cancelled.
 - Archived sessions should be read-only except for future reopen logic.
 
@@ -609,6 +634,7 @@ Stores the session workspace. This is the core product object.
 - Booking link.
 - Specialist.
 - Client.
+- Client profile reference.
 - Service.
 - Status.
 - Meeting URL.
@@ -634,6 +660,7 @@ Stores chat messages scoped only to a session.
 | id | uuid | Primary key. |
 | session_id | uuid | References `sessions.id`. |
 | sender_user_id | uuid | References `auth.users.id`. |
+| sender_role | text | `specialist`, `client`, or `system`. |
 | body | text | Message text. |
 | created_at | timestamptz | Insert timestamp. |
 | updated_at | timestamptz | Update timestamp. |
@@ -654,13 +681,15 @@ Stores chat messages scoped only to a session.
 ### Row Level Security Rules
 
 - Specialist can read and send messages in own sessions.
-- Client can read and send messages in own sessions.
+- Client can read and send messages in own sessions through `client_profiles.user_id = auth.uid()`.
 - No user can message outside a session.
 - No new messages when session is archived or cancelled.
 
 ### Important Constraints
 
 - `body` should not be empty unless file-only messages are supported later.
+- `sender_role` should be one of `specialist`, `client`, `system`.
+- `sender_user_id` should be required for specialist and client messages and may be nullable for system messages.
 - Messages are not global.
 
 ### Example Record
@@ -670,6 +699,7 @@ Stores chat messages scoped only to a session.
   "id": "msg_001",
   "session_id": "sess_001",
   "sender_user_id": "00000000-0000-0000-0000-000000000001",
+  "sender_role": "specialist",
   "body": "I added the roadmap notes before our call."
 }
 ```
@@ -724,7 +754,7 @@ Stores structured content shared with a client inside a session. Materials are s
 ### Row Level Security Rules
 
 - Specialist can manage materials in own sessions.
-- Client can read visible materials in own sessions.
+- Client can read visible materials in own sessions through `client_profiles.user_id = auth.uid()`.
 - Client cannot create specialist materials in MVP.
 
 ### Important Constraints
@@ -800,7 +830,7 @@ Stores metadata for files attached to sessions, materials, or messages. Actual b
 ### Row Level Security Rules
 
 - Specialist can read and manage files in own sessions.
-- Client can read files in own sessions.
+- Client can read files in own sessions through `client_profiles.user_id = auth.uid()`.
 - Client uploads may be allowed only for active session workspaces.
 - Archived sessions should not accept new files in MVP.
 
