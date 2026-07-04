@@ -18,7 +18,7 @@ export default function LoginPage() {
       >
         <Card className="w-full max-w-xl rounded-[2rem] border-[#ded5c8] bg-white shadow-xl shadow-[#9c7d5520]">
           <CardHeader className="space-y-2">
-            <CardTitle className="text-3xl">Sign in</CardTitle>
+            <CardTitle className="text-3xl">Log in</CardTitle>
             <p className="text-sm leading-6 text-[#66736f]">
               UI-only authentication preview. No credentials are submitted.
             </p>
@@ -74,7 +74,7 @@ export default function LoginPage() {
               asChild
               className="h-12 w-full rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
             >
-              <Link href="/dashboard">Sign in</Link>
+              <Link href="/dashboard">Log in</Link>
             </Button>
             <p className="text-center text-sm text-[#66736f]">
               New here?{" "}
