@@ -33,6 +33,7 @@ export default async function DashboardProfilePage() {
         <SpecialistProfileForm
           initialError={error?.message ?? null}
           initialProfile={profile}
+          userEmail={user.email ?? null}
           userId={user.id}
         />
       ) : (

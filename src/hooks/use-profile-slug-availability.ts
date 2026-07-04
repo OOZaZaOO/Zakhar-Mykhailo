@@ -19,9 +19,11 @@ type SlugAvailabilityStatus =
 
 export function useProfileSlugAvailability({
   currentProfileId,
+  enabled = true,
   slug,
 }: {
   currentProfileId?: string;
+  enabled?: boolean;
   slug: string;
 }) {
   const normalizedSlug = useMemo(() => normalizeProfileSlug(slug), [slug]);
@@ -32,6 +34,10 @@ export function useProfileSlugAvailability({
   } | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     if (!normalizedSlug) {
       return;
     }
@@ -83,7 +89,14 @@ export function useProfileSlugAvailability({
       isCurrentCheck = false;
       window.clearTimeout(timeoutId);
     };
-  }, [currentProfileId, normalizedSlug]);
+  }, [currentProfileId, enabled, normalizedSlug]);
+
+  if (!enabled) {
+    return {
+      message: "Slug was generated from your email. You can edit it.",
+      status: "idle" as const,
+    };
+  }
 
   if (!normalizedSlug) {
     return { message: "Slug is required.", status: "idle" as const };

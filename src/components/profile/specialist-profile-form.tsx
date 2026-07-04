@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProfileSlugAvailability } from "@/hooks/use-profile-slug-availability";
 import { useSpecialistProfile } from "@/hooks/use-specialist-profile";
 import {
-  generateProfileSlug,
+  generateProfileSlugFromEmail,
   normalizeProfileSlug,
 } from "@/lib/profile/service";
 import type { SpecialistProfile } from "@/lib/profile/types";
@@ -20,6 +20,7 @@ import type { Json } from "@/lib/supabase/types";
 type SpecialistProfileFormProps = {
   initialError: string | null;
   initialProfile: SpecialistProfile | null;
+  userEmail: string | null;
   userId: string;
 };
 
@@ -41,6 +42,7 @@ function parseLanguages(value: string) {
 export function SpecialistProfileForm({
   initialError,
   initialProfile,
+  userEmail,
   userId,
 }: SpecialistProfileFormProps) {
   const { error, isSaving, profile, saveProfile, success } =
@@ -52,10 +54,10 @@ export function SpecialistProfileForm({
   const [displayName, setDisplayName] = useState(
     initialProfile?.display_name ?? "",
   );
-  const [slug, setSlug] = useState(initialProfile?.slug ?? "");
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(
-    Boolean(initialProfile?.slug),
+  const [slug, setSlug] = useState(
+    initialProfile?.slug ?? generateProfileSlugFromEmail(userEmail),
   );
+  const [hasUserEditedSlug, setHasUserEditedSlug] = useState(false);
   const [profession, setProfession] = useState(
     initialProfile?.profession ?? "",
   );
@@ -87,30 +89,19 @@ export function SpecialistProfileForm({
   const { message: slugAvailabilityMessage, status: slugAvailabilityStatus } =
     useProfileSlugAvailability({
       currentProfileId: profile?.id,
+      enabled: hasUserEditedSlug,
       slug,
     });
   const isSlugUnavailable =
     !slug ||
-    slugAvailabilityStatus === "taken" ||
-    slugAvailabilityStatus === "invalid" ||
-    slugAvailabilityStatus === "checking";
-
-  function handleDisplayNameChange(value: string) {
-    setDisplayName(value);
-
-    if (!isSlugManuallyEdited) {
-      setSlug(generateProfileSlug(value));
-    }
-  }
+    (hasUserEditedSlug &&
+      (slugAvailabilityStatus === "taken" ||
+        slugAvailabilityStatus === "invalid" ||
+        slugAvailabilityStatus === "checking"));
 
   function handleSlugChange(value: string) {
+    setHasUserEditedSlug(true);
     setSlug(normalizeProfileSlug(value));
-    setIsSlugManuallyEdited(true);
-  }
-
-  function resetSlugFromName() {
-    setSlug(generateProfileSlug(displayName));
-    setIsSlugManuallyEdited(false);
   }
 
   function parseContactLinks() {
@@ -174,6 +165,7 @@ export function SpecialistProfileForm({
     if (savedProfile) {
       setAvatarUrl(savedProfile.avatar_url ?? "");
       setSlug(savedProfile.slug);
+      setHasUserEditedSlug(false);
       setContactLinks(stringifyContactLinks(savedProfile.contact_links));
     }
   }
@@ -214,22 +206,13 @@ export function SpecialistProfileForm({
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="display_name"
-                onChange={(event) => handleDisplayNameChange(event.target.value)}
+                onChange={(event) => setDisplayName(event.target.value)}
                 placeholder="John Smith"
                 value={displayName}
               />
             </div>
             <div>
-              <div className="flex items-center justify-between gap-3">
-                <Label htmlFor="slug">Public slug</Label>
-                <button
-                  className="text-xs font-bold text-[#1f5f55] transition hover:text-[#174a43]"
-                  onClick={resetSlugFromName}
-                  type="button"
-                >
-                  Reset from name
-                </button>
-              </div>
+              <Label htmlFor="slug">Public slug</Label>
               <Input
                 className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                 id="slug"

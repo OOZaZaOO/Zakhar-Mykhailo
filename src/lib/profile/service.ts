@@ -24,6 +24,12 @@ export function generateProfileSlug(value: string) {
   return normalizeProfileSlug(value);
 }
 
+export function generateProfileSlugFromEmail(value?: string | null) {
+  const emailName = value?.split("@")[0] ?? "";
+
+  return generateProfileSlug(emailName);
+}
+
 export function validateSpecialistProfileForm(
   values: Pick<
     SpecialistProfileFormValues,
