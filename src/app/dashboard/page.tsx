@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { dashboardStats, recentBookings, sessions } from "@/data/mock";
+import { dashboardStats, sessions } from "@/data/mock";
 
 export default function DashboardPage() {
   return (
@@ -37,7 +37,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="mt-6">
         <Card className="rounded-3xl border-[#ded5c8] bg-white">
           <CardHeader>
             <CardTitle>Today&apos;s sessions</CardTitle>
@@ -69,22 +69,6 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               </article>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-3xl border-[#ded5c8] bg-white">
-          <CardHeader>
-            <CardTitle>Recent activity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {recentBookings.map((item) => (
-              <div
-                className="rounded-2xl bg-[#f7f3ec] p-4 text-sm font-medium text-[#4f5f5b]"
-                key={item}
-              >
-                {item}
-              </div>
             ))}
           </CardContent>
         </Card>
