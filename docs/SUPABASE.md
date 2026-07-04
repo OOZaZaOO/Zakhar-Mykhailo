@@ -32,7 +32,7 @@ Empty placeholders live in `.env.example`.
 - `src/lib/supabase/server.ts`: server-side Supabase client factory for App Router server components.
 - `src/lib/supabase/types.ts`: local Supabase database types.
 - `src/lib/auth.ts`: account type and auth redirect helpers.
-- `middleware.ts`: protects authenticated workspace routes and refreshes auth cookies.
+- `middleware.ts`: protects dashboard routes and refreshes auth cookies.
 - `src/app/auth/callback/route.ts`: handles Supabase email auth callback redirects.
 - `src/app/dashboard/profile/page.tsx`: loads the authenticated specialist profile.
 - `src/components/profile/specialist-profile-form.tsx`: creates and updates specialist profile records.
@@ -44,8 +44,9 @@ Empty placeholders live in `.env.example`.
 - Generated Supabase database types from the remote database after migrations are applied.
 - Client profile persistence.
 - Services CRUD.
+- Booking persistence.
+- Session persistence.
 - Storage.
 - Realtime chat.
-- Booking persistence.
 - Payments.
 - Application business logic.

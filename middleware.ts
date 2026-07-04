@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import type { Database } from "@/lib/supabase/types";
 
-const protectedPathPrefixes = ["/dashboard", "/session"];
+const protectedPathPrefixes = ["/dashboard"];
 
 function isProtectedPath(pathname: string) {
   return protectedPathPrefixes.some(

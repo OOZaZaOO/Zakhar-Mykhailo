@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authProviders } from "@/data/mock";
-import { getDashboardPathForAccountType } from "@/lib/auth";
+import { getLoginPathForAccountType } from "@/lib/auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -45,7 +45,7 @@ export default function LoginPage() {
     const redirectedFrom = new URLSearchParams(window.location.search).get(
       "redirectedFrom",
     );
-    const accountPath = getDashboardPathForAccountType(
+    const accountPath = getLoginPathForAccountType(
       data.user.user_metadata.account_type,
     );
     const redirectPath =

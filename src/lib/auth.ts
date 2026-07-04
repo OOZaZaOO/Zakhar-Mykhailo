@@ -9,3 +9,7 @@ export function isAccountType(value: unknown): value is AccountType {
 export function getDashboardPathForAccountType(value: unknown) {
   return value === "client" ? "/dashboard/client" : "/dashboard/profile";
 }
+
+export function getLoginPathForAccountType(value: unknown) {
+  return value === "client" ? "/dashboard/client" : "/dashboard";
+}
