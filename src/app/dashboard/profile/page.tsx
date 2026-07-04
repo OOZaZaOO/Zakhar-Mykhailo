@@ -1,75 +1,63 @@
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { specialist } from "@/data/mock";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function DashboardProfilePage() {
+import { SpecialistProfileForm } from "@/components/profile/specialist-profile-form";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export default async function DashboardProfilePage() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const accountType = user.user_metadata.account_type;
+  const isSpecialistAccount = accountType !== "client";
+
+  const { data: profile, error } = isSpecialistAccount
+    ? await supabase
+        .from("specialist_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle()
+    : { data: null, error: null };
+
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
-            Specialist profile
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-normal">
-            Profile setup
-          </h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-[#5a6865]">
-            This temporary authenticated screen confirms that specialist
-            accounts land in the right workspace. Profile editing will be added
-            after profile CRUD is implemented.
-          </p>
-        </div>
-        <Badge className="w-fit rounded-full bg-[#eef1da] text-[#5d6b2f] hover:bg-[#eef1da]">
-          Auth ready
-        </Badge>
-      </div>
-
-      <Card className="mt-8 rounded-3xl border-[#ded5c8] bg-white">
-        <CardHeader>
-          <CardTitle>Mock specialist profile</CardTitle>
-          <p className="text-sm text-[#66736f]">
-            These fields are still mocked. No profile table is written from this
-            screen yet.
-          </p>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <Label>Name</Label>
-            <Input
-              className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-              readOnly
-              value={specialist.name}
-            />
-          </div>
-          <div>
-            <Label>Profession</Label>
-            <Input
-              className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-              readOnly
-              value={specialist.title}
-            />
-          </div>
-          <div>
-            <Label>Public slug</Label>
-            <Input
-              className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-              readOnly
-              value={specialist.slug}
-            />
-          </div>
-          <div>
-            <Label>Timezone</Label>
-            <Input
-              className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-              readOnly
-              value={specialist.timezone}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {isSpecialistAccount ? (
+        <SpecialistProfileForm
+          initialError={error?.message ?? null}
+          initialProfile={profile}
+          userId={user.id}
+        />
+      ) : (
+        <Card className="rounded-3xl border-[#ded5c8] bg-white">
+          <CardHeader>
+            <CardTitle>Specialist profile unavailable</CardTitle>
+            <p className="text-sm leading-6 text-[#66736f]">
+              This area is for specialist accounts. Client accounts use the
+              client cabinet to view session history, materials, and archived
+              workspaces.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Button
+              asChild
+              className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+            >
+              <Link href="/dashboard/client">Open client cabinet</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </DashboardLayout>
   );
 }

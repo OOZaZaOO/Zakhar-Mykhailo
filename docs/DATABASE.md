@@ -256,9 +256,11 @@ Stores public and private profile information for specialists.
 - Bio.
 - Timezone.
 - Visibility.
+- Create, read, and update flow at `/dashboard/profile`.
 
 ### Delayed
 
+- Avatar upload.
 - Private invitation codes.
 - Themes.
 - Custom domains.
