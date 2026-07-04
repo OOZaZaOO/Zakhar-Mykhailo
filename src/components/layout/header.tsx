@@ -80,22 +80,24 @@ export function Header() {
         <Link className="text-xl font-semibold tracking-tight" href="/">
           BuyMyTime
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium text-[#53615f] md:flex">
-          {publicLinks.map((link) => (
-            <Link
-              className={cn(
-                "transition hover:text-[#1f5f55]",
-                !link.href.includes("#") &&
-                  pathname === link.href &&
-                  "text-[#1f5f55]",
-              )}
-              href={link.href}
-              key={link.href}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {!isAuthLoading && !headerUser ? (
+          <nav className="hidden items-center gap-6 text-sm font-medium text-[#53615f] md:flex">
+            {publicLinks.map((link) => (
+              <Link
+                className={cn(
+                  "transition hover:text-[#1f5f55]",
+                  !link.href.includes("#") &&
+                    pathname === link.href &&
+                    "text-[#1f5f55]",
+                )}
+                href={link.href}
+                key={link.href}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
         <div className="flex items-center gap-2">
           {headerUser ? (
             <Button

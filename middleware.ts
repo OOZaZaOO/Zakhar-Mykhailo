@@ -1,14 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { getLoginPathForAccountType } from "@/lib/auth";
 import type { Database } from "@/lib/supabase/types";
 
 const protectedPathPrefixes = ["/dashboard"];
+const guestOnlyPaths = ["/", "/login", "/register"];
 
 function isProtectedPath(pathname: string) {
   return protectedPathPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+function isGuestOnlyPath(pathname: string) {
+  return guestOnlyPaths.includes(pathname);
 }
 
 export async function middleware(request: NextRequest) {
@@ -56,6 +62,16 @@ export async function middleware(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirectedFrom", request.nextUrl.pathname);
+
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && isGuestOnlyPath(request.nextUrl.pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = getLoginPathForAccountType(
+      user.user_metadata.account_type,
+    );
+    redirectUrl.search = "";
 
     return NextResponse.redirect(redirectUrl);
   }
