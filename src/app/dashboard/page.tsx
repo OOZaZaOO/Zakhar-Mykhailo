@@ -18,10 +18,7 @@ export default async function DashboardPage() {
   const { data: profile } = user
     ? await getOwnSpecialistProfile(supabase, user.id)
     : { data: null };
-  const completion = getProfileCompletion({
-    profile,
-    userMetadata: user?.user_metadata,
-  });
+  const completion = getProfileCompletion(profile);
   const publicProfileHref = profile?.slug
     ? `/profile/${profile.slug}`
     : "/dashboard/profile";
@@ -42,7 +39,7 @@ export default async function DashboardPage() {
             next client interaction.
           </p>
         </div>
-        {completion.status === "complete" ? (
+        {completion.isComplete ? (
           <Button
             asChild
             className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
@@ -53,7 +50,7 @@ export default async function DashboardPage() {
           <Button
             className="rounded-full"
             disabled
-            title="Complete your profile to unlock this feature."
+            title="Complete your profile first."
           >
             View public profile
           </Button>

@@ -77,7 +77,7 @@ function ProfileOwnerGatedState() {
               Locked for now
             </Badge>
             <CardTitle className="pt-3 text-3xl">
-              Complete your profile first.
+              Complete your profile to unlock this feature.
             </CardTitle>
             <p className="text-sm leading-6 text-[#66736f]">
               Finish the required profile details before using your public
@@ -247,10 +247,7 @@ export default async function PublicProfilePage({
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const completion = getProfileCompletion({
-      profile: publicProfile,
-      userMetadata: user?.user_metadata,
-    });
+    const completion = getProfileCompletion(publicProfile);
 
     if (
       user?.id === publicProfile.user_id &&

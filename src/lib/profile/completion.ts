@@ -1,19 +1,11 @@
 import { getCountryByTimezone } from "@/lib/timezones";
 import type { SpecialistProfile } from "@/lib/profile/types";
 
-export type ProfileCompletionStatus = "complete" | "incomplete";
-
 export type ProfileCompletionField =
-  | "firstName"
-  | "lastName"
   | "displayName"
-  | "profession"
   | "slug"
   | "country"
-  | "timezone"
-  | "bio"
-  | "avatar"
-  | "languages";
+  | "timezone";
 
 export type ProfileGatedFeature =
   | "bookingConfiguration"
@@ -23,88 +15,63 @@ export type ProfileGatedFeature =
 
 export type ProfileCompletion = {
   completedFields: ProfileCompletionField[];
+  isComplete: boolean;
   missingFields: ProfileCompletionField[];
   percentage: number;
-  status: ProfileCompletionStatus;
   totalFields: number;
-};
-
-type ProfileCompletionInput = {
-  profile: SpecialistProfile | null;
-  userMetadata?: {
-    first_name?: unknown;
-    last_name?: unknown;
-  } | null;
 };
 
 const requiredProfileFields: Array<{
   field: ProfileCompletionField;
-  isComplete: (input: ProfileCompletionInput) => boolean;
+  label: string;
+  isComplete: (profile: SpecialistProfile | null) => boolean;
 }> = [
   {
-    field: "firstName",
-    isComplete: ({ userMetadata }) =>
-      typeof userMetadata?.first_name === "string" &&
-      userMetadata.first_name.trim().length > 0,
-  },
-  {
-    field: "lastName",
-    isComplete: ({ userMetadata }) =>
-      typeof userMetadata?.last_name === "string" &&
-      userMetadata.last_name.trim().length > 0,
-  },
-  {
     field: "displayName",
-    isComplete: ({ profile }) => Boolean(profile?.display_name.trim()),
-  },
-  {
-    field: "profession",
-    isComplete: ({ profile }) => Boolean(profile?.profession.trim()),
+    label: "Visible name",
+    isComplete: (profile) => Boolean(profile?.display_name.trim()),
   },
   {
     field: "slug",
-    isComplete: ({ profile }) => Boolean(profile?.slug.trim()),
+    label: "Public slug",
+    isComplete: (profile) => Boolean(profile?.slug.trim()),
   },
   {
     field: "country",
-    isComplete: ({ profile }) =>
+    label: "Country",
+    isComplete: (profile) =>
       Boolean(profile?.timezone && getCountryByTimezone(profile.timezone)),
   },
   {
     field: "timezone",
-    isComplete: ({ profile }) => Boolean(profile?.timezone.trim()),
-  },
-  {
-    field: "bio",
-    isComplete: ({ profile }) => Boolean(profile?.bio.trim()),
-  },
-  {
-    field: "avatar",
-    isComplete: ({ profile }) => Boolean(profile?.avatar_url),
-  },
-  {
-    field: "languages",
-    isComplete: ({ profile }) => Boolean(profile?.languages.length),
+    label: "Timezone",
+    isComplete: (profile) => Boolean(profile?.timezone.trim()),
   },
 ];
 
-export function getProfileCompletion(input: ProfileCompletionInput) {
+export function getProfileCompletion(profile: SpecialistProfile | null) {
   const completedFields = requiredProfileFields
-    .filter((item) => item.isComplete(input))
+    .filter((item) => item.isComplete(profile))
     .map((item) => item.field);
   const missingFields = requiredProfileFields
-    .filter((item) => !item.isComplete(input))
+    .filter((item) => !item.isComplete(profile))
     .map((item) => item.field);
   const totalFields = requiredProfileFields.length;
   const percentage = Math.round((completedFields.length / totalFields) * 100);
 
   return {
     completedFields,
+    isComplete: missingFields.length === 0,
     missingFields,
     percentage,
-    status: missingFields.length === 0 ? "complete" : "incomplete",
     totalFields,
   } satisfies ProfileCompletion;
+}
+
+export function getProfileCompletionFieldLabel(field: ProfileCompletionField) {
+  return (
+    requiredProfileFields.find((item) => item.field === field)?.label ?? field
+  );
 }
 
 export function canAccessProfileFeature(
@@ -113,5 +80,5 @@ export function canAccessProfileFeature(
 ) {
   void feature;
 
-  return completion.status === "complete";
+  return completion.isComplete;
 }

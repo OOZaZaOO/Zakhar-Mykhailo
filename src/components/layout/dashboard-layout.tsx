@@ -22,10 +22,7 @@ export async function DashboardLayout({
       : { data: null };
   const completion =
     navigationRole === "specialist"
-      ? getProfileCompletion({
-          profile,
-          userMetadata: user?.user_metadata,
-        })
+      ? getProfileCompletion(profile)
       : undefined;
   const navigationItems = getNavigationItems({
     completion,

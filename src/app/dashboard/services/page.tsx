@@ -22,15 +22,12 @@ export default async function ServicesPage() {
   }
 
   const { data: profile } = await getOwnSpecialistProfile(supabase, user.id);
-  const completion = getProfileCompletion({
-    profile,
-    userMetadata: user.user_metadata,
-  });
+  const completion = getProfileCompletion(profile);
 
   if (!canAccessProfileFeature(completion, "services")) {
     return (
       <DashboardLayout>
-        <ProfileGatedEmptyState title="Complete your profile first." />
+        <ProfileGatedEmptyState />
       </DashboardLayout>
     );
   }
@@ -38,7 +35,7 @@ export default async function ServicesPage() {
   if (!profile) {
     return (
       <DashboardLayout>
-        <ProfileGatedEmptyState title="Complete your profile first." />
+        <ProfileGatedEmptyState />
       </DashboardLayout>
     );
   }

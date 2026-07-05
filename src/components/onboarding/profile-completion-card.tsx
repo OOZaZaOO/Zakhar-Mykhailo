@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { ProfileCompletion } from "@/lib/profile/completion";
+import {
+  getProfileCompletionFieldLabel,
+  type ProfileCompletion,
+} from "@/lib/profile/completion";
 
 type ProfileCompletionCardProps = {
   completion: ProfileCompletion;
@@ -15,7 +18,7 @@ export function ProfileCompletionCard({
 }: ProfileCompletionCardProps) {
   const [isDismissed, setIsDismissed] = useState(false);
 
-  if (completion.status === "complete" || isDismissed) {
+  if (completion.isComplete || isDismissed) {
     return null;
   }
 
@@ -24,17 +27,21 @@ export function ProfileCompletionCard({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
-            Profile completion
+            Profile setup
           </p>
-          <div className="mt-3 flex items-end gap-3">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
             <p className="text-4xl font-semibold tracking-normal text-[#24312f]">
-              {completion.percentage}%
-            </p>
-            <p className="pb-1 text-sm font-medium text-[#66736f]">
-              Complete your profile before configuring your services and
-              availability.
+              {completion.percentage}% complete
             </p>
           </div>
+          <p className="mt-3 text-sm font-medium text-[#66736f]">
+            Complete these fields to unlock your workspace:
+          </p>
+          <ul className="mt-3 space-y-1 text-sm font-semibold text-[#5a6865]">
+            {completion.missingFields.map((field) => (
+              <li key={field}>• {getProfileCompletionFieldLabel(field)}</li>
+            ))}
+          </ul>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button

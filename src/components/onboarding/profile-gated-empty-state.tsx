@@ -7,7 +7,7 @@ type ProfileGatedEmptyStateProps = {
 };
 
 export function ProfileGatedEmptyState({
-  title = "Complete your profile first.",
+  title = "Complete your profile to unlock this feature.",
 }: ProfileGatedEmptyStateProps) {
   return (
     <div className="rounded-3xl border border-[#ded5c8] bg-white p-8 text-center shadow-sm">
@@ -18,8 +18,7 @@ export function ProfileGatedEmptyState({
         {title}
       </h1>
       <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#66736f]">
-        Complete the required profile details before configuring this workspace
-        area.
+        Finish the required profile setup fields to continue.
       </p>
       <Button
         asChild

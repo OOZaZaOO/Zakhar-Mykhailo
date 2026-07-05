@@ -24,19 +24,19 @@ export type NavigationItem =
 export const roleNavigation: Record<NavigationRole, NavigationItem[]> = {
   specialist: [
     { href: "/dashboard", label: "Dashboard", type: "link" },
-    {
-      feature: "calendar",
-      href: "/dashboard/calendar",
-      label: "Calendar",
-      type: "link",
-    },
+    { href: "/dashboard/profile", label: "Profile", type: "link" },
     {
       feature: "services",
       href: "/dashboard/services",
       label: "Services",
       type: "link",
     },
-    { href: "/dashboard/profile", label: "Profile", type: "link" },
+    {
+      feature: "calendar",
+      href: "/dashboard/calendar",
+      label: "Calendar",
+      type: "link",
+    },
     { href: "/dashboard/settings", label: "Settings", type: "link" },
     { href: "/dashboard/archive", label: "Archive", type: "link" },
     {
@@ -88,7 +88,7 @@ export function getNavigationItems({
       ...item,
       disabled: Boolean(isDisabled),
       disabledReason: isDisabled
-        ? "Complete your profile to unlock this feature."
+        ? "Complete your profile first."
         : undefined,
       href,
     };

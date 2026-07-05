@@ -25,10 +25,7 @@ export default async function CalendarPage() {
   }
 
   const { data: profile } = await getOwnSpecialistProfile(supabase, user.id);
-  const completion = getProfileCompletion({
-    profile,
-    userMetadata: user.user_metadata,
-  });
+  const completion = getProfileCompletion(profile);
 
   if (!canAccessProfileFeature(completion, "calendar")) {
     return (
