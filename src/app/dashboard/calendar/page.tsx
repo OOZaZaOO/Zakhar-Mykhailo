@@ -2,10 +2,15 @@ import { redirect } from "next/navigation";
 
 import { BookingStatusToggle } from "@/components/calendar/booking-status-toggle";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ProfileGatedEmptyState } from "@/components/onboarding/profile-gated-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calendarDays } from "@/data/mock";
+import {
+  canAccessProfileFeature,
+  getProfileCompletion,
+} from "@/lib/profile/completion";
 import { getOwnSpecialistProfile } from "@/lib/profile/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -20,6 +25,18 @@ export default async function CalendarPage() {
   }
 
   const { data: profile } = await getOwnSpecialistProfile(supabase, user.id);
+  const completion = getProfileCompletion({
+    profile,
+    userMetadata: user.user_metadata,
+  });
+
+  if (!canAccessProfileFeature(completion, "calendar")) {
+    return (
+      <DashboardLayout>
+        <ProfileGatedEmptyState />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

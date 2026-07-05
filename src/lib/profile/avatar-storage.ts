@@ -4,7 +4,7 @@ import type { Database } from "@/lib/supabase/types";
 
 type ProfileClient = SupabaseClient<Database>;
 
-export const specialistAvatarBucket = "specialist-avatars";
+export const specialistAvatarBucket = "avatars";
 
 const avatarExtensionByMimeType: Record<string, string> = {
   "image/jpeg": "jpg",

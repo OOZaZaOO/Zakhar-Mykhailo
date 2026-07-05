@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { AvatarUpload } from "@/components/profile/avatar-upload";
@@ -17,6 +18,7 @@ import { languageOptions, normalizeLanguageList } from "@/lib/languages";
 import {
   generateProfileSlugFromIdentity,
   normalizeProfileSlug,
+  profileSlugPattern,
 } from "@/lib/profile/service";
 import type { SpecialistProfile } from "@/lib/profile/types";
 import type { Json } from "@/lib/supabase/types";
@@ -54,6 +56,18 @@ type ProfileFormSnapshot = {
   workingRules: string;
 };
 
+type ProfileFieldErrors = {
+  displayName?: string;
+  profession?: string;
+  slug?: string;
+  timezone?: string;
+};
+
+const baseInputClass = "mt-2 h-11 rounded-xl border-[#d9ceb9]";
+const invalidInputClass =
+  "border-[#9a4c2f] bg-[#fff7f4] ring-2 ring-[#f0b9a8]";
+const fieldErrorClass = "mt-2 text-xs font-semibold text-[#9a4c2f]";
+
 function getSnapshotFromProfile({
   fallbackDisplayName,
   fallbackSlug,
@@ -88,6 +102,43 @@ function areSnapshotsEqual(
   return JSON.stringify(currentSnapshot) === JSON.stringify(savedSnapshot);
 }
 
+function getProfileFieldErrors({
+  displayName,
+  profession,
+  slug,
+  timezone,
+}: {
+  displayName: string;
+  profession: string;
+  slug: string;
+  timezone: string;
+}) {
+  const nextErrors: ProfileFieldErrors = {};
+  const normalizedSlug = normalizeProfileSlug(slug);
+
+  if (!displayName.trim()) {
+    nextErrors.displayName = "Visible name is required.";
+  }
+
+  if (!normalizedSlug) {
+    nextErrors.slug = "Public slug is required.";
+  } else if (!profileSlugPattern.test(normalizedSlug)) {
+    nextErrors.slug = "Use lowercase letters, numbers, and hyphens only.";
+  }
+
+  if (!profession.trim()) {
+    nextErrors.profession = "Profession is required.";
+  }
+
+  if (!timezone.trim()) {
+    nextErrors.timezone = "Select a timezone.";
+  } else if (!isValidIanaTimezone(timezone)) {
+    nextErrors.timezone = "Select a valid timezone from the list.";
+  }
+
+  return nextErrors;
+}
+
 export function SpecialistProfileForm({
   initialError,
   initialProfile,
@@ -97,6 +148,7 @@ export function SpecialistProfileForm({
   userId,
   userLastName,
 }: SpecialistProfileFormProps) {
+  const router = useRouter();
   const fallbackSlug = generateProfileSlugFromIdentity({
     email: userEmail,
     firstName: userFirstName,
@@ -139,11 +191,12 @@ export function SpecialistProfileForm({
   const [countrySearch, setCountrySearch] = useState(
     initialSavedSnapshot.countrySearch,
   );
+  const [isCountrySearchOpen, setIsCountrySearchOpen] = useState(false);
   const [timezone, setTimezone] = useState(initialSavedSnapshot.timezone);
   const [timezoneSearch, setTimezoneSearch] = useState(
     initialSavedSnapshot.timezoneSearch,
   );
-  const [timezoneError, setTimezoneError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [selectedLanguages, setSelectedLanguages] = useState(
     initialSavedSnapshot.languages,
   );
@@ -168,12 +221,10 @@ export function SpecialistProfileForm({
       enabled: hasUserEditedSlug,
       slug,
     });
-  const isSlugUnavailable =
-    !slug ||
-    (hasUserEditedSlug &&
-      (slugAvailabilityStatus === "taken" ||
-        slugAvailabilityStatus === "invalid" ||
-        slugAvailabilityStatus === "checking"));
+  const isSlugAvailabilityBlocking =
+    hasUserEditedSlug &&
+    (slugAvailabilityStatus === "taken" ||
+      slugAvailabilityStatus === "checking");
   const countryTimezonesForSelection = getTimezonesByCountry(country);
   const timezoneOptions =
     countryTimezonesForSelection.length > 0
@@ -184,7 +235,12 @@ export function SpecialistProfileForm({
       const normalizedCountry = item.country.toLowerCase();
       const normalizedSearch = countrySearch.trim().toLowerCase();
 
-      return normalizedSearch && normalizedCountry.includes(normalizedSearch);
+      return (
+        isCountrySearchOpen &&
+        normalizedSearch &&
+        normalizedCountry !== normalizedSearch &&
+        normalizedCountry.includes(normalizedSearch)
+      );
     })
     .slice(0, 6);
   const timezoneSuggestions = timezoneOptions
@@ -250,6 +306,10 @@ export function SpecialistProfileForm({
 
   function handleSlugChange(value: string) {
     setHasUserEditedSlug(true);
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      slug: undefined,
+    }));
     setSlug(normalizeProfileSlug(value));
   }
 
@@ -258,7 +318,11 @@ export function SpecialistProfileForm({
 
     setCountry(value);
     setCountrySearch(value);
-    setTimezoneError(null);
+    setIsCountrySearchOpen(false);
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      timezone: undefined,
+    }));
     setTimezone(nextTimezones.length === 1 ? nextTimezones[0] : "");
     setTimezoneSearch(nextTimezones.length === 1 ? nextTimezones[0] : "");
   }
@@ -266,7 +330,10 @@ export function SpecialistProfileForm({
   function selectTimezone(value: string) {
     setTimezone(value);
     setTimezoneSearch(value);
-    setTimezoneError(null);
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      timezone: undefined,
+    }));
   }
 
   function addLanguage(language: string) {
@@ -299,7 +366,8 @@ export function SpecialistProfileForm({
     setTimezoneSearch(snapshot.timezoneSearch);
     setWorkingRules(snapshot.workingRules);
     setLanguageSearch("");
-    setTimezoneError(null);
+    setIsCountrySearchOpen(false);
+    setFieldErrors({});
     setHasUserEditedSlug(false);
     setTemporaryAvatar({
       file: null,
@@ -325,15 +393,16 @@ export function SpecialistProfileForm({
       return;
     }
 
-    setTimezoneError(null);
+    const nextFieldErrors = getProfileFieldErrors({
+      displayName,
+      profession,
+      slug,
+      timezone,
+    });
 
-    if (!timezone) {
-      setTimezoneError("Select a timezone before saving your profile.");
-      return;
-    }
+    setFieldErrors(nextFieldErrors);
 
-    if (!isValidIanaTimezone(timezone)) {
-      setTimezoneError("Select a valid IANA timezone before saving.");
+    if (Object.keys(nextFieldErrors).length > 0) {
       return;
     }
 
@@ -373,6 +442,7 @@ export function SpecialistProfileForm({
       setSavedSnapshot(nextSavedSnapshot);
       setHasUserEditedSlug(false);
       setAvatarRenderKey((currentKey) => currentKey + 1);
+      router.refresh();
     }
   }
 
@@ -437,12 +507,24 @@ export function SpecialistProfileForm({
             <div>
               <Label htmlFor="display_name">Visible name</Label>
               <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                aria-invalid={Boolean(fieldErrors.displayName)}
+                className={`${baseInputClass} ${
+                  fieldErrors.displayName ? invalidInputClass : ""
+                }`}
                 id="display_name"
-                onChange={(event) => setDisplayName(event.target.value)}
+                onChange={(event) => {
+                  setDisplayName(event.target.value);
+                  setFieldErrors((currentErrors) => ({
+                    ...currentErrors,
+                    displayName: undefined,
+                  }));
+                }}
                 placeholder="Anna, Dr. Anna, Psychologist Anna"
                 value={displayName}
               />
+              {fieldErrors.displayName ? (
+                <p className={fieldErrorClass}>{fieldErrors.displayName}</p>
+              ) : null}
               <p className="mt-2 text-xs font-medium text-[#66736f]">
                 Visible name is public. Legal account name:{" "}
                 {userFullName || "Not available"}
@@ -451,12 +533,18 @@ export function SpecialistProfileForm({
             <div>
               <Label htmlFor="slug">Public slug</Label>
               <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                aria-invalid={Boolean(fieldErrors.slug)}
+                className={`${baseInputClass} ${
+                  fieldErrors.slug ? invalidInputClass : ""
+                }`}
                 id="slug"
                 onChange={(event) => handleSlugChange(event.target.value)}
                 placeholder="john-smith"
                 value={slug}
               />
+              {fieldErrors.slug ? (
+                <p className={fieldErrorClass}>{fieldErrors.slug}</p>
+              ) : null}
               <p className="mt-2 break-all text-xs font-medium text-[#66736f]">
                 Public URL: {previewUrl}
               </p>
@@ -476,12 +564,24 @@ export function SpecialistProfileForm({
             <div>
               <Label htmlFor="profession">Profession</Label>
               <Input
-                className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                aria-invalid={Boolean(fieldErrors.profession)}
+                className={`${baseInputClass} ${
+                  fieldErrors.profession ? invalidInputClass : ""
+                }`}
                 id="profession"
-                onChange={(event) => setProfession(event.target.value)}
+                onChange={(event) => {
+                  setProfession(event.target.value);
+                  setFieldErrors((currentErrors) => ({
+                    ...currentErrors,
+                    profession: undefined,
+                  }));
+                }}
                 placeholder="Psychologist"
                 value={profession}
               />
+              {fieldErrors.profession ? (
+                <p className={fieldErrorClass}>{fieldErrors.profession}</p>
+              ) : null}
             </div>
             <div>
               <Label htmlFor="country">Country</Label>
@@ -489,12 +589,17 @@ export function SpecialistProfileForm({
                 <Input
                   className="h-11 rounded-xl border-[#d9ceb9]"
                   id="country"
+                  onBlur={() => {
+                    window.setTimeout(() => setIsCountrySearchOpen(false), 120);
+                  }}
                   onChange={(event) => {
                     setCountrySearch(event.target.value);
+                    setIsCountrySearchOpen(true);
                     setCountry("");
                     setTimezone("");
                     setTimezoneSearch("");
                   }}
+                  onFocus={() => setIsCountrySearchOpen(true)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && countrySuggestions[0]) {
                       event.preventDefault();
@@ -524,12 +629,18 @@ export function SpecialistProfileForm({
               <Label htmlFor="timezone">Timezone</Label>
               <div className="relative mt-2">
                 <Input
-                  className="h-11 rounded-xl border-[#d9ceb9]"
+                  aria-invalid={Boolean(fieldErrors.timezone)}
+                  className={`h-11 rounded-xl border-[#d9ceb9] ${
+                    fieldErrors.timezone ? invalidInputClass : ""
+                  }`}
                   id="timezone"
                   onChange={(event) => {
                     setTimezoneSearch(event.target.value);
                     setTimezone("");
-                    setTimezoneError(null);
+                    setFieldErrors((currentErrors) => ({
+                      ...currentErrors,
+                      timezone: undefined,
+                    }));
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && timezoneSuggestions[0]) {
@@ -555,6 +666,9 @@ export function SpecialistProfileForm({
                   </div>
                 ) : null}
               </div>
+              {fieldErrors.timezone ? (
+                <p className={fieldErrorClass}>{fieldErrors.timezone}</p>
+              ) : null}
             </div>
             <div className="sm:col-span-2">
               <div className="rounded-2xl bg-[#f7f3ec] p-4 text-sm leading-6 text-[#5a6865]">
@@ -655,9 +769,9 @@ export function SpecialistProfileForm({
           </CardContent>
         </Card>
 
-        {error || timezoneError ? (
+        {error ? (
           <p className="rounded-2xl bg-[#f6ddd4] px-4 py-3 text-sm font-medium leading-6 text-[#9a4c2f]">
-            {error ?? timezoneError}
+            {error}
           </p>
         ) : null}
         {success ? (
@@ -675,7 +789,7 @@ export function SpecialistProfileForm({
           formId={profileFormId}
           isSaving={isSaving}
           onCancel={handleCancelChanges}
-          saveDisabled={isSlugUnavailable}
+          saveDisabled={isSlugAvailabilityBlocking}
         />
       ) : null}
     </div>

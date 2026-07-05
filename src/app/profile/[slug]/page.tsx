@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { services } from "@/data/mock";
 import {
+  canAccessProfileFeature,
+  getProfileCompletion,
+} from "@/lib/profile/completion";
+import {
   getPublicSpecialistProfileBySlug,
   getSpecialistProfileBySlug,
 } from "@/lib/profile/service";
@@ -55,6 +59,37 @@ function ProfileUnavailableState({
               className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
             >
               <Link href="/">Back to homepage</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+    </PublicLayout>
+  );
+}
+
+function ProfileOwnerGatedState() {
+  return (
+    <PublicLayout>
+      <section className="mx-auto max-w-3xl px-5 pb-12 sm:px-8">
+        <Card className="rounded-3xl border-[#ded5c8] bg-white">
+          <CardHeader>
+            <Badge className="w-fit rounded-full bg-[#f6ddd4] text-[#9a4c2f] hover:bg-[#f6ddd4]">
+              Locked for now
+            </Badge>
+            <CardTitle className="pt-3 text-3xl">
+              Complete your profile first.
+            </CardTitle>
+            <p className="text-sm leading-6 text-[#66736f]">
+              Finish the required profile details before using your public
+              profile.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Button
+              asChild
+              className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+            >
+              <Link href="/dashboard/profile">Go to Profile</Link>
             </Button>
           </CardContent>
         </Card>
@@ -209,6 +244,21 @@ export default async function PublicProfilePage({
   );
 
   if (publicProfile) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const completion = getProfileCompletion({
+      profile: publicProfile,
+      userMetadata: user?.user_metadata,
+    });
+
+    if (
+      user?.id === publicProfile.user_id &&
+      !canAccessProfileFeature(completion, "publicProfile")
+    ) {
+      return <ProfileOwnerGatedState />;
+    }
+
     return <PublicProfileContent profile={publicProfile} />;
   }
 

@@ -30,6 +30,18 @@ export function Sidebar({ items }: SidebarProps) {
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
+          if (item.disabled) {
+            return (
+              <span
+                className="whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold text-[#a7afac] opacity-70 lg:flex"
+                key={item.href}
+                title={item.disabledReason}
+              >
+                {item.label}
+              </span>
+            );
+          }
+
           return (
             <Link
               className={cn(

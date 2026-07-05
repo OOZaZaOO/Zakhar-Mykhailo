@@ -1,14 +1,34 @@
 import Link from "next/link";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ProfileCompletionCard } from "@/components/onboarding/profile-completion-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dashboardStats, sessions } from "@/data/mock";
+import { getProfileCompletion } from "@/lib/profile/completion";
+import { getOwnSpecialistProfile } from "@/lib/profile/service";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile } = user
+    ? await getOwnSpecialistProfile(supabase, user.id)
+    : { data: null };
+  const completion = getProfileCompletion({
+    profile,
+    userMetadata: user?.user_metadata,
+  });
+  const publicProfileHref = profile?.slug
+    ? `/profile/${profile.slug}`
+    : "/dashboard/profile";
+
   return (
     <DashboardLayout>
+      <ProfileCompletionCard completion={completion} />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
@@ -22,9 +42,22 @@ export default function DashboardPage() {
             next client interaction.
           </p>
         </div>
-        <Button asChild className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]">
-          <Link href="/profile/maya-sterling">View public profile</Link>
-        </Button>
+        {completion.status === "complete" ? (
+          <Button
+            asChild
+            className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+          >
+            <Link href={publicProfileHref}>View public profile</Link>
+          </Button>
+        ) : (
+          <Button
+            className="rounded-full"
+            disabled
+            title="Complete your profile to unlock this feature."
+          >
+            View public profile
+          </Button>
+        )}
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">

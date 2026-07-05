@@ -1,10 +1,42 @@
+import { redirect } from "next/navigation";
+
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { ProfileGatedEmptyState } from "@/components/onboarding/profile-gated-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { services } from "@/data/mock";
+import {
+  canAccessProfileFeature,
+  getProfileCompletion,
+} from "@/lib/profile/completion";
+import { getOwnSpecialistProfile } from "@/lib/profile/service";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await getOwnSpecialistProfile(supabase, user.id);
+  const completion = getProfileCompletion({
+    profile,
+    userMetadata: user.user_metadata,
+  });
+
+  if (!canAccessProfileFeature(completion, "services")) {
+    return (
+      <DashboardLayout>
+        <ProfileGatedEmptyState />
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

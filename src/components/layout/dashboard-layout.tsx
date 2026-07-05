@@ -1,7 +1,9 @@
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
-import { getNavigationRole, roleNavigation } from "@/lib/navigation";
+import { getNavigationItems, getNavigationRole } from "@/lib/navigation";
+import { getProfileCompletion } from "@/lib/profile/completion";
+import { getOwnSpecialistProfile } from "@/lib/profile/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function DashboardLayout({
@@ -14,7 +16,22 @@ export async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
   const navigationRole = getNavigationRole(user?.user_metadata.account_type);
-  const navigationItems = roleNavigation[navigationRole];
+  const { data: profile } =
+    user && navigationRole === "specialist"
+      ? await getOwnSpecialistProfile(supabase, user.id)
+      : { data: null };
+  const completion =
+    navigationRole === "specialist"
+      ? getProfileCompletion({
+          profile,
+          userMetadata: user?.user_metadata,
+        })
+      : undefined;
+  const navigationItems = getNavigationItems({
+    completion,
+    profileSlug: profile?.slug,
+    role: navigationRole,
+  });
 
   return (
     <main className="min-h-screen bg-[#f7f3ec] text-[#1e2725]">
