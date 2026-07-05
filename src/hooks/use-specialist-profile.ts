@@ -3,6 +3,10 @@
 import { useState } from "react";
 
 import {
+  removeSpecialistAvatar,
+  uploadSpecialistAvatar,
+} from "@/lib/profile/avatar-storage";
+import {
   isSpecialistProfileSlugTaken,
   saveSpecialistProfile,
   validateSpecialistProfileForm,
@@ -14,6 +18,10 @@ import type {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function getFriendlyProfileError(message: string) {
+  if (message.includes("Bucket not found")) {
+    return "Avatar storage is not configured yet. Apply the Supabase storage migration and try again.";
+  }
+
   if (message.includes("specialist_profiles_slug_key")) {
     return "This public slug is already taken. Choose another one.";
   }
@@ -74,9 +82,50 @@ export function useSpecialistProfile({
       return null;
     }
 
+    let nextAvatarUrl = values.avatarUrl;
+
+    if (values.avatarShouldRemove && values.avatarUrl) {
+      const { error: removeAvatarError } = await removeSpecialistAvatar({
+        avatarUrl: values.avatarUrl,
+        supabase,
+      });
+
+      if (removeAvatarError) {
+        setError(getFriendlyProfileError(removeAvatarError.message));
+        setIsSaving(false);
+        return null;
+      }
+
+      nextAvatarUrl = "";
+    }
+
+    if (values.avatarFile) {
+      const { error: uploadAvatarError, publicUrl } =
+        await uploadSpecialistAvatar({
+          file: values.avatarFile,
+          supabase,
+          userId: values.userId,
+        });
+
+      if (uploadAvatarError || !publicUrl) {
+        setError(
+          getFriendlyProfileError(
+            uploadAvatarError?.message ?? "Avatar upload failed.",
+          ),
+        );
+        setIsSaving(false);
+        return null;
+      }
+
+      nextAvatarUrl = publicUrl;
+    }
+
     const { data, error: saveError } = await saveSpecialistProfile(
       supabase,
-      values,
+      {
+        ...values,
+        avatarUrl: nextAvatarUrl,
+      },
       profile,
     );
 

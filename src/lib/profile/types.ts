@@ -12,6 +12,8 @@ export type SpecialistProfileUpdate =
 export type SpecialistProfileVisibility = SpecialistProfile["visibility"];
 
 export type SpecialistProfileFormValues = {
+  avatarFile?: File | null;
+  avatarShouldRemove?: boolean;
   avatarUrl: string;
   bio: string;
   contactLinks: Json;

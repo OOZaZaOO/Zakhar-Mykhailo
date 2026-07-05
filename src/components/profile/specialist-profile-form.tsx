@@ -4,8 +4,8 @@ import { X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { AvatarUpload } from "@/components/profile/avatar-upload";
+import { UnsavedChangesBar } from "@/components/shared/unsaved-changes-bar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,6 +28,8 @@ import {
   isValidIanaTimezone,
 } from "@/lib/timezones";
 
+const profileFormId = "specialist-profile-form";
+
 type SpecialistProfileFormProps = {
   initialError: string | null;
   initialProfile: SpecialistProfile | null;
@@ -38,6 +40,54 @@ type SpecialistProfileFormProps = {
   userLastName: string;
 };
 
+type ProfileFormSnapshot = {
+  avatarUrl: string;
+  bio: string;
+  country: string;
+  countrySearch: string;
+  displayName: string;
+  languages: string[];
+  profession: string;
+  slug: string;
+  timezone: string;
+  timezoneSearch: string;
+  workingRules: string;
+};
+
+function getSnapshotFromProfile({
+  fallbackDisplayName,
+  fallbackSlug,
+  profile,
+}: {
+  fallbackDisplayName: string;
+  fallbackSlug: string;
+  profile: SpecialistProfile | null;
+}): ProfileFormSnapshot {
+  const savedTimezone = profile?.timezone ?? "";
+  const savedCountry = savedTimezone ? getCountryByTimezone(savedTimezone) : "";
+
+  return {
+    avatarUrl: profile?.avatar_url ?? "",
+    bio: profile?.bio ?? "",
+    country: savedCountry,
+    countrySearch: savedCountry,
+    displayName: profile?.display_name ?? fallbackDisplayName,
+    languages: normalizeLanguageList(profile?.languages ?? []),
+    profession: profile?.profession ?? "",
+    slug: profile?.slug ?? fallbackSlug,
+    timezone: savedTimezone,
+    timezoneSearch: savedTimezone,
+    workingRules: profile?.working_rules ?? "",
+  };
+}
+
+function areSnapshotsEqual(
+  currentSnapshot: ProfileFormSnapshot,
+  savedSnapshot: ProfileFormSnapshot,
+) {
+  return JSON.stringify(currentSnapshot) === JSON.stringify(savedSnapshot);
+}
+
 export function SpecialistProfileForm({
   initialError,
   initialProfile,
@@ -47,55 +97,59 @@ export function SpecialistProfileForm({
   userId,
   userLastName,
 }: SpecialistProfileFormProps) {
-  const { error, isSaving, profile, saveProfile, success } =
-    useSpecialistProfile({
-      initialError,
-      initialProfile,
-    });
+  const fallbackSlug = generateProfileSlugFromIdentity({
+    email: userEmail,
+    firstName: userFirstName,
+    lastName: userLastName,
+  });
+  const initialSavedSnapshot = getSnapshotFromProfile({
+    fallbackDisplayName: userFirstName,
+    fallbackSlug,
+    profile: initialProfile,
+  });
+  const {
+    error,
+    isSaving,
+    profile,
+    saveProfile,
+    success,
+  } = useSpecialistProfile({
+    initialError,
+    initialProfile,
+  });
+  const [savedSnapshot, setSavedSnapshot] = useState(initialSavedSnapshot);
+  const [avatarRenderKey, setAvatarRenderKey] = useState(0);
   const [temporaryAvatar, setTemporaryAvatar] = useState<{
     file: File | null;
     previewUrl: string | null;
+    shouldRemove: boolean;
   }>({
     file: null,
     previewUrl: null,
+    shouldRemove: false,
   });
   const [displayName, setDisplayName] = useState(
-    initialProfile?.display_name ?? userFirstName,
+    initialSavedSnapshot.displayName,
   );
-  const [slug, setSlug] = useState(
-    initialProfile?.slug ??
-      generateProfileSlugFromIdentity({
-        email: userEmail,
-        firstName: userFirstName,
-        lastName: userLastName,
-      }),
-  );
+  const [slug, setSlug] = useState(initialSavedSnapshot.slug);
   const [hasUserEditedSlug, setHasUserEditedSlug] = useState(false);
-  const [profession, setProfession] = useState(
-    initialProfile?.profession ?? "",
-  );
-  const [bio, setBio] = useState(initialProfile?.bio ?? "");
-  const [country, setCountry] = useState(
-    initialProfile?.timezone
-      ? getCountryByTimezone(initialProfile.timezone)
-      : "",
-  );
+  const [profession, setProfession] = useState(initialSavedSnapshot.profession);
+  const [bio, setBio] = useState(initialSavedSnapshot.bio);
+  const [country, setCountry] = useState(initialSavedSnapshot.country);
   const [countrySearch, setCountrySearch] = useState(
-    initialProfile?.timezone
-      ? getCountryByTimezone(initialProfile.timezone)
-      : "",
+    initialSavedSnapshot.countrySearch,
   );
-  const [timezone, setTimezone] = useState(initialProfile?.timezone ?? "");
+  const [timezone, setTimezone] = useState(initialSavedSnapshot.timezone);
   const [timezoneSearch, setTimezoneSearch] = useState(
-    initialProfile?.timezone ?? "",
+    initialSavedSnapshot.timezoneSearch,
   );
   const [timezoneError, setTimezoneError] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState(
-    normalizeLanguageList(initialProfile?.languages ?? []),
+    initialSavedSnapshot.languages,
   );
   const [languageSearch, setLanguageSearch] = useState("");
   const [workingRules, setWorkingRules] = useState(
-    initialProfile?.working_rules ?? "",
+    initialSavedSnapshot.workingRules,
   );
 
   const mode = profile ? "edit" : "create";
@@ -157,6 +211,42 @@ export function SpecialistProfileForm({
       );
     })
     .slice(0, 6);
+  const currentSnapshot = useMemo(
+    () => ({
+      avatarUrl:
+        temporaryAvatar.previewUrl ??
+        (temporaryAvatar.shouldRemove
+          ? ""
+          : profile?.avatar_url ?? initialProfile?.avatar_url ?? ""),
+      bio,
+      country,
+      countrySearch,
+      displayName,
+      languages: selectedLanguages,
+      profession,
+      slug,
+      timezone,
+      timezoneSearch,
+      workingRules,
+    }),
+    [
+      bio,
+      country,
+      countrySearch,
+      displayName,
+      initialProfile?.avatar_url,
+      profession,
+      profile?.avatar_url,
+      selectedLanguages,
+      slug,
+      temporaryAvatar.previewUrl,
+      temporaryAvatar.shouldRemove,
+      timezone,
+      timezoneSearch,
+      workingRules,
+    ],
+  );
+  const hasUnsavedChanges = !areSnapshotsEqual(currentSnapshot, savedSnapshot);
 
   function handleSlugChange(value: string) {
     setHasUserEditedSlug(true);
@@ -197,6 +287,37 @@ export function SpecialistProfileForm({
     );
   }
 
+  function restoreFromSnapshot(snapshot: ProfileFormSnapshot) {
+    setBio(snapshot.bio);
+    setCountry(snapshot.country);
+    setCountrySearch(snapshot.countrySearch);
+    setDisplayName(snapshot.displayName);
+    setProfession(snapshot.profession);
+    setSelectedLanguages(snapshot.languages);
+    setSlug(snapshot.slug);
+    setTimezone(snapshot.timezone);
+    setTimezoneSearch(snapshot.timezoneSearch);
+    setWorkingRules(snapshot.workingRules);
+    setLanguageSearch("");
+    setTimezoneError(null);
+    setHasUserEditedSlug(false);
+    setTemporaryAvatar({
+      file: null,
+      previewUrl: null,
+      shouldRemove: false,
+    });
+    setTemporaryAvatarPreview({
+      file: null,
+      hasOverride: true,
+      previewUrl: snapshot.avatarUrl || null,
+    });
+    setAvatarRenderKey((currentKey) => currentKey + 1);
+  }
+
+  function handleCancelChanges() {
+    restoreFromSnapshot(savedSnapshot);
+  }
+
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -217,7 +338,9 @@ export function SpecialistProfileForm({
     }
 
     const savedProfile = await saveProfile({
-      avatarUrl: initialProfile?.avatar_url ?? "",
+      avatarFile: temporaryAvatar.file,
+      avatarShouldRemove: temporaryAvatar.shouldRemove,
+      avatarUrl: profile?.avatar_url ?? initialProfile?.avatar_url ?? "",
       bio,
       contactLinks: (initialProfile?.contact_links ?? {}) as Json,
       displayName,
@@ -230,8 +353,26 @@ export function SpecialistProfileForm({
     });
 
     if (savedProfile) {
+      const nextSavedSnapshot = getSnapshotFromProfile({
+        fallbackDisplayName: userFirstName,
+        fallbackSlug,
+        profile: savedProfile,
+      });
+
+      setTemporaryAvatar({
+        file: null,
+        previewUrl: null,
+        shouldRemove: false,
+      });
+      setTemporaryAvatarPreview({
+        file: null,
+        hasOverride: true,
+        previewUrl: nextSavedSnapshot.avatarUrl || null,
+      });
       setSlug(savedProfile.slug);
+      setSavedSnapshot(nextSavedSnapshot);
       setHasUserEditedSlug(false);
+      setAvatarRenderKey((currentKey) => currentKey + 1);
     }
   }
 
@@ -256,7 +397,11 @@ export function SpecialistProfileForm({
         </Badge>
       </div>
 
-      <form className="mt-8 space-y-6" onSubmit={handleSave}>
+      <form
+        className="mt-8 space-y-6 pb-24"
+        id={profileFormId}
+        onSubmit={handleSave}
+      >
         <Card className="rounded-3xl border-[#ded5c8] bg-white">
           <CardHeader>
             <CardTitle>Profile basics</CardTitle>
@@ -269,15 +414,23 @@ export function SpecialistProfileForm({
             <div className="sm:col-span-2">
               <AvatarUpload
                 displayName={displayName || userFirstName || "Profile"}
-                initialPreviewUrl={initialProfile?.avatar_url}
+                initialPreviewUrl={
+                  profile?.avatar_url ?? initialProfile?.avatar_url
+                }
+                key={avatarRenderKey}
                 onChange={(value) => {
                   setTemporaryAvatar(value);
-                  setTemporaryAvatarPreview(value);
+                  setTemporaryAvatarPreview({
+                    file: value.file,
+                    hasOverride: true,
+                    previewUrl: value.previewUrl,
+                  });
                 }}
               />
               {temporaryAvatar.file ? (
                 <p className="mt-2 text-xs font-medium text-[#66736f]">
-                  Selected locally: {temporaryAvatar.file.name}
+                  Selected: {temporaryAvatar.file.name}. Save changes to keep
+                  this photo after refresh.
                 </p>
               ) : null}
             </div>
@@ -513,20 +666,18 @@ export function SpecialistProfileForm({
           </p>
         ) : null}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm leading-6 text-[#66736f]">
-            Real avatar upload, services, and payments are intentionally
-            outside this stage.
-          </p>
-          <Button
-            className="h-12 rounded-full bg-[#1f5f55] px-6 hover:bg-[#174a43]"
-            disabled={isSaving || isSlugUnavailable}
-            type="submit"
-          >
-            {isSaving ? "Saving..." : "Save profile"}
-          </Button>
-        </div>
+        <p className="text-sm leading-6 text-[#66736f]">
+          Services and payments are intentionally outside this stage.
+        </p>
       </form>
+      {hasUnsavedChanges ? (
+        <UnsavedChangesBar
+          formId={profileFormId}
+          isSaving={isSaving}
+          onCancel={handleCancelChanges}
+          saveDisabled={isSlugUnavailable}
+        />
+      ) : null}
     </div>
   );
 }

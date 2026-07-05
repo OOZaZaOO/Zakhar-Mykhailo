@@ -42,8 +42,8 @@ export function Header() {
   const [headerUser, setHeaderUser] = useState<HeaderUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [temporaryAvatarUrl, setTemporaryAvatarUrl] = useState(
-    () => getTemporaryAvatarPreview().previewUrl,
+  const [temporaryAvatar, setTemporaryAvatar] = useState(() =>
+    getTemporaryAvatarPreview(),
   );
 
   useEffect(() => {
@@ -106,11 +106,13 @@ export function Header() {
 
   useEffect(() => {
     return subscribeToTemporaryAvatarPreview((preview) => {
-      setTemporaryAvatarUrl(preview.previewUrl);
+      setTemporaryAvatar(preview);
     });
   }, []);
 
-  const avatarUrl = temporaryAvatarUrl || headerUser?.avatarUrl || null;
+  const avatarUrl = temporaryAvatar.hasOverride
+    ? temporaryAvatar.previewUrl
+    : headerUser?.avatarUrl || null;
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#ded5c8] bg-[#fffaf2]/90 backdrop-blur">

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 type AvatarUploadValue = {
   file: File | null;
   previewUrl: string | null;
+  shouldRemove: boolean;
 };
 
 type AvatarUploadProps = {
@@ -79,9 +80,9 @@ export function AvatarUpload({
     objectUrlRef.current = nextPreviewUrl;
     setError(null);
     setPreviewUrl(nextPreviewUrl);
-    onChange?.({ file, previewUrl: nextPreviewUrl });
+    onChange?.({ file, previewUrl: nextPreviewUrl, shouldRemove: false });
 
-    // TODO: Replace this temporary preview with Supabase Storage upload later.
+    // TODO: Add client-side image cropping before Supabase Storage upload later.
   }
 
   function removeAvatar() {
@@ -93,7 +94,7 @@ export function AvatarUpload({
     setError(null);
     setPreviewUrl(null);
     resetFileInput();
-    onChange?.({ file: null, previewUrl: null });
+    onChange?.({ file: null, previewUrl: null, shouldRemove: true });
   }
 
   return (
@@ -144,8 +145,8 @@ export function AvatarUpload({
             Profile photo
           </p>
           <p className="mt-1 text-sm leading-6 text-[#5a6865]">
-            Choose a clear JPG, PNG, or WebP image. This preview is temporary
-            and will stay only while the app is open.
+            Choose a clear JPG, PNG, or WebP image. It will be saved after you
+            save your profile.
           </p>
         </div>
 

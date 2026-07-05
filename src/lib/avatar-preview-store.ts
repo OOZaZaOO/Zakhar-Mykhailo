@@ -1,5 +1,6 @@
 export type TemporaryAvatarPreview = {
   file: File | null;
+  hasOverride: boolean;
   previewUrl: string | null;
 };
 
@@ -7,6 +8,7 @@ const avatarPreviewEventName = "buymytime:temporary-avatar-preview";
 
 let currentPreview: TemporaryAvatarPreview = {
   file: null,
+  hasOverride: false,
   previewUrl: null,
 };
 

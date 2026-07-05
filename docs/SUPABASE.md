@@ -12,6 +12,8 @@
 - Registration stores `account_type` in Supabase user metadata with `specialist` or `client`.
 - Added specialist profile create, read, and update flow at `/dashboard/profile`.
 - Specialist profile CRUD uses the existing `specialist_profiles` table and Supabase RLS.
+- Added Supabase Storage configuration for persistent specialist avatars through the `specialist-avatars` bucket.
+- Specialist avatar URLs are stored in `specialist_profiles.avatar_url`.
 - Specialist profile timezone is selected through a country/timezone UI and stored as an IANA timezone string in `specialist_profiles.timezone`.
 - Client timezone conversion is intentionally delayed; future `client_profiles` should store the client's selected IANA timezone for booking slot display.
 
@@ -34,6 +36,7 @@ Empty placeholders live in `.env.example`.
 - `src/lib/supabase/server.ts`: server-side Supabase client factory for App Router server components.
 - `src/lib/supabase/types.ts`: local Supabase database types.
 - `src/lib/auth.ts`: account type and auth redirect helpers.
+- `src/lib/profile/avatar-storage.ts`: browser-side helper for specialist avatar upload/removal in Supabase Storage.
 - `middleware.ts`: protects dashboard routes and refreshes auth cookies.
 - `src/app/auth/callback/route.ts`: handles Supabase email auth callback redirects.
 - `src/app/dashboard/profile/page.tsx`: loads the authenticated specialist profile.
@@ -48,7 +51,6 @@ Empty placeholders live in `.env.example`.
 - Services CRUD.
 - Booking persistence.
 - Session persistence.
-- Storage.
 - Realtime chat.
 - Payments.
 - Application business logic.
