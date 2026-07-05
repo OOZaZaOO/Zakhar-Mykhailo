@@ -4,19 +4,27 @@
 - The platform is not a marketplace.
 - The platform is not a social network.
 - The platform is not a general messenger.
-- Session Workspace is the core feature.
+- Session Workspace is the core product concept.
 - Chat exists only inside a session.
 - Materials are separate from chat.
-- Google Meet, Zoom, or similar external links are used instead of built-in video calls.
-- MVP is frontend-first.
-- UI flows should be stable before backend work starts.
-- The project remains a simple monolithic Next.js app during MVP.
-- Next.js is the application framework.
+- External meeting links are used instead of built-in video calls.
+- The MVP remains a simple monolithic Next.js application.
+- Next.js App Router is the application framework.
 - TypeScript is required.
 - Tailwind CSS is the styling foundation.
-- shadcn/ui is the primary component library.
+- shadcn/ui-style local components are the primary UI primitive layer.
 - pnpm is the package manager.
-- Supabase is planned after UI completion for auth, database, storage, and realtime.
+- Supabase is the backend foundation for auth, database, RLS, and storage.
+- Supabase Auth user metadata stores `account_type`.
+- Supported account types are `specialist` and `client`.
+- Client profiles are part of the MVP model, but the `client_profiles` table is not created yet.
+- Specialist profile completion is computed, not stored.
+- Profile completion currently requires only visible name, public slug, country, and timezone.
+- Services, Calendar, and Public Profile are gated until profile completion is 100%.
+- Specialist avatar files use Supabase Storage bucket `avatars`.
+- Services CRUD is implemented against the `services` table.
+- Calendar availability CRUD is not implemented yet.
+- Booking, sessions, chat, materials, files, and archive persistence are not implemented yet.
 - Payment provider is not decided.
 - Vercel is the deployment target.
 - Do not add major dependencies without discussion.

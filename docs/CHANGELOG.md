@@ -1,30 +1,18 @@
 # Changelog
 
-## Purpose
+This project does not have formal releases yet.
 
-This document will track meaningful product, architecture, and documentation changes over time.
+Meaningful current milestones:
 
-## Table of Contents
-
-- [Changelog Format](#changelog-format)
-- [Unreleased](#unreleased)
-- [Released Changes](#released-changes)
-- [Related Documents](#related-documents)
-
-## Changelog Format
-
-TODO: Define changelog categories and release format.
-
-## Unreleased
-
-TODO: Add unreleased changes when the process is confirmed.
-
-## Released Changes
-
-TODO: Add released changes after the first release.
-
-## Related Documents
-
-- Roadmap: [ROADMAP.md](./ROADMAP.md)
-- Decisions: [DECISIONS.md](./DECISIONS.md)
-- Contributing: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Project initialized with Next.js, TypeScript, Tailwind CSS, App Router, ESLint, and pnpm.
+- shadcn/ui-style components configured.
+- Multi-page MVP routing and layouts created.
+- Landing and auth pages polished.
+- Supabase foundation added.
+- Initial specialist schema migration created.
+- Supabase Auth implemented.
+- Specialist profile management implemented.
+- Avatar upload through Supabase Storage implemented.
+- Profile completion gating implemented.
+- Services CRUD implemented.
+- Documentation simplified and expanded for AI onboarding.

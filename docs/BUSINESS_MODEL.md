@@ -1,40 +1,12 @@
 # Business Model
 
-## Purpose
+The business model is not finalized.
 
-This document will capture confirmed business model assumptions, pricing direction, and monetization constraints.
+Current assumptions:
 
-## Table of Contents
+- Primary customer is the independent specialist.
+- The platform helps specialists work with clients they already have.
+- Marketplace discovery is out of scope.
+- Payments are planned but provider and monetization model are not decided.
 
-- [Business Goals](#business-goals)
-- [Customer Segments](#customer-segments)
-- [Pricing Model](#pricing-model)
-- [Revenue Streams](#revenue-streams)
-- [Risks](#risks)
-- [Related Documents](#related-documents)
-
-## Business Goals
-
-TODO: Add confirmed business goals.
-
-## Customer Segments
-
-TODO: Add confirmed customer segments.
-
-## Pricing Model
-
-TODO: Add confirmed pricing model.
-
-## Revenue Streams
-
-TODO: Add confirmed revenue streams.
-
-## Risks
-
-TODO: Add business risks.
-
-## Related Documents
-
-- Product: [PRODUCT.md](./PRODUCT.md)
-- Vision: [VISION.md](./VISION.md)
-- Competitors: [COMPETITORS.md](./COMPETITORS.md)
+Do not implement billing, subscriptions, or payment-provider-specific logic until a provider decision is made.

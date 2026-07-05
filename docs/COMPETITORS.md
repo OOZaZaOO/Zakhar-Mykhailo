@@ -1,40 +1,15 @@
 # Competitors
 
-## Purpose
+No verified competitor research has been added to the repository.
 
-This document will track confirmed competitive research and positioning notes.
+Do not invent competitor claims.
 
-## Table of Contents
+Likely categories for future research:
 
-- [Research Scope](#research-scope)
-- [Competitor List](#competitor-list)
-- [Comparison Criteria](#comparison-criteria)
-- [Positioning Notes](#positioning-notes)
-- [Open Research Questions](#open-research-questions)
-- [Related Documents](#related-documents)
+- booking tools;
+- coaching/tutor platforms;
+- telehealth practice tools;
+- lightweight client portals;
+- scheduling plus payment tools.
 
-## Research Scope
-
-TODO: Add confirmed research scope.
-
-## Competitor List
-
-TODO: Add competitors only after research is performed and verified.
-
-## Comparison Criteria
-
-TODO: Add comparison criteria.
-
-## Positioning Notes
-
-TODO: Add confirmed positioning notes.
-
-## Open Research Questions
-
-TODO: Add unanswered research questions.
-
-## Related Documents
-
-- Product: [PRODUCT.md](./PRODUCT.md)
-- Business model: [BUSINESS_MODEL.md](./BUSINESS_MODEL.md)
-- Vision: [VISION.md](./VISION.md)
+Any future competitor notes should include sources and dates.

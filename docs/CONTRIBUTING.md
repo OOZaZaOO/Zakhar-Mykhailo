@@ -1,40 +1,26 @@
 # Contributing
 
-## Purpose
+## Workflow
 
-This document will define how contributors should work on the application.
+1. Read [AI_ONBOARDING.md](./AI_ONBOARDING.md).
+2. Work on one logical task.
+3. Avoid unrelated refactors.
+4. Run `pnpm lint`.
+5. Run `pnpm build`.
+6. Commit with a focused message.
 
-## Table of Contents
+## Commit Style
 
-- [Contribution Workflow](#contribution-workflow)
-- [Branching](#branching)
-- [Commits](#commits)
-- [Pull Requests](#pull-requests)
-- [Review Process](#review-process)
-- [Related Documents](#related-documents)
+Examples:
 
-## Contribution Workflow
+- `feat(profile): implement specialist profile management`
+- `feat(services): implement Supabase services management`
+- `refactor(onboarding): simplify profile completion logic`
+- `docs: improve project onboarding and developer documentation`
 
-TODO: Add confirmed contribution workflow.
+## Rules
 
-## Branching
-
-TODO: Add branching strategy.
-
-## Commits
-
-TODO: Add commit message conventions.
-
-## Pull Requests
-
-TODO: Add pull request expectations.
-
-## Review Process
-
-TODO: Add review process.
-
-## Related Documents
-
-- Coding guidelines: [CODING_GUIDELINES.md](./CODING_GUIDELINES.md)
-- Decisions: [DECISIONS.md](./DECISIONS.md)
-- Changelog: [CHANGELOG.md](./CHANGELOG.md)
+- Do not modify migrations unless the task asks for schema work.
+- Do not change business logic from a documentation task.
+- Do not add dependencies unless necessary.
+- Do not rename routes or folders without reason.

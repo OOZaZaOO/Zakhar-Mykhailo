@@ -1,46 +1,42 @@
 # Stack
 
-## Purpose
-
-This document will describe the confirmed technology stack, development tools, and deployment environment.
-
-## Table of Contents
-
-- [Frontend](#frontend)
-- [Backend](#backend)
-- [Database](#database)
-- [Design System](#design-system)
-- [Tooling](#tooling)
-- [Deployment](#deployment)
-- [Related Documents](#related-documents)
-
 ## Frontend
 
-TODO: Add confirmed frontend stack details.
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Local shadcn/ui-style components
+- Lucide icons
 
-## Backend
+## Backend Foundation
 
-TODO: Add backend stack after confirmation.
+- Supabase Auth
+- Supabase Postgres
+- Supabase Row Level Security
+- Supabase Storage
 
-## Database
+## Package Manager
 
-TODO: Add database stack after confirmation.
+- pnpm
 
-## Design System
+## Quality
 
-TODO: Add confirmed design-system tooling.
-
-## Tooling
-
-TODO: Add confirmed local development and quality tooling.
+- ESLint through `pnpm lint`
+- TypeScript and production compilation through `pnpm build`
 
 ## Deployment
 
-TODO: Add deployment environment after confirmation.
+- Vercel target deployment.
+- Required Vercel environment variables:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-## Related Documents
+## Not In Use
 
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Design system: [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)
-- Database: [DATABASE.md](./DATABASE.md)
-- API: [API.md](./API.md)
+- Redux
+- Custom backend server
+- Service-role key
+- Payment provider
+- Email provider
+- Test runner

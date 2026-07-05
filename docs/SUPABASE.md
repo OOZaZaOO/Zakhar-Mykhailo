@@ -1,56 +1,128 @@
-# Supabase Foundation
+# Supabase
 
-## What Has Been Configured
+## Purpose
 
-- Installed `@supabase/supabase-js`.
-- Installed `@supabase/ssr` for cookie-aware App Router authentication.
-- Added browser and server Supabase client helpers.
-- Added generated-style database types for the current migration.
-- Added a dashboard developer check page at `/dashboard/dev/supabase`.
-- Added local environment configuration support.
-- Added real Supabase Auth registration, login, logout, auth callback handling, and route protection.
-- Registration stores `account_type` in Supabase user metadata with `specialist` or `client`.
-- Added specialist profile create, read, and update flow at `/dashboard/profile`.
-- Specialist profile CRUD uses the existing `specialist_profiles` table and Supabase RLS.
-- Added Supabase Storage configuration for persistent specialist avatars through the `avatars` bucket.
-- Specialist avatar URLs are stored in `specialist_profiles.avatar_url`.
-- Specialist profile timezone is selected through a country/timezone UI and stored as an IANA timezone string in `specialist_profiles.timezone`.
-- Client timezone conversion is intentionally delayed; future `client_profiles` should store the client's selected IANA timezone for booking slot display.
+This document explains what is currently configured in Supabase and what still requires manual setup.
+
+## Configured In Code
+
+- `@supabase/supabase-js`
+- `@supabase/ssr`
+- Browser client helper in `src/lib/supabase/client.ts`
+- Server client helper in `src/lib/supabase/server.ts`
+- Local database types in `src/lib/supabase/types.ts`
+- Auth middleware in `middleware.ts`
+- Auth callback route in `src/app/auth/callback/route.ts`
+- Developer connection check at `/dashboard/dev/supabase`
 
 ## Environment Variables
 
-The project uses:
+Required:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
 
-Local values live in `.env.local`.
+Source:
 
-Empty placeholders live in `.env.example`.
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase Project URL.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anon or publishable key.
 
-`.env.local` is ignored by Git and should not be committed.
+These values are public browser keys by design. They must exist in `.env.local` for local development and in Vercel Project Settings for deployment.
 
-## Files
+## Database
 
-- `src/lib/supabase/client.ts`: browser-side Supabase client factory.
-- `src/lib/supabase/server.ts`: server-side Supabase client factory for App Router server components.
-- `src/lib/supabase/types.ts`: local Supabase database types.
-- `src/lib/auth.ts`: account type and auth redirect helpers.
-- `src/lib/profile/avatar-storage.ts`: browser-side helper for specialist avatar upload/removal in Supabase Storage.
-- `middleware.ts`: protects dashboard routes and refreshes auth cookies.
-- `src/app/auth/callback/route.ts`: handles Supabase email auth callback redirects.
-- `src/app/dashboard/profile/page.tsx`: loads the authenticated specialist profile.
-- `src/components/profile/specialist-profile-form.tsx`: creates and updates specialist profile records.
-- `src/app/dashboard/dev/supabase/page.tsx`: simple initialization check page.
+Current real tables from the first schema migration:
 
-## What Remains To Be Implemented
+- `specialist_profiles`
+- `services`
+- `availability_blocks`
+- `availability_exceptions`
 
-- Additional database schema after the initial specialist foundation.
-- Generated Supabase database types from the remote database after migrations are applied.
-- Client profile persistence.
-- Services CRUD.
-- Booking persistence.
-- Session persistence.
-- Realtime chat.
-- Payments.
-- Application business logic.
+The code currently uses:
+
+- `specialist_profiles` for specialist profile CRUD, public profiles, avatars, profile completion, and booking status.
+- `services` for real services CRUD.
+
+The code does not yet use:
+
+- `availability_blocks`
+- `availability_exceptions`
+
+Future tables are documented in [DATABASE.md](./DATABASE.md).
+
+## Storage
+
+Current avatar upload code uses bucket:
+
+```text
+avatars
+```
+
+Important:
+
+- The bucket must exist manually in Supabase before avatar upload works.
+- Files are public.
+- Upload path format is `avatars/{auth.uid()}/avatars/{random-id}.{ext}` in public URL terms, with object name `{auth.uid()}/avatars/{random-id}.{ext}` inside the bucket.
+- Allowed formats in the UI are jpg, jpeg, png, and webp.
+- Maximum UI file size is 5 MB.
+
+Storage helper:
+
+- `src/lib/profile/avatar-storage.ts`
+
+Storage policies:
+
+- `supabase/migrations/20260705143000_configure_avatars_storage_policies.sql`
+
+Historical note:
+
+- `supabase/migrations/20260705130000_specialist_avatar_storage.sql` creates/configures a `specialist-avatars` bucket.
+- Current application code no longer uses `specialist-avatars`; it uses `avatars`.
+- Do not rely on the older bucket unless code is intentionally changed.
+
+## RLS Overview
+
+The initial schema migration enables RLS on:
+
+- `specialist_profiles`
+- `services`
+- `availability_blocks`
+- `availability_exceptions`
+
+Public users can read:
+
+- public specialist profiles;
+- active services for public specialist profiles;
+- active availability for public specialist profiles.
+
+Authenticated specialists can manage:
+
+- their own specialist profile;
+- services belonging to their own specialist profile;
+- availability rows belonging to their own specialist profile.
+
+Storage policies for `avatars` allow:
+
+- anyone to read avatar images;
+- authenticated users to upload, update, and delete only files in their own user-id folder.
+
+## Manual Supabase Setup
+
+Before local or deployed avatar/profile work is reliable:
+
+1. Set auth Site URL and redirect URLs for local and Vercel environments.
+2. Apply `supabase/migrations/20260704120000_initial_specialist_schema.sql`.
+3. Ensure the `avatars` bucket exists and is public.
+4. Apply `supabase/migrations/20260705143000_configure_avatars_storage_policies.sql`.
+5. Verify `.env.local` contains the Supabase URL and anon key.
+
+## What Remains
+
+- Generate Supabase types from the remote project instead of maintaining them manually.
+- Create `client_profiles`.
+- Implement availability CRUD.
+- Implement booking/session/message/material/file tables.
+- Implement realtime chat if needed.
+- Add payments and subscriptions after provider selection.

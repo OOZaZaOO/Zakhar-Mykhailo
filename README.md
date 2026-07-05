@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BuyMyTime
 
-## Getting Started
+BuyMyTime is a Next.js SaaS MVP for independent professionals who sell time-based services. The product is centered on a future Session Workspace: one organized place for each booked client session, including meeting links, messages, materials, files, notes, and archive history.
 
-First, run the development server:
+The current implementation is a hybrid MVP foundation: public marketing UI and several workspace pages still use mock data, while Supabase Auth, specialist profile management, avatar storage, profile completion gating, booking-status toggling, and services CRUD are connected to Supabase.
+
+## Tech Stack
+
+- Next.js App Router
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui-style local components
+- Supabase Auth, Postgres, RLS, and Storage
+- pnpm
+- Vercel target deployment
+
+## Local Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create `.env.local`:
 
-## Learn More
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
 
-To learn more about Next.js, take a look at the following resources:
+Use the Supabase Project URL and Supabase anon/publishable key. The same values must be configured in Vercel.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Quality Checks
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm lint
+pnpm build
+```
 
-## Deploy on Vercel
+## Folder Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```text
+src/app                    Next.js App Router routes
+src/components/auth        Auth shell and logout UI
+src/components/calendar    Calendar-related UI and booking status toggle
+src/components/landing     Landing page sections
+src/components/layout      Public and dashboard layouts, header, sidebar, breadcrumbs
+src/components/onboarding  Profile completion and gated empty states
+src/components/profile     Specialist profile form and avatar upload
+src/components/services    Services CRUD UI
+src/components/session     Mock session workspace components
+src/components/ui          Local shadcn/ui-style primitives
+src/data                   Mock data still used by unfinished areas
+src/hooks                  Client hooks
+src/lib                    Core auth, navigation, profile, services, Supabase, timezone logic
+supabase/migrations        SQL migrations
+docs                       Project context for developers and AI agents
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Documentation
+
+Start here:
+
+- [docs/AI_ONBOARDING.md](./docs/AI_ONBOARDING.md)
+- [docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)
+- [docs/MASTER_CONTEXT.md](./docs/MASTER_CONTEXT.md)
+- [docs/DATABASE.md](./docs/DATABASE.md)
+- [docs/SUPABASE.md](./docs/SUPABASE.md)
+- [docs/NEXT_STEPS.md](./docs/NEXT_STEPS.md)
+
+## Current Status
+
+Implemented:
+
+- Multi-page App Router shell.
+- Supabase email/password auth.
+- Specialist/client account-type metadata.
+- Protected dashboard routes.
+- Specialist profile create/edit/load from Supabase.
+- Public specialist profile loaded from Supabase.
+- Persistent specialist avatar upload through Supabase Storage.
+- Profile completion and feature gating.
+- Services CRUD connected to Supabase.
+- Booking status toggle persisted to `specialist_profiles.is_accepting_bookings`.
+
+Not implemented yet:
+
+- Client profile persistence.
+- Real booking flow.
+- Real availability CRUD.
+- Real session workspace persistence.
+- Chat, materials, files, archive persistence.
+- Payments, notifications, email, analytics, integrations.

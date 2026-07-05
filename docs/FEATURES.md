@@ -1,40 +1,44 @@
 # Features
 
-## Purpose
+## Implemented
 
-This document will track confirmed, implemented, in-progress, and planned product features.
+- Landing page.
+- Login page.
+- Register page with specialist/client account type.
+- Supabase email/password auth.
+- Logout.
+- Authenticated redirects and protected dashboard routes.
+- Role-based navigation configuration.
+- Specialist dashboard shell.
+- Specialist profile create/edit/load from Supabase.
+- Visible name, slug, profession, country/timezone, languages, bio, and working rules form.
+- Slug normalization and availability check when edited.
+- Persistent avatar upload/removal through Supabase Storage.
+- Header user identity and avatar/initials.
+- Profile completion percentage.
+- Profile gating for Services, Calendar, and Public Profile.
+- Services CRUD connected to Supabase.
+- Booking status toggle persisted to Supabase.
+- Public specialist profile loaded by slug from Supabase.
 
-## Table of Contents
+## Partially Implemented
 
-- [Feature Status Legend](#feature-status-legend)
-- [Implemented Features](#implemented-features)
-- [In-Progress Features](#in-progress-features)
-- [Planned Features](#planned-features)
-- [Deferred Features](#deferred-features)
-- [Related Documents](#related-documents)
+- Calendar: booking status is real; availability slots are mock.
+- Public profile: specialist data is real; service list is mock.
+- Client dashboard: placeholder only.
+- Archive/settings/session workspace/booking flow: UI mock only.
 
-## Feature Status Legend
+## Not Implemented
 
-TODO: Define status labels used by the team.
-
-## Implemented Features
-
-TODO: Add implemented features after confirmation.
-
-## In-Progress Features
-
-TODO: Add features currently under active development.
-
-## Planned Features
-
-TODO: Add planned features once explicitly approved.
-
-## Deferred Features
-
-TODO: Add deferred features and reasons.
-
-## Related Documents
-
-- Product: [PRODUCT.md](./PRODUCT.md)
-- User flow: [USER_FLOW.md](./USER_FLOW.md)
-- Roadmap: [ROADMAP.md](./ROADMAP.md)
+- Client profile database table and CRUD.
+- Real availability CRUD.
+- Booking persistence.
+- Session persistence.
+- Chat persistence.
+- Materials persistence.
+- Files persistence outside avatars.
+- Archive persistence.
+- Payments.
+- Notifications and email.
+- Analytics.
+- Integrations.

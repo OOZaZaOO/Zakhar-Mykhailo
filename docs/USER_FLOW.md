@@ -1,35 +1,28 @@
 # User Flow
 
-## Purpose
+## Specialist Current Flow
 
-This document will describe confirmed user journeys and interaction flows across the application.
+1. Register as Specialist.
+2. Open `/dashboard/profile`.
+3. Complete visible name, slug, country, and timezone.
+4. Services, Calendar, and Public Profile unlock.
+5. Add services in `/dashboard/services`.
+6. Toggle booking status in `/dashboard/calendar`.
+7. Share public profile route.
 
-## Table of Contents
+## Client Current Flow
 
-- [User Types](#user-types)
-- [Primary Flows](#primary-flows)
-- [Secondary Flows](#secondary-flows)
-- [Edge Cases](#edge-cases)
-- [Related Documents](#related-documents)
+1. Register as Client.
+2. Redirect to `/dashboard/client`.
+3. See placeholder client dashboard.
 
-## User Types
+Client profile, bookings, session history, and materials are not implemented yet.
 
-TODO: Add confirmed user types.
+## Public Current Flow
 
-## Primary Flows
+1. Guest opens landing page.
+2. Guest opens a public specialist profile.
+3. Guest can open mock booking page.
+4. Mock booking confirmation links to mock session workspace.
 
-TODO: Add confirmed primary user flows.
-
-## Secondary Flows
-
-TODO: Add confirmed secondary flows.
-
-## Edge Cases
-
-TODO: Add confirmed edge cases and unresolved flow questions.
-
-## Related Documents
-
-- Product: [PRODUCT.md](./PRODUCT.md)
-- Features: [FEATURES.md](./FEATURES.md)
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
+Real booking persistence is not implemented yet.

@@ -1,60 +1,34 @@
-# Documentation
+# Documentation Index
 
-## Project Purpose
+This folder exists to onboard developers and AI coding agents quickly. It is not a project-management system.
 
-The repository contains a frontend-first MVP for a SaaS workspace for independent professionals who work with clients by appointment.
+## Read First
 
-The product is centered on helping a specialist manage booking, client communication, materials, files, meeting links, and session history in one place.
+- [AI_ONBOARDING.md](./AI_ONBOARDING.md): complete context for a new AI agent.
+- [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md): local setup, Supabase, build, deployment, Git workflow.
+- [MASTER_CONTEXT.md](./MASTER_CONTEXT.md): product and architecture context.
+- [NEXT_STEPS.md](./NEXT_STEPS.md): recommended implementation order.
 
-## Tech Stack
+## Product And UX
 
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- pnpm
-- GitHub
-- Vercel
+- [PRODUCT.md](./PRODUCT.md): product concept and philosophy.
+- [UI_PAGES.md](./UI_PAGES.md): current and planned page responsibilities.
+- [DECISIONS.md](./DECISIONS.md): short project decisions.
 
-## Local Setup
+## Engineering
 
-Install dependencies:
+- [ARCHITECTURE.md](./ARCHITECTURE.md): application architecture summary.
+- [AUTH.md](./AUTH.md): Supabase Auth flow.
+- [SUPABASE.md](./SUPABASE.md): Supabase configuration and manual setup.
+- [DATABASE.md](./DATABASE.md): current and planned database model.
+- [DATABASE_DECISIONS.md](./DATABASE_DECISIONS.md): database architecture decisions.
+- [MIGRATION_001.md](./MIGRATION_001.md): first schema migration notes.
+- [TECH_DEBT.md](./TECH_DEBT.md): known technical debt.
 
-```bash
-pnpm install
-```
+## Agent Rules
 
-Run the development server:
+- [AI_RULES.md](./AI_RULES.md): rules for AI assistants.
+- [CODING_GUIDELINES.md](./CODING_GUIDELINES.md): general coding conventions.
+- [CONTRIBUTING.md](./CONTRIBUTING.md): contribution process notes.
 
-```bash
-pnpm dev
-```
-
-Run quality checks:
-
-```bash
-pnpm lint
-pnpm build
-```
-
-## Folder Structure
-
-```text
-src/app                 App Router pages and layout
-src/components/ui       Shared shadcn/ui components
-src/components/landing  Landing page sections
-src/components/dashboard Dashboard mock components
-src/components/public-profile Public profile and booking preview
-src/components/session Session workspace mock components
-src/data                Mock data
-src/lib                 Shared utilities
-docs                    Short context docs for AI assistants and developers
-```
-
-## Documentation Overview
-
-- [MASTER_CONTEXT.md](./MASTER_CONTEXT.md): first file to read for product context.
-- [UI_PAGES.md](./UI_PAGES.md): current and planned MVP page intent.
-- [DECISIONS.md](./DECISIONS.md): short list of project decisions.
-- [AI_RULES.md](./AI_RULES.md): rules for AI assistants working in the repo.
+Some older planning documents are intentionally sparse. Prefer the "Read First" documents when context conflicts.

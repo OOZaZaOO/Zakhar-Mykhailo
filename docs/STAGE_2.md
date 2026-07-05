@@ -1,40 +1,24 @@
 # Stage 2
 
-## Purpose
+Stage 2 introduced the Supabase foundation.
 
-This document will define the second confirmed delivery stage after Stage 1 is stable.
+Completed outcomes:
 
-## Table of Contents
+- Supabase clients for browser and server contexts.
+- Supabase Auth registration, login, logout.
+- Auth middleware and callback route.
+- Specialist/client account metadata.
+- Specialist profile CRUD.
+- Public specialist profile lookup.
+- Avatar upload through Supabase Storage.
+- Profile completion and feature gating.
+- Services CRUD.
+- Booking status toggle.
+- Initial specialist schema migration.
+- Avatar storage policy migration.
 
-- [Stage Goal](#stage-goal)
-- [Scope](#scope)
-- [Deliverables](#deliverables)
-- [Acceptance Criteria](#acceptance-criteria)
-- [Dependencies](#dependencies)
-- [Related Documents](#related-documents)
+Remaining Stage 2-adjacent work:
 
-## Stage Goal
-
-TODO: Add the confirmed Stage 2 goal.
-
-## Scope
-
-TODO: Add confirmed Stage 2 scope.
-
-## Deliverables
-
-TODO: Add confirmed deliverables.
-
-## Acceptance Criteria
-
-TODO: Add acceptance criteria.
-
-## Dependencies
-
-TODO: Add dependencies and blockers.
-
-## Related Documents
-
-- Roadmap: [ROADMAP.md](./ROADMAP.md)
-- Stage 1: [STAGE_1.md](./STAGE_1.md)
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Client profiles.
+- Availability CRUD.
+- Public profile real services.

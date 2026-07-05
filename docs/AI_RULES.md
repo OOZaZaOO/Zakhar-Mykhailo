@@ -1,24 +1,26 @@
 # AI Rules
 
-- Read [MASTER_CONTEXT.md](./MASTER_CONTEXT.md) before coding.
-- Read [UI_PAGES.md](./UI_PAGES.md) before implementing UI.
-- Follow [DECISIONS.md](./DECISIONS.md).
+- Read [AI_ONBOARDING.md](./AI_ONBOARDING.md) before coding.
+- Read [MASTER_CONTEXT.md](./MASTER_CONTEXT.md) for product context.
+- Read [UI_PAGES.md](./UI_PAGES.md) before changing UI routes.
+- Read [DECISIONS.md](./DECISIONS.md) before making product or architecture decisions.
 - Never invent product features.
 - Never change business logic without request.
-- Never add backend functionality unless explicitly requested.
-- Reuse existing components.
+- Never modify Supabase schema or migrations unless the task explicitly asks for it.
+- Never bypass Supabase RLS or use a service-role key in application code.
+- Reuse existing components and helpers.
 - Keep components small.
 - Prefer composition over duplication.
-- Use shadcn/ui where appropriate.
+- Put reusable business logic in `src/lib`.
 - Use TypeScript.
-- Keep the MVP as a simple monolithic Next.js app.
+- Use existing local shadcn/ui-style components.
 - Do not introduce Redux or complex state managers without request.
 - Do not add dependencies unless necessary.
 - Do not rename folders, files, or routes without reason.
 - Do not rewrite working components without reason.
-- Keep mock data in `src/data` during the UI-only stage.
+- Keep mock data in `src/data` only for unfinished areas.
 - Run `pnpm lint` after meaningful changes.
 - Run `pnpm build` after meaningful changes.
-- Commit only completed work.
+- Commit only completed work when the user asks for a commit.
 - Keep commits focused on one logical change.
-- If unsure, ask for clarification instead of guessing.
+- If docs and code conflict, trust code and update docs unless the user asked to change code.

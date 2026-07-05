@@ -1,40 +1,17 @@
 # Stage 1
 
-## Purpose
+Stage 1 created the frontend application structure and polished public/auth UI.
 
-This document will define the first confirmed delivery stage for the product.
+Completed outcomes:
 
-## Table of Contents
+- Next.js App Router project.
+- TypeScript, Tailwind CSS, ESLint, pnpm.
+- shadcn/ui-style local components.
+- Landing page.
+- Login and register pages.
+- Multi-page routing.
+- Public and dashboard layouts.
+- Shared header, sidebar, breadcrumbs.
+- Mock dashboard, calendar, profile, public profile, booking, session, archive, and settings pages.
 
-- [Stage Goal](#stage-goal)
-- [Scope](#scope)
-- [Deliverables](#deliverables)
-- [Acceptance Criteria](#acceptance-criteria)
-- [Dependencies](#dependencies)
-- [Related Documents](#related-documents)
-
-## Stage Goal
-
-TODO: Add the confirmed Stage 1 goal.
-
-## Scope
-
-TODO: Add confirmed Stage 1 scope.
-
-## Deliverables
-
-TODO: Add confirmed deliverables.
-
-## Acceptance Criteria
-
-TODO: Add acceptance criteria.
-
-## Dependencies
-
-TODO: Add dependencies and blockers.
-
-## Related Documents
-
-- Roadmap: [ROADMAP.md](./ROADMAP.md)
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Features: [FEATURES.md](./FEATURES.md)
+Some Stage 1 pages later gained real Supabase behavior during Stage 2.

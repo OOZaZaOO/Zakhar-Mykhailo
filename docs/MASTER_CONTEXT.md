@@ -1,83 +1,98 @@
 # Master Context
 
+This is the first project-context file every developer or AI assistant should read.
+
 ## Product Overview
 
-The platform is a SaaS workspace for independent professionals who work with clients by appointment.
+The platform is a SaaS workspace for independent professionals who work with clients by appointment. It helps specialists organize profile presentation, services, availability, bookings, client communication, materials, files, meeting links, and session history.
 
-It helps specialists organize the client workflow around bookings, sessions, communication, materials, files, meeting links, and archive history.
-
-The product is not a marketplace, social network, messenger, video-call platform, or full CRM.
+The product is not a marketplace, social network, general messenger, video-call platform, or full CRM.
 
 ## Target Audience
 
-The primary users are independent professionals such as psychologists, tutors, consultants, lawyers, accountants, coaches, dietitians, trainers, therapists, mentors, and similar specialists.
+Primary users are independent professionals such as psychologists, tutors, consultants, lawyers, accountants, coaches, dietitians, trainers, therapists, mentors, and similar specialists.
 
-These users usually bring clients from their own channels: social media, referrals, communities, personal websites, direct messages, or existing client relationships.
-
-The MVP supports both specialist profiles and client profiles. Specialists manage services, availability, bookings, sessions, and clients. Clients use their account to access their personal cabinet, session history, archived sessions, materials, files, and session workspaces.
+Clients are also part of the MVP model because they need future access to their client cabinet, session history, archived sessions, materials, files, and session workspaces.
 
 ## Core Idea
 
-The core idea is: one workspace for every client session.
+The core product object is the Session Workspace.
 
-Booking creates or leads to a dedicated session workspace. That workspace is where session-specific communication, materials, files, meeting links, notes, status, and history belong.
+The intended lifecycle is:
 
-## Main Modules
+```text
+Profile -> Service -> Availability -> Booking -> Session Workspace -> Archive
+```
 
-- Landing page
-- Authentication pages
-- Specialist dashboard
-- Calendar and availability
-- Services
-- Public profile
-- Booking flow
-- Session workspace
-- Materials and files
-- Archive
-- Settings
+Booking should create or lead to a dedicated workspace for one session. Messages, materials, files, meeting links, notes, and archive state belong to that session, not to a global chat.
+
+## Current Implementation Status
+
+The project is no longer UI-only. It has a real Supabase foundation plus some still-mocked product areas.
+
+Implemented:
+
+- Public landing, login, register, dashboard, profile, services, calendar, archive, public profile, booking mock, and session mock routes.
+- Supabase email/password registration, login, logout, auth callback, and dashboard route protection.
+- Specialist/client account type stored in Supabase user metadata.
+- Specialist profile create/edit/load from `specialist_profiles`.
+- Public specialist profile reads from Supabase by slug.
+- Persistent avatar upload/removal through Supabase Storage bucket `avatars`.
+- Profile completion helper and feature gating.
+- Services CRUD connected to Supabase `services`.
+- Booking availability toggle persisted to `specialist_profiles.is_accepting_bookings`.
+
+Still mocked or incomplete:
+
+- Client profile CRUD and real client workspace.
+- Real availability CRUD beyond booking-status toggle.
+- Booking creation and slot calculation.
+- Session persistence, chat, materials, files, notes, archive.
+- Payments, notifications, email, analytics, integrations.
 
 ## Current Tech Stack
 
-- Next.js
+- Next.js App Router
 - React
 - TypeScript
 - Tailwind CSS
-- shadcn/ui
+- Local shadcn/ui-style components
+- Supabase Auth, Postgres, RLS, and Storage
 - pnpm
-- GitHub
-- Vercel
+- Vercel target deployment
 
-Planned after UI completion:
+## Main Modules
 
-- Supabase for auth, database, storage, and realtime
-- Payment provider later, not decided
-- Email provider later, not decided
+- Marketing landing page
+- Authentication
+- Role-based dashboard shell
+- Specialist profile management
+- Profile completion and gating
+- Services management
+- Calendar and booking-status settings
+- Public specialist profile
+- Mock booking flow
+- Mock session workspace
+- Mock archive/settings
 
 ## Development Philosophy
 
-Build the MVP as a simple monolithic Next.js application.
-
-Keep the project frontend-first until the UI flows are clear.
-
-Prefer simple components, mock data, clear routes, and practical UI over premature backend architecture.
-
-## Current Project Stage
-
-The project is in the UI-only MVP prototype stage.
-
-Current implementation includes multi-page mock UI, domain components, mock data, shadcn/ui setup, Supabase Auth, protected dashboard routes, specialist profile CRUD, and documentation.
-
-Services CRUD, client profile persistence, booking persistence, session persistence, payments, real file storage, and real chat are not implemented yet.
+- Keep the app as a simple monolithic Next.js application during MVP.
+- Prefer clear domain helpers under `src/lib` over database calls inside large UI components.
+- Keep business logic in reusable helpers when it affects multiple pages.
+- Keep mock data only in unfinished areas.
+- Do not add backend tables or dependencies without a specific task.
+- Do not bypass Supabase RLS.
 
 ## Things That Must Not Change Without Discussion
 
 - The product is not a marketplace.
-- The product is centered around session workspaces.
+- Session Workspace is the core concept.
 - Chat exists only inside a session.
 - Materials are separate from chat.
-- MVP starts frontend-first with mock data.
-- Backend is added only after UI flows are stable.
-- The app stays a simple monolith during MVP.
-- External meeting links are used instead of built-in video calls.
+- Built-in video calls are out of scope; use external meeting links.
+- The project remains a monolithic Next.js app during MVP.
+- Supabase is the backend foundation.
+- Client profiles are required for the MVP model, but the table is not created yet.
 - Product name is not finalized.
-- Major new dependencies require discussion.
+- Payments provider is not decided.

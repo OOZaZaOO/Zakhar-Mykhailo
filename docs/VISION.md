@@ -1,35 +1,18 @@
 # Vision
 
-## Purpose
+The product should become the central workspace for independent professionals who manage client sessions.
 
-This document will capture the long-term direction for the product without mixing it with current implementation details.
+Long-term direction:
 
-## Table of Contents
+- One public profile for the specialist.
+- Services and availability configured once.
+- Bookings create structured session workspaces.
+- Session communication, materials, files, meeting links, notes, and archive history stay organized.
+- Clients can return to their own cabinet for history and resources.
 
-- [Vision Statement](#vision-statement)
-- [Strategic Principles](#strategic-principles)
-- [Long-Term Outcomes](#long-term-outcomes)
-- [Constraints](#constraints)
-- [Related Documents](#related-documents)
+Constraints:
 
-## Vision Statement
-
-TODO: Add the confirmed vision statement.
-
-## Strategic Principles
-
-TODO: Add confirmed principles for product and delivery decisions.
-
-## Long-Term Outcomes
-
-TODO: Add confirmed long-term outcomes.
-
-## Constraints
-
-TODO: Add known constraints when confirmed.
-
-## Related Documents
-
-- Product: [PRODUCT.md](./PRODUCT.md)
-- Roadmap: [ROADMAP.md](./ROADMAP.md)
-- Decisions: [DECISIONS.md](./DECISIONS.md)
+- Not a marketplace.
+- Not a social network.
+- Not a built-in video-call product.
+- Not an enterprise CRM.

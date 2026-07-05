@@ -1,44 +1,30 @@
 # Design System
 
-## Purpose
+## Current Direction
 
-This document will define the product design system, component conventions, and visual standards.
+The UI should feel clean, calm, modern, professional, and premium. It should not feel like a social network or marketplace.
 
-## Table of Contents
+## Implementation
 
-- [Design Principles](#design-principles)
-- [Component Library](#component-library)
-- [Tokens](#tokens)
-- [Typography](#typography)
-- [Layout](#layout)
-- [Accessibility](#accessibility)
-- [Related Documents](#related-documents)
+- Tailwind CSS is the styling foundation.
+- Local shadcn/ui-style primitives live in `src/components/ui`.
+- Lucide icons are used where icons are needed.
+- Layout components live in `src/components/layout`.
 
-## Design Principles
+## Current Components
 
-TODO: Add confirmed design principles.
+- Button
+- Card
+- Input
+- Label
+- Textarea
+- Badge
+- Avatar
+- Separator
+- Tabs
 
-## Component Library
+## Notes
 
-TODO: Document confirmed component library usage.
-
-## Tokens
-
-TODO: Document colors, spacing, radii, and other tokens after confirmation.
-
-## Typography
-
-TODO: Document confirmed typography rules.
-
-## Layout
-
-TODO: Document layout standards.
-
-## Accessibility
-
-TODO: Document accessibility requirements.
-
-## Related Documents
-
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Coding guidelines: [CODING_GUIDELINES.md](./CODING_GUIDELINES.md)
+- Do not introduce another UI library without discussion.
+- Preserve the current visual language unless asked to redesign.
+- Keep forms empty by default and use placeholders.

@@ -1,111 +1,127 @@
 # UI Pages
 
-## Landing
+## Landing: `/`
 
-Purpose: explain the product and convert professionals into registered specialists.
+Purpose: explain the product to guests and convert independent professionals.
 
-Main sections: hero, features, how it works, audience, benefits, testimonials, pricing preview, FAQ, footer.
+Main sections: hero, dashboard preview, how it works, feature grid, audience, session workspace preview, pricing preview, FAQ, footer.
 
-Primary actions: create workspace, see demo, login, register.
+Primary actions: Start free, See demo, Log in.
 
-Navigation: features, pricing, FAQ, login, register.
+Navigation: marketing links are shown only to guests. Authenticated users are redirected to their workspace.
 
-## Login
+## Login: `/login`
 
-Purpose: authenticate returning specialists.
+Purpose: authenticate returning users.
 
-Main sections: email field, password field, remember me, forgot password.
+Main sections: social buttons UI-only, email/password form, remember me, forgot password link, account-type note.
 
-Primary actions: sign in, register, recover password.
+Primary actions: Log in, Create account.
 
-Navigation: register, forgot password, landing page.
+Navigation: authenticated users are redirected to their workspace.
 
-## Register
+## Register: `/register`
 
-Purpose: create a specialist account.
+Purpose: create a Supabase Auth account.
 
-Main sections: name, email, password, confirm password, agreement checkbox.
+Main sections: specialist/client selector, first name, last name, email, password, confirm password, password strength, terms checkbox, social signup buttons UI-only.
 
-Primary actions: create account.
+Primary actions: Create specialist account or Create client account.
 
-Navigation: login, landing page.
+Navigation: specialist redirects to `/dashboard/profile`; client redirects to `/dashboard/client`.
 
-## Dashboard
+## Specialist Dashboard: `/dashboard`
 
-Purpose: provide the specialist's main workspace overview.
+Purpose: specialist overview.
 
-Main sections: today's sessions, upcoming sessions, recent bookings, quick actions, profile completion.
+Main sections: profile setup card when incomplete, mock dashboard stats, mock today's sessions.
 
-Primary actions: open session, copy profile link, create service, edit profile.
+Primary actions: Complete profile, view public profile when unlocked, open mock session.
 
-Navigation: calendar, services, profile, sessions, settings.
+Navigation: role-based dashboard sidebar.
 
-## Calendar
+## Client Dashboard Placeholder: `/dashboard/client`
 
-Purpose: manage availability.
+Purpose: temporary workspace route for authenticated client accounts.
 
-Main sections: month view, week view, available slots, blocked dates, working hours.
+Main sections: polished placeholder content.
 
-Primary actions: add availability, block time, edit working hours.
+Primary actions: none real yet.
 
-Navigation: dashboard, services, sessions, settings.
+Navigation: client navigation config exists, but deeper client routes are not implemented yet.
 
-## Services
+## Profile: `/dashboard/profile`
 
-Purpose: manage bookable services.
+Purpose: create and edit the specialist public profile.
 
-Main sections: service cards, duration, price, status, actions.
+Main sections: avatar upload, visible name, public slug, profession, country/timezone, languages, bio, working rules.
 
-Primary actions: create service, edit, duplicate, delete, activate, deactivate.
+Primary actions: save changed profile fields through floating save bar, upload/change/remove avatar immediately.
 
-Navigation: dashboard, calendar, profile.
+Navigation: unlocks Services, Calendar, and Public Profile after visible name, slug, country, and timezone are complete.
 
-## Profile
+## Services: `/dashboard/services`
 
-Purpose: manage the specialist profile and preview client-facing information.
+Purpose: manage real bookable services in Supabase.
 
-Main sections: avatar, name, profession, bio, services, rules, contact links, visibility.
+Main sections: service cards, active/inactive state, create/edit form overlay.
 
-Primary actions: edit profile, publish profile, copy profile link.
+Primary actions: create, edit, duplicate, delete, activate, deactivate.
 
-Navigation: dashboard, services, public profile preview.
+Navigation: gated until profile completion is 100%.
 
-## Booking
+## Calendar: `/dashboard/calendar`
 
-Purpose: let a client book or request a session.
+Purpose: manage booking availability settings.
 
-Main sections: service selection, date selection, time selection, client details, comment, confirmation.
+Main sections: real booking-status toggle, mock week view, mock rules card.
 
-Primary actions: select service, select time, confirm booking.
+Primary actions: turn accepting new bookings on/off.
 
-Navigation: public profile, session workspace after confirmation.
+Navigation: gated until profile completion is 100%.
 
-## Session Workspace
+## Settings: `/dashboard/settings`
 
-Purpose: provide the collaboration space for one specific booked session.
+Purpose: account/workspace settings surface.
 
-Main sections: session summary, chat, materials, files, meeting link, status, client information, archive action.
+Main sections: currently mock cards.
 
-Primary actions: join meeting, send message, open material, upload or view file, archive session.
+Primary actions: none real yet.
 
-Navigation: dashboard, sessions, archive.
+## Archive: `/dashboard/archive`
 
-## Archive
+Purpose: future completed-session history.
 
-Purpose: show completed sessions and preserved history.
+Main sections: currently mock archive cards.
 
-Main sections: filters, search, archived session cards, materials, history.
+Primary actions: open historical session mock.
 
-Primary actions: search, filter, open archived session.
+## Public Profile: `/profile/[slug]`
 
-Navigation: dashboard, sessions.
+Purpose: client-facing specialist profile.
 
-## Settings
+Main sections: Supabase specialist profile, profile status badges, bio, languages, working rules, mock services.
 
-Purpose: manage account and workspace preferences.
+Primary actions: book session when `is_accepting_bookings` is true.
 
-Main sections: profile, password, notifications, availability, billing future, integrations future, danger zone.
+Navigation: public route. If profile does not exist, renders 404. If hidden/private, renders unavailable state.
 
-Primary actions: update account settings, update password, manage preferences.
+## Booking: `/profile/[slug]/book`
 
-Navigation: dashboard, profile, calendar.
+Purpose: future client booking flow.
+
+Main sections: mock service, date, time, client details, comment.
+
+Primary actions: confirm mock booking and open mock session.
+
+Navigation: public route. Does not write to Supabase yet.
+
+## Session Workspace: `/session/[id]`
+
+Purpose: future collaboration space for one booked session.
+
+Main sections: mock session summary, meeting link, chat, materials.
+
+Primary actions: join meeting mock, archive mock.
+
+Navigation: public route for now. Real access control is not implemented yet.

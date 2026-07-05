@@ -1,45 +1,21 @@
 # API
 
-## Purpose
+There are no custom application API routes yet.
 
-This document will define confirmed API boundaries, contracts, and integration behavior.
+Current backend interaction happens through Supabase client helpers:
 
-## Table of Contents
+- Supabase Auth for registration, login, logout, and sessions.
+- Supabase Postgres for specialist profiles and services.
+- Supabase Storage for avatars.
 
-- [API Strategy](#api-strategy)
-- [Authentication](#authentication)
-- [Endpoints](#endpoints)
-- [Request And Response Models](#request-and-response-models)
-- [Error Handling](#error-handling)
-- [External Integrations](#external-integrations)
-- [Related Documents](#related-documents)
+Existing route handler:
 
-## API Strategy
+- `src/app/auth/callback/route.ts` handles Supabase email auth callback redirects.
 
-TODO: Add confirmed API strategy.
+Future API boundaries should be added only when Supabase direct client access is no longer enough or when server-side validation/orchestration is required.
 
-## Authentication
+Related:
 
-TODO: Add confirmed authentication behavior.
-
-## Endpoints
-
-TODO: Add confirmed endpoints.
-
-## Request And Response Models
-
-TODO: Add confirmed request and response models.
-
-## Error Handling
-
-TODO: Add error conventions.
-
-## External Integrations
-
-TODO: Add confirmed external integrations.
-
-## Related Documents
-
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Database: [DATABASE.md](./DATABASE.md)
-- Stack: [STACK.md](./STACK.md)
+- [AUTH.md](./AUTH.md)
+- [SUPABASE.md](./SUPABASE.md)
+- [DATABASE.md](./DATABASE.md)
