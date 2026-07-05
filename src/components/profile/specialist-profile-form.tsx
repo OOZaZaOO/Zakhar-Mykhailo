@@ -1,8 +1,9 @@
 "use client";
 
-import { Upload, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfileSlugAvailability } from "@/hooks/use-profile-slug-availability";
 import { useSpecialistProfile } from "@/hooks/use-specialist-profile";
+import { setTemporaryAvatarPreview } from "@/lib/avatar-preview-store";
 import { languageOptions, normalizeLanguageList } from "@/lib/languages";
 import {
   generateProfileSlugFromIdentity,
@@ -36,15 +38,6 @@ type SpecialistProfileFormProps = {
   userLastName: string;
 };
 
-function getInitials(value: string) {
-  return value
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 export function SpecialistProfileForm({
   initialError,
   initialProfile,
@@ -59,7 +52,13 @@ export function SpecialistProfileForm({
       initialError,
       initialProfile,
     });
-  const [avatarUrl, setAvatarUrl] = useState(initialProfile?.avatar_url ?? "");
+  const [temporaryAvatar, setTemporaryAvatar] = useState<{
+    file: File | null;
+    previewUrl: string | null;
+  }>({
+    file: null,
+    previewUrl: null,
+  });
   const [displayName, setDisplayName] = useState(
     initialProfile?.display_name ?? userFirstName,
   );
@@ -97,9 +96,6 @@ export function SpecialistProfileForm({
   const [languageSearch, setLanguageSearch] = useState("");
   const [workingRules, setWorkingRules] = useState(
     initialProfile?.working_rules ?? "",
-  );
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(
-    initialProfile?.avatar_url ?? "",
   );
 
   const mode = profile ? "edit" : "create";
@@ -183,20 +179,6 @@ export function SpecialistProfileForm({
     setTimezoneError(null);
   }
 
-  function handleAvatarPreviewChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    setAvatarPreviewUrl(previewUrl);
-    setAvatarUrl("");
-  }
-
   function addLanguage(language: string) {
     if (selectedLanguages.length >= 10 || selectedLanguages.includes(language)) {
       return;
@@ -235,7 +217,7 @@ export function SpecialistProfileForm({
     }
 
     const savedProfile = await saveProfile({
-      avatarUrl,
+      avatarUrl: initialProfile?.avatar_url ?? "",
       bio,
       contactLinks: (initialProfile?.contact_links ?? {}) as Json,
       displayName,
@@ -248,8 +230,6 @@ export function SpecialistProfileForm({
     });
 
     if (savedProfile) {
-      setAvatarUrl(savedProfile.avatar_url ?? "");
-      setAvatarPreviewUrl(savedProfile.avatar_url ?? "");
       setSlug(savedProfile.slug);
       setHasUserEditedSlug(false);
     }
@@ -287,59 +267,19 @@ export function SpecialistProfileForm({
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <Label>Avatar</Label>
-              <div className="mt-2 flex flex-col gap-4 rounded-2xl bg-[#f7f3ec] p-4 sm:flex-row sm:items-center">
-                <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1f5f55] text-2xl font-bold text-white">
-                  {avatarPreviewUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      alt=""
-                      className="size-full object-cover"
-                      src={avatarPreviewUrl}
-                    />
-                  ) : (
-                    getInitials(displayName || userFirstName || "Profile")
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <p className="text-sm leading-6 text-[#5a6865]">
-                    Add a clear profile photo. Real upload will be connected
-                    later; for now this preview is local only.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      asChild
-                      className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
-                      type="button"
-                    >
-                      <label>
-                        <Upload className="mr-2 size-4" />
-                        {avatarPreviewUrl ? "Change photo" : "Upload photo"}
-                        <input
-                          accept="image/*"
-                          className="sr-only"
-                          onChange={handleAvatarPreviewChange}
-                          type="file"
-                        />
-                      </label>
-                    </Button>
-                    {avatarPreviewUrl ? (
-                      <Button
-                        className="rounded-full"
-                        onClick={() => {
-                          setAvatarPreviewUrl("");
-                          setAvatarUrl("");
-                        }}
-                        type="button"
-                        variant="outline"
-                      >
-                        <X className="mr-2 size-4" />
-                        Remove
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
+              <AvatarUpload
+                displayName={displayName || userFirstName || "Profile"}
+                initialPreviewUrl={initialProfile?.avatar_url}
+                onChange={(value) => {
+                  setTemporaryAvatar(value);
+                  setTemporaryAvatarPreview(value);
+                }}
+              />
+              {temporaryAvatar.file ? (
+                <p className="mt-2 text-xs font-medium text-[#66736f]">
+                  Selected locally: {temporaryAvatar.file.name}
+                </p>
+              ) : null}
             </div>
             <div>
               <Label htmlFor="display_name">Visible name</Label>

@@ -7,6 +7,10 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { recentBookings } from "@/data/mock";
+import {
+  getTemporaryAvatarPreview,
+  subscribeToTemporaryAvatarPreview,
+} from "@/lib/avatar-preview-store";
 import { getDashboardPathForAccountType } from "@/lib/auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -38,6 +42,9 @@ export function Header() {
   const [headerUser, setHeaderUser] = useState<HeaderUser | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [temporaryAvatarUrl, setTemporaryAvatarUrl] = useState(
+    () => getTemporaryAvatarPreview().previewUrl,
+  );
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -96,6 +103,14 @@ export function Header() {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    return subscribeToTemporaryAvatarPreview((preview) => {
+      setTemporaryAvatarUrl(preview.previewUrl);
+    });
+  }, []);
+
+  const avatarUrl = temporaryAvatarUrl || headerUser?.avatarUrl || null;
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#ded5c8] bg-[#fffaf2]/90 backdrop-blur">
@@ -195,12 +210,12 @@ export function Header() {
                     Signed in
                   </span>
                   <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/20 text-xs font-bold text-white">
-                    {headerUser.avatarUrl ? (
+                    {avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         alt=""
                         className="size-full object-cover"
-                        src={headerUser.avatarUrl}
+                        src={avatarUrl}
                       />
                     ) : (
                       getInitials(headerUser.name)
