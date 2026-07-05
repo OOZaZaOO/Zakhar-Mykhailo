@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { UnsavedChangesBar } from "@/components/shared/unsaved-changes-bar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -198,6 +199,8 @@ export function SpecialistProfileForm({
   const [timezoneSearch, setTimezoneSearch] = useState(
     initialSavedSnapshot.timezoneSearch,
   );
+  const [isTimezoneDialogOpen, setIsTimezoneDialogOpen] = useState(false);
+  const [advancedTimezoneSearch, setAdvancedTimezoneSearch] = useState("");
   const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [selectedLanguages, setSelectedLanguages] = useState(
     initialSavedSnapshot.languages,
@@ -228,10 +231,15 @@ export function SpecialistProfileForm({
     (slugAvailabilityStatus === "taken" ||
       slugAvailabilityStatus === "checking");
   const countryTimezonesForSelection = getTimezonesByCountry(country);
-  const timezoneOptions =
-    countryTimezonesForSelection.length > 0
-      ? countryTimezonesForSelection
-      : getAllTimezones();
+  const timezoneSelectOptions =
+    timezone && !countryTimezonesForSelection.includes(timezone)
+      ? [timezone, ...countryTimezonesForSelection]
+      : countryTimezonesForSelection;
+  const isTimezoneSelectDisabled =
+    !country ||
+    (countryTimezonesForSelection.length === 1 &&
+      countryTimezonesForSelection.includes(timezone));
+  const allTimezones = useMemo(() => getAllTimezones(), []);
   const countrySuggestions = countryTimezones
     .filter((item) => {
       const normalizedCountry = item.country.toLowerCase();
@@ -245,18 +253,14 @@ export function SpecialistProfileForm({
       );
     })
     .slice(0, 6);
-  const timezoneSuggestions = timezoneOptions
+  const advancedTimezoneSuggestions = allTimezones
     .filter((item) => {
       const normalizedTimezone = item.toLowerCase();
-      const normalizedSearch = timezoneSearch.trim().toLowerCase();
+      const normalizedSearch = advancedTimezoneSearch.trim().toLowerCase();
 
-      return (
-        normalizedSearch &&
-        normalizedTimezone.includes(normalizedSearch) &&
-        item !== timezone
-      );
+      return !normalizedSearch || normalizedTimezone.includes(normalizedSearch);
     })
-    .slice(0, 6);
+    .slice(0, 40);
   const languageSuggestions = languageOptions
     .filter((language) => {
       const normalizedLanguage = language.toLowerCase();
@@ -320,6 +324,7 @@ export function SpecialistProfileForm({
     }));
     setTimezone(nextTimezones.length === 1 ? nextTimezones[0] : "");
     setTimezoneSearch(nextTimezones.length === 1 ? nextTimezones[0] : "");
+    setAdvancedTimezoneSearch("");
   }
 
   function selectTimezone(value: string) {
@@ -329,6 +334,12 @@ export function SpecialistProfileForm({
       ...currentErrors,
       timezone: undefined,
     }));
+  }
+
+  function selectAdvancedTimezone(value: string) {
+    selectTimezone(value);
+    setAdvancedTimezoneSearch("");
+    setIsTimezoneDialogOpen(false);
   }
 
   function addLanguage(language: string) {
@@ -362,6 +373,8 @@ export function SpecialistProfileForm({
     setWorkingRules(snapshot.workingRules);
     setLanguageSearch("");
     setIsCountrySearchOpen(false);
+    setIsTimezoneDialogOpen(false);
+    setAdvancedTimezoneSearch("");
     setFieldErrors({});
     setHasUserEditedSlug(false);
     setTemporaryAvatar({
@@ -650,6 +663,8 @@ export function SpecialistProfileForm({
                     setCountry("");
                     setTimezone("");
                     setTimezoneSearch("");
+                    setAdvancedTimezoneSearch("");
+                    setIsTimezoneDialogOpen(false);
                   }}
                   onFocus={() => setIsCountrySearchOpen(true)}
                   onKeyDown={(event) => {
@@ -679,44 +694,39 @@ export function SpecialistProfileForm({
             </div>
             <div>
               <Label htmlFor="timezone">Timezone</Label>
-              <div className="relative mt-2">
-                <Input
+              <div className="mt-2 space-y-3">
+                <select
                   aria-invalid={Boolean(fieldErrors.timezone)}
-                  className={`h-11 rounded-xl border-[#d9ceb9] ${
+                  className={`h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm font-semibold text-[#24312f] outline-none transition disabled:cursor-not-allowed disabled:bg-[#f7f3ec] disabled:text-[#66736f] ${
                     fieldErrors.timezone ? invalidInputClass : ""
                   }`}
+                  disabled={isTimezoneSelectDisabled}
                   id="timezone"
                   onChange={(event) => {
-                    setTimezoneSearch(event.target.value);
-                    setTimezone("");
-                    setFieldErrors((currentErrors) => ({
-                      ...currentErrors,
-                      timezone: undefined,
-                    }));
+                    selectTimezone(event.target.value);
                   }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && timezoneSuggestions[0]) {
-                      event.preventDefault();
-                      selectTimezone(timezoneSuggestions[0]);
-                    }
-                  }}
-                  placeholder="Search timezone..."
                   value={timezoneSearch}
-                />
-                {timezoneSuggestions.length > 0 ? (
-                  <div className="absolute left-0 right-0 top-12 z-30 overflow-hidden rounded-2xl border border-[#ded5c8] bg-white shadow-lg">
-                    {timezoneSuggestions.map((item) => (
-                      <button
-                        className="block w-full px-4 py-3 text-left text-sm font-semibold text-[#24312f] transition hover:bg-[#f7f3ec]"
-                        key={item}
-                        onClick={() => selectTimezone(item)}
-                        type="button"
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
+                >
+                  {!country ? (
+                    <option value="">Select country first</option>
+                  ) : null}
+                  {country && !timezone ? (
+                    <option value="">Select timezone</option>
+                  ) : null}
+                  {timezoneSelectOptions.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  className="h-auto rounded-full px-0 text-sm font-bold text-[#1f5f55] hover:text-[#153f39]"
+                  onClick={() => setIsTimezoneDialogOpen(true)}
+                  type="button"
+                  variant="link"
+                >
+                  Choose another timezone
+                </Button>
               </div>
               {fieldErrors.timezone ? (
                 <p className={fieldErrorClass}>{fieldErrors.timezone}</p>
@@ -836,6 +846,79 @@ export function SpecialistProfileForm({
           Services and payments are intentionally outside this stage.
         </p>
       </form>
+      {isTimezoneDialogOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-[#17211f]/35 px-4 py-4 backdrop-blur-sm sm:items-center sm:justify-center">
+          <div className="w-full overflow-hidden rounded-3xl border border-[#ded5c8] bg-white shadow-2xl sm:max-w-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[#eadfce] px-5 py-4">
+              <div>
+                <h2 className="text-lg font-semibold text-[#24312f]">
+                  Choose another timezone
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-[#66736f]">
+                  Advanced selection. Your selected country will stay the same.
+                </p>
+              </div>
+              <button
+                aria-label="Close timezone picker"
+                className="rounded-full p-2 text-[#66736f] transition hover:bg-[#f7f3ec] hover:text-[#24312f]"
+                onClick={() => {
+                  setIsTimezoneDialogOpen(false);
+                  setAdvancedTimezoneSearch("");
+                }}
+                type="button"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="p-5">
+              <Input
+                autoFocus
+                className="h-11 rounded-xl border-[#d9ceb9]"
+                onChange={(event) =>
+                  setAdvancedTimezoneSearch(event.target.value)
+                }
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    advancedTimezoneSuggestions[0]
+                  ) {
+                    event.preventDefault();
+                    selectAdvancedTimezone(advancedTimezoneSuggestions[0]);
+                  }
+
+                  if (event.key === "Escape") {
+                    setIsTimezoneDialogOpen(false);
+                    setAdvancedTimezoneSearch("");
+                  }
+                }}
+                placeholder="Search timezone..."
+                value={advancedTimezoneSearch}
+              />
+              <div className="mt-4 max-h-[360px] overflow-y-auto rounded-2xl border border-[#ded5c8]">
+                {advancedTimezoneSuggestions.map((item) => (
+                  <button
+                    className={`block w-full px-4 py-3 text-left text-sm font-semibold transition hover:bg-[#f7f3ec] ${
+                      item === timezone
+                        ? "bg-[#eef1da] text-[#5d6b2f]"
+                        : "text-[#24312f]"
+                    }`}
+                    key={item}
+                    onClick={() => selectAdvancedTimezone(item)}
+                    type="button"
+                  >
+                    {item}
+                  </button>
+                ))}
+                {advancedTimezoneSuggestions.length === 0 ? (
+                  <p className="px-4 py-5 text-sm font-medium text-[#66736f]">
+                    No timezone found.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {hasUnsavedChanges ? (
         <UnsavedChangesBar
           formId={profileFormId}
