@@ -15,6 +15,7 @@ type AvatarUploadValue = {
 type AvatarUploadProps = {
   displayName: string;
   initialPreviewUrl?: string | null;
+  isSaving?: boolean;
   onChange?: (value: AvatarUploadValue) => void;
 };
 
@@ -37,6 +38,7 @@ function isAllowedAvatarFile(file: File) {
 export function AvatarUpload({
   displayName,
   initialPreviewUrl,
+  isSaving = false,
   onChange,
 }: AvatarUploadProps) {
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,10 @@ export function AvatarUpload({
   }
 
   function updateAvatar(file: File) {
+    if (isSaving) {
+      return;
+    }
+
     if (!isAllowedAvatarFile(file)) {
       setError("Use a JPG, PNG, or WebP image.");
       resetFileInput();
@@ -86,6 +92,10 @@ export function AvatarUpload({
   }
 
   function removeAvatar() {
+    if (isSaving) {
+      return;
+    }
+
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
@@ -123,6 +133,7 @@ export function AvatarUpload({
         aria-label="Choose avatar photo"
         className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1f5f55] text-2xl font-bold text-white ring-4 ring-white transition hover:bg-[#174a43]"
         onClick={() => fileInputRef.current?.click()}
+        disabled={isSaving}
         type="button"
       >
         {previewUrl ? (
@@ -145,24 +156,30 @@ export function AvatarUpload({
             Profile photo
           </p>
           <p className="mt-1 text-sm leading-6 text-[#5a6865]">
-            Choose a clear JPG, PNG, or WebP image. It will be saved after you
-            save your profile.
+            Choose a clear JPG, PNG, or WebP image. Changes are saved
+            automatically.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button
             className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
+            disabled={isSaving}
             onClick={() => fileInputRef.current?.click()}
             type="button"
           >
             <Upload className="mr-2 size-4" />
-            {previewUrl ? "Change photo" : "Upload photo"}
+            {isSaving
+              ? "Saving..."
+              : previewUrl
+                ? "Change photo"
+                : "Upload photo"}
           </Button>
 
           {previewUrl ? (
             <Button
               className="rounded-full"
+              disabled={isSaving}
               onClick={removeAvatar}
               type="button"
               variant="outline"

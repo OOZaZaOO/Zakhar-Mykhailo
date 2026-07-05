@@ -55,6 +55,7 @@ export function useSpecialistProfile({
   const [profile, setProfile] = useState(initialProfile);
   const [error, setError] = useState<string | null>(initialError);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isAvatarSaving, setIsAvatarSaving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   async function saveProfile(values: SpecialistProfileFormValues) {
@@ -157,10 +158,96 @@ export function useSpecialistProfile({
     return data;
   }
 
+  async function saveAvatar({
+    avatarFile,
+    avatarShouldRemove,
+    currentAvatarUrl,
+    userId,
+  }: {
+    avatarFile: File | null;
+    avatarShouldRemove: boolean;
+    currentAvatarUrl: string;
+    userId: string;
+  }) {
+    if (isAvatarSaving) {
+      return null;
+    }
+
+    if (!profile) {
+      setError("Create your profile before adding a profile photo.");
+      return null;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setIsAvatarSaving(true);
+
+    const supabase = createSupabaseBrowserClient();
+    let nextAvatarUrl = currentAvatarUrl;
+    let previousAvatarUrlToRemove = "";
+
+    if (avatarShouldRemove && currentAvatarUrl) {
+      previousAvatarUrlToRemove = currentAvatarUrl;
+      nextAvatarUrl = "";
+    }
+
+    if (avatarFile) {
+      previousAvatarUrlToRemove = currentAvatarUrl;
+      const { error: uploadAvatarError, publicUrl } =
+        await uploadSpecialistAvatar({
+          file: avatarFile,
+          supabase,
+          userId,
+        });
+
+      if (uploadAvatarError || !publicUrl) {
+        setError(
+          getFriendlyProfileError(
+            uploadAvatarError?.message ?? "Avatar upload failed.",
+          ),
+        );
+        setIsAvatarSaving(false);
+        return null;
+      }
+
+      nextAvatarUrl = publicUrl;
+    }
+
+    const { data, error: updateError } = await supabase
+      .from("specialist_profiles")
+      .update({
+        avatar_url: nextAvatarUrl || null,
+      })
+      .eq("id", profile.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      setError(getFriendlyProfileError(updateError.message));
+      setIsAvatarSaving(false);
+      return null;
+    }
+
+    if (previousAvatarUrlToRemove) {
+      await removeSpecialistAvatar({
+        avatarUrl: previousAvatarUrlToRemove,
+        supabase,
+      });
+    }
+
+    setProfile(data);
+    setSuccess(nextAvatarUrl ? "Profile photo saved." : "Profile photo removed.");
+    setIsAvatarSaving(false);
+
+    return data;
+  }
+
   return {
     error,
+    isAvatarSaving,
     isSaving,
     profile,
+    saveAvatar,
     saveProfile,
     success,
   };

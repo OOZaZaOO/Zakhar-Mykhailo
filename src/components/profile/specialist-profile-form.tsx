@@ -161,8 +161,10 @@ export function SpecialistProfileForm({
   });
   const {
     error,
+    isAvatarSaving,
     isSaving,
     profile,
+    saveAvatar,
     saveProfile,
     success,
   } = useSpecialistProfile({
@@ -269,11 +271,7 @@ export function SpecialistProfileForm({
     .slice(0, 6);
   const currentSnapshot = useMemo(
     () => ({
-      avatarUrl:
-        temporaryAvatar.previewUrl ??
-        (temporaryAvatar.shouldRemove
-          ? ""
-          : profile?.avatar_url ?? initialProfile?.avatar_url ?? ""),
+      avatarUrl: savedSnapshot.avatarUrl,
       bio,
       country,
       countrySearch,
@@ -290,13 +288,10 @@ export function SpecialistProfileForm({
       country,
       countrySearch,
       displayName,
-      initialProfile?.avatar_url,
       profession,
-      profile?.avatar_url,
+      savedSnapshot.avatarUrl,
       selectedLanguages,
       slug,
-      temporaryAvatar.previewUrl,
-      temporaryAvatar.shouldRemove,
       timezone,
       timezoneSearch,
       workingRules,
@@ -386,6 +381,64 @@ export function SpecialistProfileForm({
     restoreFromSnapshot(savedSnapshot);
   }
 
+  async function handleAvatarChange(value: {
+    file: File | null;
+    previewUrl: string | null;
+    shouldRemove: boolean;
+  }) {
+    setTemporaryAvatar(value);
+    setTemporaryAvatarPreview({
+      file: value.file,
+      hasOverride: true,
+      previewUrl: value.previewUrl,
+    });
+
+    const savedProfile = await saveAvatar({
+      avatarFile: value.file,
+      avatarShouldRemove: value.shouldRemove,
+      currentAvatarUrl: profile?.avatar_url ?? savedSnapshot.avatarUrl,
+      userId,
+    });
+
+    if (!savedProfile) {
+      setTemporaryAvatar({
+        file: null,
+        previewUrl: null,
+        shouldRemove: false,
+      });
+      setTemporaryAvatarPreview({
+        file: null,
+        hasOverride: true,
+        previewUrl: savedSnapshot.avatarUrl || null,
+      });
+      setAvatarRenderKey((currentKey) => currentKey + 1);
+      return;
+    }
+
+    const nextSavedSnapshot = getSnapshotFromProfile({
+      fallbackDisplayName: userFirstName,
+      fallbackSlug,
+      profile: savedProfile,
+    });
+
+    setTemporaryAvatar({
+      file: null,
+      previewUrl: null,
+      shouldRemove: false,
+    });
+    setTemporaryAvatarPreview({
+      file: null,
+      hasOverride: true,
+      previewUrl: nextSavedSnapshot.avatarUrl || null,
+    });
+    setSavedSnapshot((currentSavedSnapshot) => ({
+      ...currentSavedSnapshot,
+      avatarUrl: nextSavedSnapshot.avatarUrl,
+    }));
+    setAvatarRenderKey((currentKey) => currentKey + 1);
+    router.refresh();
+  }
+
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -407,8 +460,6 @@ export function SpecialistProfileForm({
     }
 
     const savedProfile = await saveProfile({
-      avatarFile: temporaryAvatar.file,
-      avatarShouldRemove: temporaryAvatar.shouldRemove,
       avatarUrl: profile?.avatar_url ?? initialProfile?.avatar_url ?? "",
       bio,
       contactLinks: (initialProfile?.contact_links ?? {}) as Json,
@@ -487,20 +538,21 @@ export function SpecialistProfileForm({
                 initialPreviewUrl={
                   profile?.avatar_url ?? initialProfile?.avatar_url
                 }
+                isSaving={isAvatarSaving}
                 key={avatarRenderKey}
                 onChange={(value) => {
-                  setTemporaryAvatar(value);
-                  setTemporaryAvatarPreview({
-                    file: value.file,
-                    hasOverride: true,
-                    previewUrl: value.previewUrl,
-                  });
+                  void handleAvatarChange(value);
                 }}
               />
-              {temporaryAvatar.file ? (
+              {isAvatarSaving ? (
+                <p className="mt-2 text-xs font-semibold text-[#1f5f55]">
+                  Saving profile photo...
+                </p>
+              ) : null}
+              {temporaryAvatar.file && !isAvatarSaving ? (
                 <p className="mt-2 text-xs font-medium text-[#66736f]">
-                  Selected: {temporaryAvatar.file.name}. Save changes to keep
-                  this photo after refresh.
+                  Selected: {temporaryAvatar.file.name}. The photo is saved
+                  automatically.
                 </p>
               ) : null}
             </div>
