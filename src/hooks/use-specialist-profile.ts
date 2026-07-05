@@ -22,6 +22,14 @@ function getFriendlyProfileError(message: string) {
     return "Avatar storage is not configured yet. Apply the Supabase storage migration and try again.";
   }
 
+  if (message.includes("new row violates row-level security policy")) {
+    return "Avatar storage permissions are not configured yet. Apply the Supabase storage migration and try again.";
+  }
+
+  if (message.includes("The resource already exists")) {
+    return "This avatar file already exists. Choose the image again and try saving once more.";
+  }
+
   if (message.includes("specialist_profiles_slug_key")) {
     return "This public slug is already taken. Choose another one.";
   }
@@ -83,23 +91,15 @@ export function useSpecialistProfile({
     }
 
     let nextAvatarUrl = values.avatarUrl;
+    let previousAvatarUrlToRemove = "";
 
     if (values.avatarShouldRemove && values.avatarUrl) {
-      const { error: removeAvatarError } = await removeSpecialistAvatar({
-        avatarUrl: values.avatarUrl,
-        supabase,
-      });
-
-      if (removeAvatarError) {
-        setError(getFriendlyProfileError(removeAvatarError.message));
-        setIsSaving(false);
-        return null;
-      }
-
+      previousAvatarUrlToRemove = values.avatarUrl;
       nextAvatarUrl = "";
     }
 
     if (values.avatarFile) {
+      previousAvatarUrlToRemove = nextAvatarUrl;
       const { error: uploadAvatarError, publicUrl } =
         await uploadSpecialistAvatar({
           file: values.avatarFile,
@@ -133,6 +133,19 @@ export function useSpecialistProfile({
       setError(getFriendlyProfileError(saveError.message));
       setIsSaving(false);
       return null;
+    }
+
+    if (values.avatarFile && !data.avatar_url) {
+      setError("Avatar uploaded, but the profile did not save its URL. Try saving again.");
+      setIsSaving(false);
+      return null;
+    }
+
+    if (previousAvatarUrlToRemove) {
+      await removeSpecialistAvatar({
+        avatarUrl: previousAvatarUrlToRemove,
+        supabase,
+      });
     }
 
     setProfile(data);

@@ -17,7 +17,12 @@ function getAvatarExtension(file: File) {
 }
 
 export function getSpecialistAvatarPath(userId: string, file: File) {
-  return `${userId}/avatar.${getAvatarExtension(file)}`;
+  const uploadId =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  return `${userId}/avatars/${uploadId}.${getAvatarExtension(file)}`;
 }
 
 export function getSpecialistAvatarPathFromUrl(url: string) {
@@ -52,9 +57,9 @@ export async function uploadSpecialistAvatar({
   const { error } = await supabase.storage
     .from(specialistAvatarBucket)
     .upload(path, file, {
-      cacheControl: "3600",
+      cacheControl: "31536000",
       contentType: file.type,
-      upsert: true,
+      upsert: false,
     });
 
   if (error) {

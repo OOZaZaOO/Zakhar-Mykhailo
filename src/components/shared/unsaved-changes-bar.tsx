@@ -21,11 +21,11 @@ export function UnsavedChangesBar({
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-5 z-40 px-5 sm:bottom-6 sm:px-8",
+        "fixed inset-x-0 bottom-5 z-40 animate-[unsaved-bar-enter_260ms_cubic-bezier(0.16,1,0.3,1)] px-5 sm:bottom-6 sm:px-8",
         className,
       )}
     >
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-[#ded5c8] bg-[#fffaf2]/95 p-3 shadow-2xl shadow-[#2b2118]/15 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-[#ded5c8] bg-[#fffaf2]/95 p-3 shadow-2xl shadow-[#2b2118]/15 backdrop-blur transition-transform duration-200 ease-out hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-[#24312f]">
             You have unsaved changes
