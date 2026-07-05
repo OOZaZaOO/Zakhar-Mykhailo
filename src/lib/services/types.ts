@@ -11,10 +11,10 @@ export type ServiceFormat = Service["format"];
 export type ServiceFormValues = {
   currency: string;
   description: string;
-  durationMinutes: number;
+  durationMinutes: number | "";
   format: ServiceFormat;
   isActive: boolean;
-  priceAmount: number;
-  sortOrder: number;
+  priceAmount: number | "";
+  sortOrder: number | "";
   title: string;
 };

@@ -451,7 +451,7 @@ export function ServicesManager({
                   onChange={(event) =>
                     updateFormValue(
                       "durationMinutes",
-                      Number(event.target.value),
+                      event.target.value === "" ? "" : Number(event.target.value),
                     )
                   }
                   placeholder="60"
@@ -466,7 +466,7 @@ export function ServicesManager({
                   id="service-price"
                   min={0}
                   onChange={(event) =>
-                    updateFormValue("priceAmount", Number(event.target.value))
+                    updateFormValue("priceAmount", event.target.value === "" ? "" : Number(event.target.value))
                   }
                   placeholder="5000"
                   type="number"
@@ -515,7 +515,7 @@ export function ServicesManager({
                   className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                   id="service-sort"
                   onChange={(event) =>
-                    updateFormValue("sortOrder", Number(event.target.value))
+                    updateFormValue("sortOrder", event.target.value === "" ? "" : Number(event.target.value))
                   }
                   placeholder="0"
                   type="number"

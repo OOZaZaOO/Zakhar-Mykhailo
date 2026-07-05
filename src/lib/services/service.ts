@@ -14,10 +14,10 @@ export function getDefaultServiceFormValues(): ServiceFormValues {
   return {
     currency: "EUR",
     description: "",
-    durationMinutes: 60,
+    durationMinutes: "",
     format: "online",
     isActive: true,
-    priceAmount: 0,
+    priceAmount: "",
     sortOrder: 0,
     title: "",
   };
@@ -41,11 +41,11 @@ export function validateServiceForm(values: ServiceFormValues) {
     return "Service title is required.";
   }
 
-  if (values.durationMinutes <= 0 || values.durationMinutes > 1440) {
+  if (values.durationMinutes === "" || values.durationMinutes <= 0 || values.durationMinutes > 1440) {
     return "Duration must be between 1 and 1440 minutes.";
   }
 
-  if (values.priceAmount < 0) {
+  if (values.priceAmount === "" || values.priceAmount < 0) {
     return "Price cannot be negative.";
   }
 
@@ -60,11 +60,11 @@ function getServicePayload(values: ServiceFormValues) {
   return {
     currency: values.currency.trim().toUpperCase(),
     description: values.description.trim(),
-    duration_minutes: values.durationMinutes,
+    duration_minutes: values.durationMinutes === "" ? 0 : values.durationMinutes,
     format: values.format,
     is_active: values.isActive,
-    price_amount: values.priceAmount,
-    sort_order: values.sortOrder,
+    price_amount: values.priceAmount === "" ? 0 : values.priceAmount,
+    sort_order: values.sortOrder === "" ? 0 : values.sortOrder,
     title: values.title.trim(),
   };
 }
