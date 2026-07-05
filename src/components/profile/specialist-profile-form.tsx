@@ -539,10 +539,6 @@ export function SpecialistProfileForm({
         <Card className="rounded-3xl border-[#ded5c8] bg-white">
           <CardHeader>
             <CardTitle>Profile basics</CardTitle>
-            <p className="text-sm leading-6 text-[#66736f]">
-              These fields are stored in `specialist_profiles` and protected by
-              Supabase RLS.
-            </p>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
