@@ -1,11 +1,15 @@
 import { redirect } from "next/navigation";
 
-import { WeeklyAvailabilityEditor } from "@/components/calendar/weekly-availability-editor";
+import { WeekAvailabilityEditor } from "@/components/calendar/week-availability-editor";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ProfileGatedEmptyState } from "@/components/onboarding/profile-gated-empty-state";
 import { Badge } from "@/components/ui/badge";
-import { createScheduleFromAvailabilityBlocks } from "@/lib/availability/schedule";
-import { getAvailabilityBlocksForSpecialistProfile } from "@/lib/availability/service";
+import { getAvailableExceptionsForSpecialistWeek } from "@/lib/availability/service";
+import {
+  createWeekScheduleFromAvailabilityExceptions,
+  formatDateKey,
+  getWeekStartFromParam,
+} from "@/lib/availability/week";
 import {
   canAccessProfileFeature,
   getProfileCompletion,
@@ -13,7 +17,16 @@ import {
 import { getOwnSpecialistProfile } from "@/lib/profile/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default async function CalendarPage() {
+type CalendarPageProps = {
+  searchParams?: Promise<{
+    week?: string;
+  }>;
+};
+
+export default async function CalendarPage({
+  searchParams,
+}: CalendarPageProps) {
+  const resolvedSearchParams = await searchParams;
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -42,11 +55,19 @@ export default async function CalendarPage() {
     );
   }
 
-  const { data: availabilityBlocks, error: availabilityError } =
-    await getAvailabilityBlocksForSpecialistProfile(supabase, profile.id);
-  const initialSchedule = createScheduleFromAvailabilityBlocks(
-    availabilityBlocks ?? [],
-  );
+  const selectedWeekStart = getWeekStartFromParam(resolvedSearchParams?.week);
+  const { data: availabilityExceptions, error: availabilityError } =
+    await getAvailableExceptionsForSpecialistWeek({
+      specialistProfileId: profile.id,
+      supabase,
+      timezone: profile.timezone,
+      weekStart: selectedWeekStart,
+    });
+  const initialSchedule = createWeekScheduleFromAvailabilityExceptions({
+    exceptions: availabilityExceptions ?? [],
+    timezone: profile.timezone,
+    weekStart: selectedWeekStart,
+  });
 
   return (
     <DashboardLayout>
@@ -59,7 +80,7 @@ export default async function CalendarPage() {
             Calendar
           </h1>
           <p className="mt-3 max-w-2xl text-base leading-7 text-[#5a6865]">
-            Set your weekly availability for bookings.
+            Set your availability for each week.
           </p>
         </div>
       </div>
@@ -84,9 +105,10 @@ export default async function CalendarPage() {
           {availabilityError.message}
         </div>
       ) : (
-        <WeeklyAvailabilityEditor
+        <WeekAvailabilityEditor
           initialIsAcceptingBookings={profile.is_accepting_bookings}
           initialSchedule={initialSchedule}
+          selectedWeekStart={formatDateKey(selectedWeekStart)}
           specialistProfileId={profile.id}
           timezone={profile.timezone}
         />

@@ -94,11 +94,11 @@ Currently used by code:
 
 - `specialist_profiles`
 - `services`
-- `availability_blocks`
+- `availability_exceptions`
 
 Created but not yet used by real UI:
 
-- `availability_exceptions`
+- `availability_blocks`
 
 ## Related Storage Migrations
 

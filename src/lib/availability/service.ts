@@ -4,7 +4,14 @@ import {
   allDayNumbers,
   getComparableSchedule,
 } from "@/lib/availability/schedule";
-import type { WeeklyAvailabilitySchedule } from "@/lib/availability/types";
+import type {
+  WeekAvailabilitySchedule,
+  WeeklyAvailabilitySchedule,
+} from "@/lib/availability/types";
+import {
+  createAvailabilityExceptionPayload,
+  getWeekUtcRange,
+} from "@/lib/availability/week";
 import type { Database } from "@/lib/supabase/types";
 
 type AvailabilityClient = SupabaseClient<Database>;
@@ -79,4 +86,83 @@ export async function replaceWeeklyAvailabilityBlocks({
 export function getEmptyAvailabilityCount(schedule: WeeklyAvailabilitySchedule) {
   return allDayNumbers.filter((dayOfWeek) => schedule[dayOfWeek].enabled)
     .length;
+}
+
+export async function getAvailableExceptionsForSpecialistWeek({
+  specialistProfileId,
+  supabase,
+  timezone,
+  weekStart,
+}: {
+  specialistProfileId: string;
+  supabase: AvailabilityClient;
+  timezone: string;
+  weekStart: Date;
+}) {
+  const { weekEndUtc, weekStartUtc } = getWeekUtcRange(weekStart, timezone);
+
+  return supabase
+    .from("availability_exceptions")
+    .select("*")
+    .eq("specialist_profile_id", specialistProfileId)
+    .eq("exception_type", "available")
+    .eq("is_active", true)
+    .lt("starts_at", weekEndUtc.toISOString())
+    .gt("ends_at", weekStartUtc.toISOString())
+    .order("starts_at", { ascending: true });
+}
+
+export async function replaceWeekAvailabilityExceptions({
+  schedule,
+  specialistProfileId,
+  supabase,
+  timezone,
+  weekStart,
+}: {
+  schedule: WeekAvailabilitySchedule;
+  specialistProfileId: string;
+  supabase: AvailabilityClient;
+  timezone: string;
+  weekStart: Date;
+}) {
+  const { weekEndUtc, weekStartUtc } = getWeekUtcRange(weekStart, timezone);
+
+  // TODO: When bookings exist, changing availability must respect already booked sessions.
+  const { error: deleteError } = await supabase
+    .from("availability_exceptions")
+    .delete()
+    .eq("specialist_profile_id", specialistProfileId)
+    .eq("exception_type", "available")
+    .lt("starts_at", weekEndUtc.toISOString())
+    .gt("ends_at", weekStartUtc.toISOString());
+
+  if (deleteError) {
+    return {
+      data: null,
+      error: deleteError,
+    };
+  }
+
+  const payload = createAvailabilityExceptionPayload({
+    schedule,
+    specialistProfileId,
+    timezone,
+  });
+
+  if (payload.length === 0) {
+    return {
+      data: [],
+      error: null,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("availability_exceptions")
+    .insert(payload)
+    .select();
+
+  return {
+    data,
+    error,
+  };
 }

@@ -44,11 +44,11 @@ The code currently uses:
 
 - `specialist_profiles` for specialist profile CRUD, public profiles, avatars, profile completion, and booking status.
 - `services` for real services CRUD.
+- `availability_exceptions` for week-specific date availability on the Calendar page.
 
 The code does not yet use:
 
 - `availability_blocks`
-- `availability_exceptions`
 
 Future tables are documented in [DATABASE.md](./DATABASE.md).
 
@@ -122,7 +122,6 @@ Before local or deployed avatar/profile work is reliable:
 
 - Generate Supabase types from the remote project instead of maintaining them manually.
 - Create `client_profiles`.
-- Implement availability CRUD.
 - Implement booking/session/message/material/file tables.
 - Implement realtime chat if needed.
 - Add payments and subscriptions after provider selection.

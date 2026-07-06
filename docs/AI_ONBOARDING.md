@@ -32,7 +32,7 @@ Real backend-connected features:
 - Profile completion and gating.
 - Services CRUD.
 - Booking status toggle.
-- Weekly availability CRUD.
+- Week-specific availability CRUD.
 
 Mock or placeholder features:
 
@@ -59,7 +59,7 @@ Mock or placeholder features:
 - Profile completion helper.
 - Gated empty state for incomplete profile.
 - Services create, edit, delete, active toggle.
-- Weekly availability create/update/clear through `availability_blocks`.
+- Week-specific availability create/update/clear through `availability_exceptions`.
 
 ## Incomplete Features
 
@@ -136,7 +136,7 @@ Specialist:
 
 - Real profile management.
 - Real services management.
-- Calendar booking-status toggle and weekly availability management.
+- Calendar booking-status toggle and week-specific availability management.
 - Mock dashboard/session/archive/settings areas.
 
 Client:

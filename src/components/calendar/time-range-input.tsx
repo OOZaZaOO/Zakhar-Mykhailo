@@ -7,6 +7,7 @@ import type { AvailabilityRange } from "@/lib/availability/types";
 
 type TimeRangeInputProps = {
   canRemove: boolean;
+  disabled?: boolean;
   onChange: (range: AvailabilityRange) => void;
   onRemove: () => void;
   range: AvailabilityRange;
@@ -15,6 +16,7 @@ type TimeRangeInputProps = {
 
 export function TimeRangeInput({
   canRemove,
+  disabled = false,
   onChange,
   onRemove,
   range,
@@ -25,6 +27,7 @@ export function TimeRangeInput({
       <select
         aria-label="Start time"
         className="h-11 rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm font-semibold text-[#24312f] outline-none transition focus:border-[#1f5f55]"
+        disabled={disabled}
         onChange={(event) =>
           onChange({
             ...range,
@@ -45,6 +48,7 @@ export function TimeRangeInput({
       <select
         aria-label="End time"
         className="h-11 rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm font-semibold text-[#24312f] outline-none transition focus:border-[#1f5f55]"
+        disabled={disabled}
         onChange={(event) =>
           onChange({
             ...range,
@@ -62,7 +66,7 @@ export function TimeRangeInput({
       <Button
         aria-label="Remove time range"
         className="h-11 rounded-full border-[#d9ceb9] px-4 text-[#9a4c2f] hover:bg-[#f6ddd4]"
-        disabled={!canRemove}
+        disabled={disabled || !canRemove}
         onClick={onRemove}
         type="button"
         variant="outline"

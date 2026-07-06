@@ -15,7 +15,7 @@
 - Client navigation includes future routes that are not implemented.
 - Services delete is hard delete; it should become archive/deactivate after bookings reference services.
 - Public profile displays mock services even when real services exist.
-- Calendar weekly availability replaces rows on save; future booking-aware updates may need versioning or audit handling.
+- Calendar week-specific availability replaces selected-week rows on save; future booking-aware updates must respect already booked sessions.
 - Header loads specialist profile in a client component after auth load, causing a small delayed identity update.
 - Profile `contact_links` exists in database but is not represented by friendly UI fields.
 - `visibility` remains in database but is not exposed in UI; current create flow inserts `public`.

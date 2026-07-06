@@ -41,7 +41,7 @@ Implemented:
 - Profile completion helper and feature gating.
 - Services CRUD connected to Supabase `services`.
 - Booking availability toggle persisted to `specialist_profiles.is_accepting_bookings`.
-- Weekly availability management connected to Supabase `availability_blocks`.
+- Week-specific availability management connected to Supabase `availability_exceptions`.
 
 Still mocked or incomplete:
 

@@ -74,9 +74,9 @@ Navigation: gated until profile completion is 100%.
 
 Purpose: manage booking availability settings.
 
-Main sections: specialist timezone, real booking-status toggle, weekly working-hours editor, quick setup actions.
+Main sections: specialist timezone, real booking-status toggle, selected week navigation, date-specific availability editor, week copy actions.
 
-Primary actions: turn accepting new bookings on/off, enable or disable days, add/remove time ranges, copy a day to weekdays or all days, save/cancel changes.
+Primary actions: turn accepting new bookings on/off, move between weeks, enable or disable dates, add/remove time ranges, copy from previous week, copy this week forward, clear week, save/cancel changes.
 
 Navigation: gated until profile completion is 100%.
 

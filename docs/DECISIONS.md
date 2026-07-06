@@ -23,7 +23,8 @@
 - Services, Calendar, and Public Profile are gated until profile completion is 100%.
 - Specialist avatar files use Supabase Storage bucket `avatars`.
 - Services CRUD is implemented against the `services` table.
-- Calendar availability CRUD is not implemented yet.
+- Calendar availability is week-specific and stored in `availability_exceptions`.
+- `availability_blocks` is reserved for a future default weekly template.
 - Booking, sessions, chat, materials, files, and archive persistence are not implemented yet.
 - Payment provider is not decided.
 - Vercel is the deployment target.

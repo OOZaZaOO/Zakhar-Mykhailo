@@ -5,81 +5,65 @@ import { Plus } from "lucide-react";
 import { TimeRangeInput } from "@/components/calendar/time-range-input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { getDateLabel } from "@/lib/availability/week";
 import type {
   AvailabilityRange,
-  DayAvailability,
+  DateAvailability,
 } from "@/lib/availability/types";
 
-type DayAvailabilityRowProps = {
-  day: DayAvailability;
+type DateAvailabilityRowProps = {
+  dateAvailability: DateAvailability;
+  disabled?: boolean;
   errors?: string[];
-  label: string;
   onAddRange: () => void;
-  onCopyToAllDays: () => void;
-  onCopyToWeekdays: () => void;
   onRangeChange: (range: AvailabilityRange) => void;
   onRemoveRange: (rangeId: string) => void;
   onToggle: (enabled: boolean) => void;
   timeOptions: string[];
 };
 
-export function DayAvailabilityRow({
-  day,
+export function DateAvailabilityRow({
+  dateAvailability,
+  disabled = false,
   errors = [],
-  label,
   onAddRange,
-  onCopyToAllDays,
-  onCopyToWeekdays,
   onRangeChange,
   onRemoveRange,
   onToggle,
   timeOptions,
-}: DayAvailabilityRowProps) {
+}: DateAvailabilityRowProps) {
   return (
     <div className="rounded-3xl border border-[#ded5c8] bg-white p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Switch
-            aria-label={`${day.enabled ? "Disable" : "Enable"} ${label}`}
-            checked={day.enabled}
+            aria-label={`${dateAvailability.enabled ? "Disable" : "Enable"} ${getDateLabel(dateAvailability.date)}`}
+            checked={dateAvailability.enabled}
             className="data-[state=checked]:bg-[#1f5f55]"
+            disabled={disabled}
             onCheckedChange={onToggle}
           />
           <div>
-            <h2 className="text-lg font-semibold text-[#24312f]">{label}</h2>
+            <h2 className="text-lg font-semibold text-[#24312f]">
+              {getDateLabel(dateAvailability.date)}
+            </h2>
             <p className="text-sm font-medium text-[#66736f]">
-              {day.enabled ? "Available for bookings" : "Unavailable"}
+              {disabled
+                ? "Past date"
+                : dateAvailability.enabled
+                  ? "Available for bookings"
+                  : "Unavailable"}
             </p>
           </div>
         </div>
-
-        {day.enabled ? (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              className="h-11 rounded-full border-[#d9ceb9] px-4 text-sm"
-              onClick={onCopyToWeekdays}
-              type="button"
-              variant="outline"
-            >
-              Copy to weekdays
-            </Button>
-            <Button
-              className="h-11 rounded-full border-[#d9ceb9] px-4 text-sm"
-              onClick={onCopyToAllDays}
-              type="button"
-              variant="outline"
-            >
-              Copy to all days
-            </Button>
-          </div>
-        ) : null}
       </div>
 
-      {day.enabled ? (
+      {dateAvailability.enabled ? (
         <div className="mt-4 space-y-3">
-          {day.ranges.map((range) => (
+          {dateAvailability.ranges.map((range) => (
             <TimeRangeInput
-              canRemove={day.ranges.length > 1}
+              canRemove={dateAvailability.ranges.length > 1 && !disabled}
+              disabled={disabled}
               key={range.id}
               onChange={onRangeChange}
               onRemove={() => onRemoveRange(range.id)}
@@ -90,6 +74,7 @@ export function DayAvailabilityRow({
 
           <Button
             className="h-11 rounded-full border-[#d9ceb9] px-4"
+            disabled={disabled}
             onClick={onAddRange}
             type="button"
             variant="outline"

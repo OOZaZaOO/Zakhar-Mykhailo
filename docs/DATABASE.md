@@ -177,9 +177,8 @@ Columns:
 
 Current usage:
 
-- `/dashboard/calendar` loads and saves recurring weekly working hours.
-- One active time range is stored as one row.
-- Save currently replaces all existing rows for the specialist profile.
+- Reserved for a future default weekly template.
+- `/dashboard/calendar` no longer edits this table directly.
 
 ## `availability_exceptions`
 
@@ -200,8 +199,9 @@ Columns:
 
 Current usage:
 
-- Table exists.
-- No real UI CRUD yet.
+- `/dashboard/calendar` stores date-specific available ranges with `exception_type = 'available'`.
+- One time range for one date is stored as one row.
+- Save currently replaces existing available exceptions within the selected week.
 
 ## Storage
 
