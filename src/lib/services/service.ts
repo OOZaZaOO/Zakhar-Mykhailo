@@ -30,7 +30,7 @@ export function getServiceFormValues(service: Service): ServiceFormValues {
     durationMinutes: service.duration_minutes,
     format: service.format,
     isActive: service.is_active,
-    priceAmount: service.price_amount,
+    priceAmount: service.price_amount === 0 ? "" : (service.price_amount / 100).toString(),
     sortOrder: service.sort_order,
     title: service.title,
   };
@@ -45,8 +45,9 @@ export function validateServiceForm(values: ServiceFormValues) {
     return "Duration must be between 1 and 1440 minutes.";
   }
 
-  if (values.priceAmount === "" || values.priceAmount < 0) {
-    return "Price cannot be negative.";
+  const parsedPrice = parseFloat(values.priceAmount.replace(",", "."));
+  if (values.priceAmount === "" || isNaN(parsedPrice) || parsedPrice < 0) {
+    return "Price must be a valid positive number.";
   }
 
   if (!/^[A-Z]{3}$/.test(values.currency.trim().toUpperCase())) {
@@ -63,7 +64,7 @@ function getServicePayload(values: ServiceFormValues) {
     duration_minutes: values.durationMinutes === "" ? 0 : values.durationMinutes,
     format: values.format,
     is_active: values.isActive,
-    price_amount: values.priceAmount === "" ? 0 : values.priceAmount,
+    price_amount: values.priceAmount === "" ? 0 : Math.round(parseFloat(values.priceAmount.replace(",", ".")) * 100),
     sort_order: values.sortOrder === "" ? 0 : values.sortOrder,
     title: values.title.trim(),
   };

@@ -464,17 +464,12 @@ export function ServicesManager({
                 <Input
                   className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
                   id="service-price"
-                  min={0}
-                  onChange={(event) =>
-                    updateFormValue("priceAmount", event.target.value === "" ? "" : Number(event.target.value))
-                  }
-                  placeholder="5000"
-                  type="number"
+                  inputMode="decimal"
+                  onChange={(event) => updateFormValue("priceAmount", event.target.value)}
+                  placeholder="50.00"
+                  type="text"
                   value={formValues.priceAmount}
                 />
-                <p className="mt-2 text-xs font-medium text-[#66736f]">
-                  Store price in minor units, for example 5000 = 50.00.
-                </p>
               </div>
               <div>
                 <Label htmlFor="service-currency">Currency</Label>

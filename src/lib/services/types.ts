@@ -14,7 +14,7 @@ export type ServiceFormValues = {
   durationMinutes: number | "";
   format: ServiceFormat;
   isActive: boolean;
-  priceAmount: number | "";
+  priceAmount: string;
   sortOrder: number | "";
   title: string;
 };
