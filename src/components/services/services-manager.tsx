@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,7 +79,9 @@ export function ServicesManager({
     getDefaultServiceFormValues(),
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [pendingServiceId, setPendingServiceId] = useState<string | null>(null);
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
   const [services, setServices] = useState(initialServices);
 
   function openCreateForm() {
@@ -214,35 +217,39 @@ export function ServicesManager({
     setPendingServiceId(null);
   }
 
-  async function handleDeleteService(service: Service) {
-    const confirmed = window.confirm(
-      `Delete "${service.title}"? This cannot be undone.`,
-    );
+  function handleDeleteService(service: Service) {
+    setServiceToDelete(service);
+  }
 
-    if (!confirmed) {
-      return;
-    }
+  async function handleConfirmDelete() {
+    if (!serviceToDelete) return;
 
     setError(null);
-    setPendingServiceId(service.id);
+    setIsDeleting(true);
+    setPendingServiceId(serviceToDelete.id);
 
     const supabase = createSupabaseBrowserClient();
     const { error: deleteError } = await deleteService(
       supabase,
       specialistProfileId,
-      service.id,
+      serviceToDelete.id,
     );
 
     if (deleteError) {
       setError(getFriendlyServiceError(deleteError.message));
+      setIsDeleting(false);
       setPendingServiceId(null);
       return;
     }
 
     setServices((currentServices) =>
-      currentServices.filter((currentService) => currentService.id !== service.id),
+      currentServices.filter(
+        (currentService) => currentService.id !== serviceToDelete.id,
+      ),
     );
+    setIsDeleting(false);
     setPendingServiceId(null);
+    setServiceToDelete(null);
   }
 
   return (
@@ -560,6 +567,45 @@ export function ServicesManager({
           </div>
         </div>
       ) : null}
+
+      <ConfirmationDialog
+        open={serviceToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setServiceToDelete(null);
+        }}
+        title="Delete service?"
+        description="This action cannot be undone. The service will be permanently deleted."
+        confirmLabel="Delete service"
+        cancelLabel="Cancel"
+        confirmVariant="destructive"
+        confirmIcon={<Trash2 className="size-4" />}
+        loading={isDeleting}
+        onConfirm={handleConfirmDelete}
+      >
+        {serviceToDelete ? (
+          <div className="rounded-2xl border border-[#ded5c8] bg-white p-4 space-y-3">
+            <p className="font-semibold text-[#24312f] leading-6">
+              {serviceToDelete.title}
+            </p>
+            <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="rounded-xl bg-[#f7f3ec] p-3">
+                <p className="text-[#7b8884]">Duration</p>
+                <p className="mt-1 font-bold">{serviceToDelete.duration_minutes} min</p>
+              </div>
+              <div className="rounded-xl bg-[#f7f3ec] p-3">
+                <p className="text-[#7b8884]">Price</p>
+                <p className="mt-1 font-bold">
+                  {formatPrice(serviceToDelete.price_amount, serviceToDelete.currency)}
+                </p>
+              </div>
+              <div className="rounded-xl bg-[#f7f3ec] p-3">
+                <p className="text-[#7b8884]">Format</p>
+                <p className="mt-1 font-bold capitalize">{serviceToDelete.format}</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </ConfirmationDialog>
     </>
   );
 }
