@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { BookingStatusToggle } from "@/components/calendar/booking-status-toggle";
@@ -64,10 +65,24 @@ export function WeekAvailabilityEditor({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentWeekStart, setCurrentWeekStart] = useState(() =>
+    getThisWeekStart(),
+  );
   const timeOptions = useMemo(() => getQuarterHourTimeOptions(), []);
   const hasUnsavedChanges = !areWeekSchedulesEqual(schedule, savedSchedule);
   const isBeyondPlanningWindow = isWeekBeyondPlanningWindow(weekStart);
   const weekDates = getWeekDates(weekStart);
+  const previousWeekHref = getWeekHref(addWeeks(weekStart, -1));
+  const nextWeekHref = getWeekHref(addWeeks(weekStart, 1));
+  const thisWeekHref = getWeekHref(currentWeekStart);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentWeekStart(getThisWeekStart());
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   function getWeekHref(nextWeekStart: Date) {
     return `/dashboard/calendar?week=${formatDateKey(nextWeekStart)}`;
@@ -313,36 +328,36 @@ export function WeekAvailabilityEditor({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-2">
               <Button
                 asChild
-                className="h-11 rounded-full border-[#d9ceb9]"
+                className="size-11 rounded-full border-[#d9ceb9] p-0"
                 variant="outline"
               >
-                <Link href={getWeekHref(addWeeks(weekStart, -1))}>
-                  Previous week
+                <Link aria-label="Previous week" href={previousWeekHref}>
+                  <ChevronLeft className="size-4" />
                 </Link>
               </Button>
+              <p className="min-w-0 flex-1 px-2 text-center text-xl font-semibold text-[#24312f] sm:min-w-64">
+                {getWeekLabel(weekStart)}
+              </p>
               <Button
                 asChild
-                className="h-11 rounded-full border-[#d9ceb9]"
+                className="size-11 rounded-full border-[#d9ceb9] p-0"
                 variant="outline"
               >
-                <Link href={getWeekHref(getThisWeekStart())}>This week</Link>
-              </Button>
-              <Button
-                asChild
-                className="h-11 rounded-full border-[#d9ceb9]"
-                variant="outline"
-              >
-                <Link href={getWeekHref(addWeeks(weekStart, 1))}>
-                  Next week
+                <Link aria-label="Next week" href={nextWeekHref}>
+                  <ChevronRight className="size-4" />
                 </Link>
               </Button>
             </div>
-            <p className="text-xl font-semibold text-[#24312f]">
-              {getWeekLabel(weekStart)}
-            </p>
+            <Button
+              asChild
+              className="h-11 w-full rounded-full border-[#d9ceb9] lg:w-auto"
+              variant="outline"
+            >
+              <Link href={thisWeekHref}>This week</Link>
+            </Button>
           </div>
 
           {isBeyondPlanningWindow ? (
@@ -350,42 +365,42 @@ export function WeekAvailabilityEditor({
               Availability can be configured up to 8 weeks ahead for the MVP.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Button
-                className="h-11 rounded-full border-[#d9ceb9]"
+                className="h-11 rounded-full border-[#d9ceb9] px-4"
                 disabled={isSaving}
                 onClick={handleCopyFromPreviousWeek}
                 type="button"
                 variant="outline"
               >
-                Copy from previous week
+                Copy previous
               </Button>
               <Button
-                className="h-11 rounded-full border-[#d9ceb9]"
+                className="h-11 rounded-full border-[#d9ceb9] px-4"
                 disabled={isSaving}
                 onClick={() => handleCopyCurrentWeekToFutureWeeks(1)}
                 type="button"
                 variant="outline"
               >
-                Copy this week to next week
+                Copy to next
               </Button>
               <Button
-                className="h-11 rounded-full border-[#d9ceb9]"
+                className="h-11 rounded-full border-[#d9ceb9] px-4"
                 disabled={isSaving}
                 onClick={() => handleCopyCurrentWeekToFutureWeeks(4)}
                 type="button"
                 variant="outline"
               >
-                Apply this week to next 4 weeks
+                Apply next 4
               </Button>
               <Button
-                className="h-11 rounded-full border-[#d9ceb9] text-[#9a4c2f] hover:bg-[#f6ddd4]"
+                className="h-11 rounded-full border-[#d9ceb9] px-4 text-[#9a4c2f] hover:bg-[#f6ddd4]"
                 disabled={isSaving}
                 onClick={handleClearWeek}
                 type="button"
                 variant="outline"
               >
-                Clear this week
+                Clear
               </Button>
             </div>
           )}
