@@ -3,12 +3,12 @@
 import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   createService,
@@ -313,28 +313,36 @@ export function ServicesManager({
 
             return (
               <Card
-                className="rounded-3xl border-[#ded5c8] bg-white"
+                className="rounded-3xl border-[#ded5c8] bg-white transition-shadow hover:shadow-md"
                 key={service.id}
               >
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-3">
-                    <CardTitle className="leading-7">{service.title}</CardTitle>
-                    <Badge
-                      className={
-                        service.is_active
-                          ? "rounded-full bg-[#eef1da] text-[#5d6b2f] hover:bg-[#eef1da]"
-                          : "rounded-full bg-[#f6ddd4] text-[#9a4c2f] hover:bg-[#f6ddd4]"
-                      }
-                      variant="secondary"
-                    >
-                      {service.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                    <CardTitle className="leading-7 text-[#24312f]">
+                      {service.title}
+                    </CardTitle>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <Switch
+                        aria-label={service.is_active ? "Disable service" : "Enable service"}
+                        checked={service.is_active}
+                        disabled={isPending}
+                        onCheckedChange={() => handleToggleActive(service)}
+                        className="data-[state=checked]:bg-[#1f5f55]"
+                      />
+                      <span
+                        className={`text-xs font-medium ${
+                          service.is_active ? "text-[#5d6b2f]" : "text-[#9a7060]"
+                        }`}
+                      >
+                        {service.is_active ? "● Active" : "● Inactive"}
+                      </span>
+                    </div>
                   </div>
-                  <p className="min-h-12 text-sm leading-6 text-[#66736f]">
+                  <p className="min-h-10 text-sm leading-6 text-[#66736f]">
                     {service.description || "No description yet."}
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pt-0">
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div className="rounded-2xl bg-[#f7f3ec] p-3">
                       <p className="text-[#7b8884]">Duration</p>
@@ -355,46 +363,38 @@ export function ServicesManager({
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      className="rounded-full"
+
+                  <div className="flex items-center gap-1 pt-1">
+                    <button
+                      aria-label="Edit service"
+                      className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#1f5f55] transition-colors hover:bg-[#eef5f3] disabled:pointer-events-none disabled:opacity-40"
                       disabled={isPending}
                       onClick={() => openEditForm(service)}
+                      title="Edit"
                       type="button"
-                      variant="outline"
                     >
                       <Pencil className="size-4" />
-                      Edit
-                    </Button>
-                    <Button
-                      className="rounded-full"
+                    </button>
+                    <button
+                      aria-label="Duplicate service"
+                      className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#5a6865] transition-colors hover:bg-[#f0ece4] disabled:pointer-events-none disabled:opacity-40"
                       disabled={isPending}
                       onClick={() => handleDuplicateService(service)}
+                      title="Duplicate"
                       type="button"
-                      variant="outline"
                     >
                       <Copy className="size-4" />
-                      Duplicate
-                    </Button>
-                    <Button
-                      className="rounded-full"
-                      disabled={isPending}
-                      onClick={() => handleToggleActive(service)}
-                      type="button"
-                      variant="outline"
-                    >
-                      {service.is_active ? "Disable" : "Enable"}
-                    </Button>
-                    <Button
-                      className="rounded-full text-[#9a4c2f]"
+                    </button>
+                    <button
+                      aria-label="Delete service"
+                      className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#9a4c2f] transition-colors hover:bg-[#f6ddd4] disabled:pointer-events-none disabled:opacity-40"
                       disabled={isPending}
                       onClick={() => handleDeleteService(service)}
+                      title="Delete"
                       type="button"
-                      variant="ghost"
                     >
                       <Trash2 className="size-4" />
-                      Delete
-                    </Button>
+                    </button>
                   </div>
                 </CardContent>
               </Card>
