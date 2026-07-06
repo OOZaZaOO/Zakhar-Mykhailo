@@ -139,23 +139,3 @@ export async function deleteService(
     .eq("id", serviceId)
     .eq("specialist_profile_id", specialistProfileId);
 }
-
-export async function duplicateService(
-  supabase: ServicesClient,
-  specialistProfileId: string,
-  service: Service,
-) {
-  const payload: ServiceInsert = {
-    currency: service.currency,
-    description: service.description,
-    duration_minutes: service.duration_minutes,
-    format: service.format,
-    is_active: false,
-    price_amount: service.price_amount,
-    sort_order: service.sort_order + 1,
-    specialist_profile_id: specialistProfileId,
-    title: `${service.title} Copy`,
-  };
-
-  return supabase.from("services").insert(payload).select().single();
-}

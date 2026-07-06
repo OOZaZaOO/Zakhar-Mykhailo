@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createService,
   deleteService,
-  duplicateService,
   getDefaultServiceFormValues,
   getServiceFormValues,
   updateService,
@@ -196,27 +195,6 @@ export function ServicesManager({
     setPendingServiceId(null);
   }
 
-  async function handleDuplicateService(service: Service) {
-    setError(null);
-    setPendingServiceId(service.id);
-
-    const supabase = createSupabaseBrowserClient();
-    const { data, error: duplicateError } = await duplicateService(
-      supabase,
-      specialistProfileId,
-      service,
-    );
-
-    if (duplicateError) {
-      setError(getFriendlyServiceError(duplicateError.message));
-      setPendingServiceId(null);
-      return;
-    }
-
-    setServices((currentServices) => [data, ...currentServices]);
-    setPendingServiceId(null);
-  }
-
   function handleDeleteService(service: Service) {
     setServiceToDelete(service);
   }
@@ -374,16 +352,6 @@ export function ServicesManager({
                       type="button"
                     >
                       <Pencil className="size-4" />
-                    </button>
-                    <button
-                      aria-label="Duplicate service"
-                      className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#5a6865] transition-colors hover:bg-[#f0ece4] disabled:pointer-events-none disabled:opacity-40"
-                      disabled={isPending}
-                      onClick={() => handleDuplicateService(service)}
-                      title="Duplicate"
-                      type="button"
-                    >
-                      <Copy className="size-4" />
                     </button>
                     <button
                       aria-label="Delete service"
