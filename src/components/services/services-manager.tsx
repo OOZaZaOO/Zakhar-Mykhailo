@@ -38,10 +38,13 @@ type FormMode =
 const serviceFormats: ServiceFormat[] = ["online", "offline", "async"];
 
 function formatPrice(amount: number, currency: string) {
+  const value = amount / 100;
   return new Intl.NumberFormat("en", {
     currency,
     style: "currency",
-  }).format(amount / 100);
+    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
 }
 
 function getFriendlyServiceError(message: string) {
