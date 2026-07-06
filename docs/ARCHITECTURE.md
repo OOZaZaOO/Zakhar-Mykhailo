@@ -56,6 +56,16 @@ Use helpers instead of putting database logic directly in large UI components:
 - `src/lib/supabase/client.ts`
 - `src/lib/supabase/server.ts`
 
+## Services
+
+Services are specialist-owned offers stored in Supabase. The current service model supports:
+
+- one-time services;
+- one-off fixed-session packages;
+- monthly package offers.
+
+Monthly package offers are client-facing service definitions only. They do not create platform SaaS subscriptions, recurring billing, invoices, client package balances, or automatic scheduling yet.
+
 ## State Management
 
 There is no global state manager. React state is used in client components. The temporary avatar preview store is a small custom browser-side store used to update the header immediately.

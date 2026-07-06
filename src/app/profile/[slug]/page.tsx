@@ -36,6 +36,38 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+function getServiceBadge(service: Service) {
+  if (service.is_monthly_subscription) {
+    return "Monthly";
+  }
+
+  return service.service_type === "package" ? "Package" : "One-time";
+}
+
+function getPublicServiceSummary(service: Service) {
+  const price = formatServicePrice(service.price_amount, service.currency);
+
+  if (service.service_type === "one_time") {
+    return {
+      detail: `${service.duration_minutes} min · ${service.format}`,
+      priceLabel: `${price} per session`,
+    };
+  }
+
+  const sessionsCount = service.sessions_count ?? 0;
+  const sessionsPerWeek = service.sessions_per_week ?? 0;
+  const validityWeeks = service.is_monthly_subscription
+    ? 4
+    : service.package_validity_weeks ?? 0;
+
+  return {
+    detail: service.is_monthly_subscription
+      ? `${sessionsCount} sessions/month · ${sessionsPerWeek}/week · 4-week schedule`
+      : `${sessionsCount} sessions · ${sessionsPerWeek}/week · valid for ${validityWeeks} weeks`,
+    priceLabel: service.is_monthly_subscription ? `${price}/month` : `${price} total`,
+  };
+}
+
 function ProfileUnavailableState({
   slug,
 }: {
@@ -221,42 +253,49 @@ function PublicProfileContent({
               </CardContent>
             </Card>
           ) : null}
-          {services.map((service) => (
-            <Card
-              className="rounded-3xl border-[#ded5c8] bg-white"
-              key={service.id}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <CardTitle>{service.title}</CardTitle>
-                    <p className="mt-2 text-sm leading-6 text-[#60706c]">
-                      {service.description}
+          {services.map((service) => {
+            const summary = getPublicServiceSummary(service);
+
+            return (
+              <Card
+                className="rounded-3xl border-[#ded5c8] bg-white"
+                key={service.id}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <Badge className="mb-3 rounded-full bg-[#eef1da] text-[#59672c] hover:bg-[#eef1da]">
+                        {getServiceBadge(service)}
+                      </Badge>
+                      <CardTitle>{service.title}</CardTitle>
+                      <p className="mt-2 text-sm leading-6 text-[#60706c]">
+                        {service.description}
+                      </p>
+                    </div>
+                    <p className="whitespace-nowrap text-sm font-bold text-[#9a4c2f]">
+                      {summary.priceLabel}
                     </p>
                   </div>
-                  <p className="whitespace-nowrap text-sm font-bold text-[#9a4c2f]">
-                    {formatServicePrice(service.price_amount, service.currency)}
+                </CardHeader>
+                <CardContent className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-[#7d8a86]">
+                    {summary.detail}
                   </p>
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-medium text-[#7d8a86]">
-                  {service.duration_minutes} min · {service.format}
-                </p>
-                {canStartBooking ? (
-                  <Button asChild variant="outline" className="rounded-full">
-                    <Link href={`/profile/${profile.slug}/book`}>
-                      Select service
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button variant="outline" className="rounded-full" disabled>
-                    Unavailable
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  {canStartBooking ? (
+                    <Button asChild variant="outline" className="rounded-full">
+                      <Link href={`/profile/${profile.slug}/book`}>
+                        Select service
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="rounded-full" disabled>
+                      Unavailable
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </section>
     </PublicLayout>

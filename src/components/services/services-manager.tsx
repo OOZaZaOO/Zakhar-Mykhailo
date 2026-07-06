@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createService,
   deleteService,
+  duplicateService,
   getDefaultServiceFormValues,
   getServiceFormValues,
   updateService,
@@ -24,6 +25,7 @@ import type {
   Service,
   ServiceFormat,
   ServiceFormValues,
+  ServiceType,
 } from "@/lib/services/types";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -37,6 +39,10 @@ type FormMode =
   | { service: Service; type: "edit" };
 
 const serviceFormats: ServiceFormat[] = ["online", "offline", "async"];
+const serviceTypes: { label: string; value: ServiceType }[] = [
+  { label: "One-time service", value: "one_time" },
+  { label: "Package", value: "package" },
+];
 
 function formatPrice(amount: number, currency: string) {
   const value = amount / 100;
@@ -65,6 +71,14 @@ function getFriendlyServiceError(message: string) {
     return "Currency must be a 3-letter code.";
   }
 
+  if (message.includes("services_package")) {
+    return "Check the package details. Monthly packages must fit within a 4-week month.";
+  }
+
+  if (message.includes("services_monthly_subscription")) {
+    return "Monthly package settings must fit within a 4-week month.";
+  }
+
   return message;
 }
 
@@ -84,6 +98,100 @@ function getNextSortOrder(services: Service[]) {
   }
 
   return Math.max(...services.map((service) => service.sort_order)) + 1;
+}
+
+function getPriceHelperText(values: ServiceFormValues) {
+  if (values.serviceType === "one_time") {
+    return "Price for one session.";
+  }
+
+  return values.isMonthlySubscription
+    ? "Monthly price for this package."
+    : "Total price for the full package.";
+}
+
+function getServiceBadge(service: Service) {
+  if (service.is_monthly_subscription) {
+    return "Monthly";
+  }
+
+  return service.service_type === "package" ? "Package" : "One-time";
+}
+
+function getServiceSummary(service: Service) {
+  const price = formatPrice(service.price_amount, service.currency);
+
+  if (service.service_type === "one_time") {
+    return {
+      detail: `${service.duration_minutes} min · ${service.format}`,
+      priceLabel: `${price} per session`,
+      stats: [
+        { label: "Duration", value: `${service.duration_minutes} min` },
+        { label: "Price", value: price },
+        { label: "Format", value: service.format },
+      ],
+    };
+  }
+
+  const sessionsCount = service.sessions_count ?? 0;
+  const sessionsPerWeek = service.sessions_per_week ?? 0;
+  const validityWeeks = service.is_monthly_subscription
+    ? 4
+    : service.package_validity_weeks ?? 0;
+  const perSession =
+    sessionsCount > 0
+      ? formatPrice(Math.round(service.price_amount / sessionsCount), service.currency)
+      : price;
+
+  return {
+    detail: service.is_monthly_subscription
+      ? `${sessionsCount} sessions/month · ${sessionsPerWeek}/week · 4-week schedule`
+      : `${sessionsCount} sessions · ${sessionsPerWeek}/week · ${validityWeeks} weeks`,
+    priceLabel: service.is_monthly_subscription ? `${price}/month` : `${price} total`,
+    stats: [
+      {
+        label: service.is_monthly_subscription ? "Monthly" : "Package",
+        value: `${sessionsCount} sessions`,
+      },
+      { label: "Pace", value: `${sessionsPerWeek}/week` },
+      {
+        label: "Per session",
+        value: perSession,
+      },
+    ],
+  };
+}
+
+function getFormSummary(values: ServiceFormValues) {
+  const parsedPrice = parseFloat(values.priceAmount.replace(",", "."));
+  const priceAmount = Number.isFinite(parsedPrice)
+    ? Math.round(parsedPrice * 100)
+    : 0;
+  const currency = /^[A-Z]{3}$/.test(values.currency.trim().toUpperCase())
+    ? values.currency.trim().toUpperCase()
+    : "EUR";
+  const price = formatPrice(priceAmount, currency);
+
+  if (values.serviceType === "one_time") {
+    return `${price} per session`;
+  }
+
+  const sessionsCount = values.sessionsCount === "" ? 0 : values.sessionsCount;
+  const sessionsPerWeek =
+    values.sessionsPerWeek === "" ? 0 : values.sessionsPerWeek;
+  const validityWeeks = values.isMonthlySubscription
+    ? 4
+    : values.packageValidityWeeks === ""
+      ? 0
+      : values.packageValidityWeeks;
+  const perSession =
+    sessionsCount > 0
+      ? formatPrice(Math.round(priceAmount / sessionsCount), currency)
+      : price;
+
+  return values.isMonthlySubscription
+    ? `${price}/month · ${sessionsCount} sessions/month · ${perSession} per session · ${sessionsPerWeek}/week · Planned over 4 weeks`
+    : `${price} total · ${sessionsCount} sessions · ${perSession} per session · ${sessionsPerWeek}/week · Estimated duration: ${validityWeeks} weeks`;
 }
 
 export function ServicesManager({
@@ -131,6 +239,37 @@ export function ServicesManager({
     setFormValues((currentValues) => ({
       ...currentValues,
       [key]: value,
+    }));
+  }
+
+  function updateServiceType(serviceType: ServiceType) {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      isMonthlySubscription:
+        serviceType === "package" ? currentValues.isMonthlySubscription : false,
+      packageValidityWeeks:
+        serviceType === "package"
+          ? currentValues.isMonthlySubscription
+            ? 4
+            : currentValues.packageValidityWeeks
+          : "",
+      serviceType,
+      sessionsCount:
+        serviceType === "package" ? currentValues.sessionsCount : "",
+      sessionsPerWeek:
+        serviceType === "package" ? currentValues.sessionsPerWeek : "",
+    }));
+  }
+
+  function updateMonthlySubscription(isMonthlySubscription: boolean) {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      isMonthlySubscription,
+      packageValidityWeeks: isMonthlySubscription
+        ? 4
+        : currentValues.packageValidityWeeks === 4
+          ? ""
+          : currentValues.packageValidityWeeks,
     }));
   }
 
@@ -210,6 +349,28 @@ export function ServicesManager({
         currentService.id === data.id ? data : currentService,
       ),
     );
+    setPendingServiceId(null);
+  }
+
+  async function handleDuplicateService(service: Service) {
+    setError(null);
+    setPendingServiceId(service.id);
+
+    const supabase = createSupabaseBrowserClient();
+    const { data, error: duplicateError } = await duplicateService(
+      supabase,
+      specialistProfileId,
+      service,
+      getNextSortOrder(services),
+    );
+
+    if (duplicateError) {
+      setError(getFriendlyServiceError(duplicateError.message));
+      setPendingServiceId(null);
+      return;
+    }
+
+    setServices((currentServices) => sortServices([...currentServices, data]));
     setPendingServiceId(null);
   }
 
@@ -358,6 +519,7 @@ export function ServicesManager({
           {services.map((service, index) => {
             const isPending = pendingServiceId === service.id;
             const actionsDisabled = isPending || isReordering;
+            const summary = getServiceSummary(service);
 
             return (
               <Card
@@ -386,31 +548,27 @@ export function ServicesManager({
                       </span>
                     </div>
                   </div>
+                  <span className="mt-2 inline-flex w-fit rounded-full bg-[#eef1da] px-3 py-1 text-xs font-bold text-[#59672c]">
+                    {getServiceBadge(service)}
+                  </span>
                   <p className="min-h-10 text-sm leading-6 text-[#66736f]">
                     {service.description || "No description yet."}
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-0">
                   <div className="grid grid-cols-3 gap-2 text-sm">
-                    <div className="rounded-2xl bg-[#f7f3ec] p-3">
-                      <p className="text-[#7b8884]">Duration</p>
-                      <p className="mt-1 font-bold">
-                        {service.duration_minutes} min
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-[#f7f3ec] p-3">
-                      <p className="text-[#7b8884]">Price</p>
-                      <p className="mt-1 font-bold">
-                        {formatPrice(service.price_amount, service.currency)}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl bg-[#f7f3ec] p-3">
-                      <p className="text-[#7b8884]">Format</p>
-                      <p className="mt-1 font-bold capitalize">
-                        {service.format}
-                      </p>
-                    </div>
+                    {summary.stats.map((item) => (
+                      <div className="rounded-2xl bg-[#f7f3ec] p-3" key={item.label}>
+                        <p className="text-[#7b8884]">{item.label}</p>
+                        <p className="mt-1 font-bold capitalize">
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
                   </div>
+                  <p className="text-sm font-semibold leading-6 text-[#5a6865]">
+                    {summary.priceLabel} · {summary.detail}
+                  </p>
 
                   <div className="flex items-center gap-1 pt-1">
                     <button
@@ -442,6 +600,16 @@ export function ServicesManager({
                       type="button"
                     >
                       <Pencil className="size-4" />
+                    </button>
+                    <button
+                      aria-label="Duplicate service"
+                      className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#1f5f55] transition-colors hover:bg-[#eef5f3] disabled:pointer-events-none disabled:opacity-40"
+                      disabled={actionsDisabled}
+                      onClick={() => handleDuplicateService(service)}
+                      title="Duplicate"
+                      type="button"
+                    >
+                      <Copy className="size-4" />
                     </button>
                     <button
                       aria-label="Delete service"
@@ -486,6 +654,27 @@ export function ServicesManager({
             </div>
 
             <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={handleSaveService}>
+              <div className="sm:col-span-2">
+                <Label>Service type</Label>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {serviceTypes.map((serviceType) => (
+                    <button
+                      className={`rounded-2xl border p-4 text-left transition-colors ${
+                        formValues.serviceType === serviceType.value
+                          ? "border-[#1f5f55] bg-[#eef5f3] text-[#1f5f55]"
+                          : "border-[#d9ceb9] bg-white text-[#24312f] hover:bg-[#f7f3ec]"
+                      }`}
+                      key={serviceType.value}
+                      onClick={() => updateServiceType(serviceType.value)}
+                      type="button"
+                    >
+                      <span className="text-sm font-bold">
+                        {serviceType.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="sm:col-span-2">
                 <Label htmlFor="service-title">Title</Label>
                 <Input
@@ -538,6 +727,9 @@ export function ServicesManager({
                   type="text"
                   value={formValues.priceAmount}
                 />
+                <p className="mt-2 text-xs font-medium text-[#66736f]">
+                  {getPriceHelperText(formValues)}
+                </p>
               </div>
               <div>
                 <Label htmlFor="service-currency">Currency</Label>
@@ -571,6 +763,160 @@ export function ServicesManager({
                     </option>
                   ))}
                 </select>
+              </div>
+              {formValues.serviceType === "package" ? (
+                <div className="space-y-4 rounded-3xl border border-[#ded5c8] bg-white p-4 sm:col-span-2">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-[#24312f]">
+                        Package settings
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[#66736f]">
+                        Configure a one-off package or a recurring monthly
+                        client package.
+                      </p>
+                    </div>
+                    <label className="flex items-center gap-3 rounded-full bg-[#f7f3ec] px-4 py-3 text-sm font-semibold text-[#24312f]">
+                      <input
+                        checked={formValues.isMonthlySubscription}
+                        className="size-4 accent-[#1f5f55]"
+                        onChange={(event) =>
+                          updateMonthlySubscription(event.target.checked)
+                        }
+                        type="checkbox"
+                      />
+                      Monthly subscription
+                    </label>
+                  </div>
+
+                  {formValues.isMonthlySubscription ? (
+                    <p className="rounded-2xl bg-[#eef5f3] px-4 py-3 text-sm font-medium leading-6 text-[#1f5f55]">
+                      Monthly subscriptions are planned within a 4-week month.
+                    </p>
+                  ) : null}
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <Label htmlFor="service-sessions-count">
+                        {formValues.isMonthlySubscription
+                          ? "Sessions per month"
+                          : "Number of sessions"}
+                      </Label>
+                      <Input
+                        className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                        id="service-sessions-count"
+                        min={formValues.isMonthlySubscription ? 1 : 2}
+                        onChange={(event) =>
+                          updateFormValue(
+                            "sessionsCount",
+                            event.target.value === ""
+                              ? ""
+                              : Number(event.target.value),
+                          )
+                        }
+                        placeholder={formValues.isMonthlySubscription ? "8" : "10"}
+                        type="number"
+                        value={formValues.sessionsCount}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="service-sessions-week">
+                        Sessions per week
+                      </Label>
+                      <Input
+                        className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                        id="service-sessions-week"
+                        min={1}
+                        onChange={(event) =>
+                          updateFormValue(
+                            "sessionsPerWeek",
+                            event.target.value === ""
+                              ? ""
+                              : Number(event.target.value),
+                          )
+                        }
+                        placeholder="2"
+                        type="number"
+                        value={formValues.sessionsPerWeek}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="service-validity">
+                        Valid for / duration
+                      </Label>
+                      <Input
+                        className="mt-2 h-11 rounded-xl border-[#d9ceb9] disabled:bg-[#f7f3ec] disabled:text-[#7b8884]"
+                        disabled={formValues.isMonthlySubscription}
+                        id="service-validity"
+                        min={1}
+                        onChange={(event) =>
+                          updateFormValue(
+                            "packageValidityWeeks",
+                            event.target.value === ""
+                              ? ""
+                              : Number(event.target.value),
+                          )
+                        }
+                        placeholder="6"
+                        type="number"
+                        value={
+                          formValues.isMonthlySubscription
+                            ? 4
+                            : formValues.packageValidityWeeks
+                        }
+                      />
+                      <p className="mt-2 text-xs font-medium text-[#66736f]">
+                        Weeks
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-3 rounded-2xl bg-[#f7f3ec] p-4 text-sm font-semibold text-[#24312f]">
+                    <input
+                      checked={formValues.allowReschedule}
+                      className="size-4 accent-[#1f5f55]"
+                      onChange={(event) =>
+                        updateFormValue("allowReschedule", event.target.checked)
+                      }
+                      type="checkbox"
+                    />
+                    Allow rescheduling
+                  </label>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="service-cancellation">
+                        Cancellation policy
+                      </Label>
+                      <Textarea
+                        className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
+                        id="service-cancellation"
+                        onChange={(event) =>
+                          updateFormValue("cancellationPolicy", event.target.value)
+                        }
+                        placeholder="Clients can reschedule up to 24 hours before a session."
+                        value={formValues.cancellationPolicy}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="service-package-notes">
+                        Package notes
+                      </Label>
+                      <Textarea
+                        className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
+                        id="service-package-notes"
+                        onChange={(event) =>
+                          updateFormValue("packageNotes", event.target.value)
+                        }
+                        placeholder="Add anything clients should know about this package."
+                        value={formValues.packageNotes}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              <div className="rounded-2xl bg-[#f7f3ec] px-4 py-3 text-sm font-semibold leading-6 text-[#24312f] sm:col-span-2">
+                {getFormSummary(formValues)}
               </div>
               <label className="flex items-center gap-3 rounded-2xl bg-white p-4 text-sm font-semibold text-[#24312f]">
                 <input

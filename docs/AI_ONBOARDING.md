@@ -57,13 +57,12 @@ Mock or placeholder features:
 - Immediate avatar save to Supabase Storage.
 - Profile completion helper.
 - Gated empty state for incomplete profile.
-- Services create, edit, delete, active toggle.
+- Services create, edit, delete, duplicate, active toggle, display ordering, one-time offers, packages, and monthly package offers.
 - Week-specific availability create/update/clear through `availability_exceptions`.
 
 ## Incomplete Features
 
 - `client_profiles` table and CRUD.
-- Public profile real services listing.
 - Booking database flow and slot calculation.
 - Session tables and access control.
 - Session chat.
@@ -173,6 +172,8 @@ Current tables:
 - `services`
 - `availability_blocks`
 - `availability_exceptions`
+
+The `services` table supports one-time services, one-off packages, and monthly package offers. Monthly package offers are not the platform SaaS subscription and do not implement recurring billing or client package tracking yet.
 
 Current bucket used by code:
 

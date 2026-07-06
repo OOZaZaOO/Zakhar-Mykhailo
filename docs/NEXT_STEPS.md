@@ -18,6 +18,7 @@ Create bookings table and implement service/date/time/client confirmation flow.
 Why next:
 
 - This is the bridge from public profile to Session Workspace.
+- Package and monthly package offers already describe what can be bought, but purchase flow, recurring billing, client package balances, and automatic scheduling are still intentionally delayed.
 
 ## 3. Session Schema
 

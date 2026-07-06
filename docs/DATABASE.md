@@ -137,6 +137,14 @@ Columns:
 | `currency` | text | Three uppercase letters. |
 | `format` | text | `online`, `offline`, or `async`. |
 | `location_details` | text | Present in DB, not currently exposed in UI. |
+| `service_type` | text | `one_time` or `package`. |
+| `sessions_count` | integer | Package sessions. For monthly packages, sessions per month. |
+| `sessions_per_week` | integer | Expected package pacing. |
+| `package_validity_weeks` | integer | One-off package validity. Monthly packages are fixed at 4 weeks. |
+| `is_monthly_subscription` | boolean | Specialist-created monthly client package flag. Not the platform SaaS plan. |
+| `allow_reschedule` | boolean | Package rescheduling preference. Booking enforcement comes later. |
+| `cancellation_policy` | text | Package cancellation policy text. |
+| `package_notes` | text | Additional package notes. |
 | `is_active` | boolean | Public/readable and later bookable state. |
 | `sort_order` | integer | Specialist-controlled display order. |
 | `created_at` | timestamptz | Insert timestamp. |
@@ -146,6 +154,16 @@ Indexes:
 
 - By `specialist_profile_id`.
 - Public listing by `specialist_profile_id`, `is_active`, and `sort_order`.
+- Type-aware listing by `specialist_profile_id`, `service_type`, `is_active`, and `sort_order`.
+
+Important constraints:
+
+- `service_type` must be `one_time` or `package`.
+- Monthly subscriptions are allowed only for package services.
+- One-time services do not store package fields.
+- Package services require sessions count, sessions per week, and validity weeks.
+- Monthly package validity is fixed to 4 weeks.
+- Monthly package sessions must fit into `sessions_per_week * 4`.
 
 RLS:
 
@@ -155,7 +173,9 @@ RLS:
 Current usage:
 
 - `/dashboard/services` real CRUD.
-- Public profile still uses mock service cards and should be connected later.
+- One-time services, one-off packages, and monthly package offers are stored here.
+- Monthly package mode defines the service offer only. It does not implement billing, invoices, subscription cancellation, client package tracking, or automatic scheduling.
+- `/profile/[slug]` reads active services from Supabase.
 
 ## `availability_blocks`
 
