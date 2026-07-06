@@ -334,7 +334,7 @@ export function WeekAvailabilityEditor({
                 className="size-11 rounded-full border-[#d9ceb9] p-0"
                 variant="outline"
               >
-                <Link aria-label="Previous week" href={previousWeekHref}>
+                <Link aria-label="Previous week" href={previousWeekHref} scroll={false}>
                   <ChevronLeft className="size-4" />
                 </Link>
               </Button>
@@ -346,7 +346,7 @@ export function WeekAvailabilityEditor({
                 className="size-11 rounded-full border-[#d9ceb9] p-0"
                 variant="outline"
               >
-                <Link aria-label="Next week" href={nextWeekHref}>
+                <Link aria-label="Next week" href={nextWeekHref} scroll={false}>
                   <ChevronRight className="size-4" />
                 </Link>
               </Button>
@@ -356,7 +356,7 @@ export function WeekAvailabilityEditor({
               className="h-11 w-full rounded-full border-[#d9ceb9] lg:w-auto"
               variant="outline"
             >
-              <Link href={thisWeekHref}>This week</Link>
+              <Link href={thisWeekHref} scroll={false}>This week</Link>
             </Button>
           </div>
 
