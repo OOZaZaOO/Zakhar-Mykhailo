@@ -46,8 +46,9 @@ function getServiceBadge(service: Service) {
 
 function getPublicServiceSummary(service: Service) {
   const price = formatServicePrice(service.price_amount, service.currency);
+  const serviceType = service.service_type ?? "one_time";
 
-  if (service.service_type === "one_time") {
+  if (serviceType === "one_time") {
     return {
       detail: `${service.duration_minutes} min · ${service.format}`,
       priceLabel: `${price} per session`,

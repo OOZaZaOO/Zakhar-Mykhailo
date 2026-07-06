@@ -55,6 +55,10 @@ function formatPrice(amount: number, currency: string) {
 }
 
 function getFriendlyServiceError(message: string) {
+  if (message.includes("schema cache") || message.includes("allow_reschedule")) {
+    return "The services database schema is not updated yet. Run the latest Supabase migration, then try again.";
+  }
+
   if (message.includes("violates row-level security policy")) {
     return "You do not have permission to modify this service.";
   }
@@ -120,8 +124,9 @@ function getServiceBadge(service: Service) {
 
 function getServiceSummary(service: Service) {
   const price = formatPrice(service.price_amount, service.currency);
+  const serviceType = service.service_type ?? "one_time";
 
-  if (service.service_type === "one_time") {
+  if (serviceType === "one_time") {
     return {
       detail: `${service.duration_minutes} min · ${service.format}`,
       priceLabel: `${price} per session`,

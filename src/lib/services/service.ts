@@ -9,6 +9,10 @@ import type {
 import type { Database } from "@/lib/supabase/types";
 
 type ServicesClient = SupabaseClient<Database>;
+type ServiceMutationError = {
+  code?: string;
+  message?: string;
+} | null;
 
 export function getDefaultServiceFormValues(): ServiceFormValues {
   return {
@@ -33,18 +37,18 @@ export function getDefaultServiceFormValues(): ServiceFormValues {
 
 export function getServiceFormValues(service: Service): ServiceFormValues {
   return {
-    allowReschedule: service.allow_reschedule,
-    cancellationPolicy: service.cancellation_policy,
+    allowReschedule: service.allow_reschedule ?? true,
+    cancellationPolicy: service.cancellation_policy ?? "",
     currency: service.currency,
     description: service.description,
     durationMinutes: service.duration_minutes,
     format: service.format,
-    isMonthlySubscription: service.is_monthly_subscription,
+    isMonthlySubscription: service.is_monthly_subscription ?? false,
     isActive: service.is_active,
-    packageNotes: service.package_notes,
+    packageNotes: service.package_notes ?? "",
     packageValidityWeeks: service.package_validity_weeks ?? "",
     priceAmount: service.price_amount === 0 ? "" : (service.price_amount / 100).toString(),
-    serviceType: service.service_type,
+    serviceType: service.service_type ?? "one_time",
     sessionsCount: service.sessions_count ?? "",
     sessionsPerWeek: service.sessions_per_week ?? "",
     sortOrder: service.sort_order,
@@ -149,6 +153,32 @@ function getServicePayload(values: ServiceFormValues) {
   };
 }
 
+function getLegacyOneTimeServicePayload(values: ServiceFormValues) {
+  return {
+    currency: values.currency.trim().toUpperCase(),
+    description: values.description.trim(),
+    duration_minutes: values.durationMinutes === "" ? 0 : values.durationMinutes,
+    format: values.format,
+    is_active: values.isActive,
+    price_amount:
+      values.priceAmount === ""
+        ? 0
+        : Math.round(parseFloat(values.priceAmount.replace(",", ".")) * 100),
+    sort_order: values.sortOrder === "" ? 0 : values.sortOrder,
+    title: values.title.trim(),
+  };
+}
+
+function isServicePackageSchemaCacheError(error: ServiceMutationError) {
+  return (
+    error?.code === "PGRST204" ||
+    error?.message?.includes("schema cache") ||
+    error?.message?.includes("allow_reschedule") ||
+    error?.message?.includes("service_type") ||
+    error?.message?.includes("is_monthly_subscription")
+  );
+}
+
 export async function getServicesForSpecialistProfile(
   supabase: ServicesClient,
   specialistProfileId: string,
@@ -195,7 +225,23 @@ export async function createService(
     specialist_profile_id: specialistProfileId,
   };
 
-  return supabase.from("services").insert(payload).select().single();
+  const result = await supabase.from("services").insert(payload).select().single();
+
+  if (
+    values.serviceType === "one_time" &&
+    isServicePackageSchemaCacheError(result.error)
+  ) {
+    return supabase
+      .from("services")
+      .insert({
+        ...getLegacyOneTimeServicePayload(values),
+        specialist_profile_id: specialistProfileId,
+      })
+      .select()
+      .single();
+  }
+
+  return result;
 }
 
 export async function updateService(
@@ -206,13 +252,28 @@ export async function updateService(
 ) {
   const payload: ServiceUpdate = getServicePayload(values);
 
-  return supabase
+  const result = await supabase
     .from("services")
     .update(payload)
     .eq("id", serviceId)
     .eq("specialist_profile_id", specialistProfileId)
     .select()
     .single();
+
+  if (
+    values.serviceType === "one_time" &&
+    isServicePackageSchemaCacheError(result.error)
+  ) {
+    return supabase
+      .from("services")
+      .update(getLegacyOneTimeServicePayload(values))
+      .eq("id", serviceId)
+      .eq("specialist_profile_id", specialistProfileId)
+      .select()
+      .single();
+  }
+
+  return result;
 }
 
 export async function updateServiceActiveStatus(
@@ -236,20 +297,22 @@ export async function duplicateService(
   service: Service,
   sortOrder: number,
 ) {
+  const isLegacyOneTimeService =
+    !service.service_type || service.service_type === "one_time";
   const payload: ServiceInsert = {
-    allow_reschedule: service.allow_reschedule,
-    cancellation_policy: service.cancellation_policy,
+    allow_reschedule: service.allow_reschedule ?? true,
+    cancellation_policy: service.cancellation_policy ?? "",
     currency: service.currency,
     description: service.description,
     duration_minutes: service.duration_minutes,
     format: service.format,
     is_active: false,
-    is_monthly_subscription: service.is_monthly_subscription,
+    is_monthly_subscription: service.is_monthly_subscription ?? false,
     location_details: service.location_details,
-    package_notes: service.package_notes,
+    package_notes: service.package_notes ?? "",
     package_validity_weeks: service.package_validity_weeks,
     price_amount: service.price_amount,
-    service_type: service.service_type,
+    service_type: service.service_type ?? "one_time",
     sessions_count: service.sessions_count,
     sessions_per_week: service.sessions_per_week,
     sort_order: sortOrder,
@@ -257,7 +320,28 @@ export async function duplicateService(
     title: `${service.title} Copy`,
   };
 
-  return supabase.from("services").insert(payload).select().single();
+  const result = await supabase.from("services").insert(payload).select().single();
+
+  if (isLegacyOneTimeService && isServicePackageSchemaCacheError(result.error)) {
+    return supabase
+      .from("services")
+      .insert({
+        currency: service.currency,
+        description: service.description,
+        duration_minutes: service.duration_minutes,
+        format: service.format,
+        is_active: false,
+        location_details: service.location_details,
+        price_amount: service.price_amount,
+        sort_order: sortOrder,
+        specialist_profile_id: specialistProfileId,
+        title: `${service.title} Copy`,
+      })
+      .select()
+      .single();
+  }
+
+  return result;
 }
 
 export async function updateServicesSortOrder(
