@@ -177,9 +177,9 @@ Columns:
 
 Current usage:
 
-- Table exists.
-- No real UI CRUD yet.
-- Calendar currently displays mock weekly slots.
+- `/dashboard/calendar` loads and saves recurring weekly working hours.
+- One active time range is stored as one row.
+- Save currently replaces all existing rows for the specialist profile.
 
 ## `availability_exceptions`
 

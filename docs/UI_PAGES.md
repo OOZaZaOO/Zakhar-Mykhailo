@@ -66,7 +66,7 @@ Purpose: manage real bookable services in Supabase.
 
 Main sections: service cards, active/inactive state, create/edit form overlay.
 
-Primary actions: create, edit, duplicate, delete, activate, deactivate.
+Primary actions: create, edit, delete, activate, deactivate.
 
 Navigation: gated until profile completion is 100%.
 
@@ -74,9 +74,9 @@ Navigation: gated until profile completion is 100%.
 
 Purpose: manage booking availability settings.
 
-Main sections: real booking-status toggle, mock week view, mock rules card.
+Main sections: specialist timezone, real booking-status toggle, weekly working-hours editor, quick setup actions.
 
-Primary actions: turn accepting new bookings on/off.
+Primary actions: turn accepting new bookings on/off, enable or disable days, add/remove time ranges, copy a day to weekdays or all days, save/cancel changes.
 
 Navigation: gated until profile completion is 100%.
 

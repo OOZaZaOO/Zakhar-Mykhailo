@@ -143,7 +143,7 @@ After auth/profile/service changes:
 - Complete required profile fields.
 - Verify Services, Calendar, and Public Profile unlock.
 - Upload avatar and refresh page.
-- Create/edit/duplicate/delete a service.
+- Create/edit/delete a service.
 - Log out and log back in.
 - Visit `/profile/[slug]`.
 

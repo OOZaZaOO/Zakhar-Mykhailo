@@ -14,11 +14,11 @@ Completed outcomes:
 - Profile completion and feature gating.
 - Services CRUD.
 - Booking status toggle.
+- Weekly availability management.
 - Initial specialist schema migration.
 - Avatar storage policy migration.
 
 Remaining Stage 2-adjacent work:
 
 - Client profiles.
-- Availability CRUD.
 - Public profile real services.

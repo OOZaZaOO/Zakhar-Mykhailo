@@ -19,11 +19,12 @@
 - Profile gating for Services, Calendar, and Public Profile.
 - Services CRUD connected to Supabase.
 - Booking status toggle persisted to Supabase.
+- Weekly availability management connected to Supabase.
 - Public specialist profile loaded by slug from Supabase.
 
 ## Partially Implemented
 
-- Calendar: booking status is real; availability slots are mock.
+- Calendar: booking status and weekly availability are real; booking slot generation is not implemented.
 - Public profile: specialist data is real; service list is mock.
 - Client dashboard: placeholder only.
 - Archive/settings/session workspace/booking flow: UI mock only.
@@ -31,7 +32,6 @@
 ## Not Implemented
 
 - Client profile database table and CRUD.
-- Real availability CRUD.
 - Booking persistence.
 - Session persistence.
 - Chat persistence.

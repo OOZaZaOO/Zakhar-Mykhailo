@@ -32,12 +32,12 @@ Real backend-connected features:
 - Profile completion and gating.
 - Services CRUD.
 - Booking status toggle.
+- Weekly availability CRUD.
 
 Mock or placeholder features:
 
 - Landing content is static UI.
 - Dashboard stats and today's sessions are mock.
-- Calendar slots are mock.
 - Public profile services are mock.
 - Booking flow is mock.
 - Session workspace is mock.
@@ -58,12 +58,12 @@ Mock or placeholder features:
 - Immediate avatar save to Supabase Storage.
 - Profile completion helper.
 - Gated empty state for incomplete profile.
-- Services create, edit, duplicate, delete, active toggle.
+- Services create, edit, delete, active toggle.
+- Weekly availability create/update/clear through `availability_blocks`.
 
 ## Incomplete Features
 
 - `client_profiles` table and CRUD.
-- Real availability CRUD using existing availability tables.
 - Public profile real services listing.
 - Booking database flow and slot calculation.
 - Session tables and access control.
@@ -136,7 +136,7 @@ Specialist:
 
 - Real profile management.
 - Real services management.
-- Calendar booking-status toggle.
+- Calendar booking-status toggle and weekly availability management.
 - Mock dashboard/session/archive/settings areas.
 
 Client:
@@ -225,7 +225,6 @@ Manual Supabase setup is required for the `avatars` bucket and policies.
 
 - Client profiles are documented as required for MVP but not created.
 - Public profile service listing still uses mock services.
-- Availability tables exist but have no management UI.
 - Booking/session tables do not exist.
 - Storage has historical migration mismatch: current code uses `avatars`, while an older migration references `specialist-avatars`.
 - Types are manually maintained instead of generated from Supabase.
@@ -235,14 +234,13 @@ Manual Supabase setup is required for the `avatars` bucket and policies.
 
 1. Add `client_profiles` migration and profile creation.
 2. Connect public profile services to real `services`.
-3. Implement availability CRUD.
-4. Implement booking tables and booking flow.
-5. Implement sessions created from bookings.
-6. Implement session access control.
-7. Implement chat, materials, files.
-8. Implement archive.
-9. Add notifications/email.
-10. Add payments after provider decision.
+3. Implement booking tables and booking flow.
+4. Implement sessions created from bookings.
+5. Implement session access control.
+6. Implement chat, materials, files.
+7. Implement archive.
+8. Add notifications/email.
+9. Add payments after provider decision.
 
 ## Common Mistakes To Avoid
 

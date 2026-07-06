@@ -70,7 +70,7 @@ Current state: the `client_profiles` table has not been created yet.
 
 - `services.sort_order` lets specialists control display order.
 - `services.is_active` controls whether the service is publicly readable and later bookable.
-- Current UI supports create, edit, duplicate, delete, and active toggle.
+- Current UI supports create, edit, delete, and active toggle.
 
 ## Decision: Meeting Links Are External
 

@@ -87,12 +87,12 @@ Implemented:
 - Profile completion and feature gating.
 - Services CRUD connected to Supabase.
 - Booking status toggle persisted to `specialist_profiles.is_accepting_bookings`.
+- Weekly availability management connected to Supabase `availability_blocks`.
 
 Not implemented yet:
 
 - Client profile persistence.
 - Real booking flow.
-- Real availability CRUD.
 - Real session workspace persistence.
 - Chat, materials, files, archive persistence.
 - Payments, notifications, email, analytics, integrations.
