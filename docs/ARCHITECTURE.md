@@ -76,4 +76,3 @@ Profile completion is computed in `src/lib/profile/completion.ts`. Services, Cal
 - Session route is public/mock.
 - Booking route is public/mock.
 - Client dashboard is a placeholder.
-- Public profile services are still mock.

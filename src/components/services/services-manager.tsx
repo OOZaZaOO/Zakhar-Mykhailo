@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
   getServiceFormValues,
   updateService,
   updateServiceActiveStatus,
+  updateServicesSortOrder,
   validateServiceForm,
 } from "@/lib/services/service";
 import type {
@@ -67,6 +68,24 @@ function getFriendlyServiceError(message: string) {
   return message;
 }
 
+function sortServices(services: Service[]) {
+  return [...services].sort((firstService, secondService) => {
+    if (firstService.sort_order !== secondService.sort_order) {
+      return firstService.sort_order - secondService.sort_order;
+    }
+
+    return secondService.created_at.localeCompare(firstService.created_at);
+  });
+}
+
+function getNextSortOrder(services: Service[]) {
+  if (services.length === 0) {
+    return 0;
+  }
+
+  return Math.max(...services.map((service) => service.sort_order)) + 1;
+}
+
 export function ServicesManager({
   initialServices,
   specialistProfileId,
@@ -79,9 +98,10 @@ export function ServicesManager({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const [pendingServiceId, setPendingServiceId] = useState<string | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
-  const [services, setServices] = useState(initialServices);
+  const [services, setServices] = useState(sortServices(initialServices));
 
   function openCreateForm() {
     setFormError(null);
@@ -133,14 +153,18 @@ export function ServicesManager({
     setIsSaving(true);
 
     const supabase = createSupabaseBrowserClient();
+    const valuesToSave =
+      formMode.type === "create"
+        ? { ...formValues, sortOrder: getNextSortOrder(services) }
+        : formValues;
     const { data, error: saveError } =
       formMode.type === "create"
-        ? await createService(supabase, specialistProfileId, formValues)
+        ? await createService(supabase, specialistProfileId, valuesToSave)
         : await updateService(
             supabase,
             specialistProfileId,
             formMode.service.id,
-            formValues,
+            valuesToSave,
           );
 
     if (saveError) {
@@ -157,13 +181,7 @@ export function ServicesManager({
               service.id === data.id ? data : service,
             );
 
-      return nextServices.sort((firstService, secondService) => {
-        if (firstService.sort_order !== secondService.sort_order) {
-          return firstService.sort_order - secondService.sort_order;
-        }
-
-        return secondService.created_at.localeCompare(firstService.created_at);
-      });
+      return sortServices(nextServices);
     });
     setIsSaving(false);
     setFormMode(null);
@@ -230,6 +248,57 @@ export function ServicesManager({
     setServiceToDelete(null);
   }
 
+  async function handleMoveService(serviceId: string, direction: "up" | "down") {
+    if (isReordering) {
+      return;
+    }
+
+    const sortedServices = sortServices(services);
+    const currentIndex = sortedServices.findIndex(
+      (service) => service.id === serviceId,
+    );
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+
+    if (
+      currentIndex === -1 ||
+      targetIndex < 0 ||
+      targetIndex >= sortedServices.length
+    ) {
+      return;
+    }
+
+    const reorderedServices = [...sortedServices];
+    const [movedService] = reorderedServices.splice(currentIndex, 1);
+    reorderedServices.splice(targetIndex, 0, movedService);
+
+    const nextServices = reorderedServices.map((service, index) => ({
+      ...service,
+      sort_order: index,
+    }));
+
+    setError(null);
+    setIsReordering(true);
+    setPendingServiceId(serviceId);
+
+    const supabase = createSupabaseBrowserClient();
+    const { error: reorderError } = await updateServicesSortOrder(
+      supabase,
+      specialistProfileId,
+      nextServices,
+    );
+
+    if (reorderError) {
+      setError(getFriendlyServiceError(reorderError.message));
+      setIsReordering(false);
+      setPendingServiceId(null);
+      return;
+    }
+
+    setServices(nextServices);
+    setIsReordering(false);
+    setPendingServiceId(null);
+  }
+
   return (
     <>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -286,8 +355,9 @@ export function ServicesManager({
         </Card>
       ) : (
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
-          {services.map((service) => {
+          {services.map((service, index) => {
             const isPending = pendingServiceId === service.id;
+            const actionsDisabled = isPending || isReordering;
 
             return (
               <Card
@@ -344,9 +414,29 @@ export function ServicesManager({
 
                   <div className="flex items-center gap-1 pt-1">
                     <button
+                      aria-label="Move service up"
+                      className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#5a6865] transition-colors hover:bg-[#f7f3ec] disabled:pointer-events-none disabled:opacity-35"
+                      disabled={actionsDisabled || index === 0}
+                      onClick={() => handleMoveService(service.id, "up")}
+                      title="Move up"
+                      type="button"
+                    >
+                      <ArrowUp className="size-4" />
+                    </button>
+                    <button
+                      aria-label="Move service down"
+                      className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#5a6865] transition-colors hover:bg-[#f7f3ec] disabled:pointer-events-none disabled:opacity-35"
+                      disabled={actionsDisabled || index === services.length - 1}
+                      onClick={() => handleMoveService(service.id, "down")}
+                      title="Move down"
+                      type="button"
+                    >
+                      <ArrowDown className="size-4" />
+                    </button>
+                    <button
                       aria-label="Edit service"
                       className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#1f5f55] transition-colors hover:bg-[#eef5f3] disabled:pointer-events-none disabled:opacity-40"
-                      disabled={isPending}
+                      disabled={actionsDisabled}
                       onClick={() => openEditForm(service)}
                       title="Edit"
                       type="button"
@@ -356,7 +446,7 @@ export function ServicesManager({
                     <button
                       aria-label="Delete service"
                       className="flex size-11 cursor-pointer items-center justify-center rounded-full text-[#9a4c2f] transition-colors hover:bg-[#f6ddd4] disabled:pointer-events-none disabled:opacity-40"
-                      disabled={isPending}
+                      disabled={actionsDisabled}
                       onClick={() => handleDeleteService(service)}
                       title="Delete"
                       type="button"
@@ -481,19 +571,6 @@ export function ServicesManager({
                     </option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <Label htmlFor="service-sort">Sort order</Label>
-                <Input
-                  className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                  id="service-sort"
-                  onChange={(event) =>
-                    updateFormValue("sortOrder", event.target.value === "" ? "" : Number(event.target.value))
-                  }
-                  placeholder="0"
-                  type="number"
-                  value={formValues.sortOrder}
-                />
               </div>
               <label className="flex items-center gap-3 rounded-2xl bg-white p-4 text-sm font-semibold text-[#24312f]">
                 <input

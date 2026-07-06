@@ -25,7 +25,7 @@
 ## Partially Implemented
 
 - Calendar: booking status and week-specific availability are real; booking slot generation is not implemented.
-- Public profile: specialist data is real; service list is mock.
+- Public profile: specialist data and active service list are real.
 - Client dashboard: placeholder only.
 - Archive/settings/session workspace/booking flow: UI mock only.
 

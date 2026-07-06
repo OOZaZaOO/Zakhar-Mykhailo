@@ -5,13 +5,11 @@ The practical implementation roadmap is maintained in [NEXT_STEPS.md](./NEXT_STE
 Current recommended order:
 
 1. Client profiles.
-2. Real public profile services.
-3. Availability CRUD.
-4. Booking flow.
-5. Session persistence.
-6. Session chat, materials, and files.
-7. Archive.
-8. Notifications/email.
-9. Payments.
+2. Booking flow.
+3. Session persistence.
+4. Session chat, materials, and files.
+5. Archive.
+6. Notifications/email.
+7. Payments.
 
 Do not prioritize marketplace discovery, built-in video calls, team accounts, AI automation, or advanced analytics during the current MVP foundation.

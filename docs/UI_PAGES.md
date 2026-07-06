@@ -100,7 +100,7 @@ Primary actions: open historical session mock.
 
 Purpose: client-facing specialist profile.
 
-Main sections: Supabase specialist profile, profile status badges, bio, languages, working rules, mock services.
+Main sections: Supabase specialist profile, profile status badges, bio, languages, working rules, active services from Supabase.
 
 Primary actions: book session when `is_accepting_bookings` is true.
 

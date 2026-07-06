@@ -82,6 +82,30 @@ export async function getServicesForSpecialistProfile(
     .order("created_at", { ascending: false });
 }
 
+export async function getActiveServicesForPublicProfile(
+  supabase: ServicesClient,
+  specialistProfileId: string,
+) {
+  return supabase
+    .from("services")
+    .select("*")
+    .eq("specialist_profile_id", specialistProfileId)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+}
+
+export function formatServicePrice(amount: number, currency: string) {
+  const value = amount / 100;
+
+  return new Intl.NumberFormat("en", {
+    currency,
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+    style: "currency",
+  }).format(value);
+}
+
 export async function createService(
   supabase: ServicesClient,
   specialistProfileId: string,
@@ -125,6 +149,26 @@ export async function updateServiceActiveStatus(
     .eq("specialist_profile_id", specialistProfileId)
     .select()
     .single();
+}
+
+export async function updateServicesSortOrder(
+  supabase: ServicesClient,
+  specialistProfileId: string,
+  orderedServices: Pick<Service, "id">[],
+) {
+  const updates = await Promise.all(
+    orderedServices.map((service, index) =>
+      supabase
+        .from("services")
+        .update({ sort_order: index })
+        .eq("id", service.id)
+        .eq("specialist_profile_id", specialistProfileId),
+    ),
+  );
+
+  return {
+    error: updates.find((update) => update.error)?.error ?? null,
+  };
 }
 
 export async function deleteService(

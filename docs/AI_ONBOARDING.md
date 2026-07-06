@@ -38,7 +38,6 @@ Mock or placeholder features:
 
 - Landing content is static UI.
 - Dashboard stats and today's sessions are mock.
-- Public profile services are mock.
 - Booking flow is mock.
 - Session workspace is mock.
 - Archive and settings are mock.
@@ -224,7 +223,6 @@ Manual Supabase setup is required for the `avatars` bucket and policies.
 ## Current Blockers
 
 - Client profiles are documented as required for MVP but not created.
-- Public profile service listing still uses mock services.
 - Booking/session tables do not exist.
 - Storage has historical migration mismatch: current code uses `avatars`, while an older migration references `specialist-avatars`.
 - Types are manually maintained instead of generated from Supabase.
@@ -233,14 +231,13 @@ Manual Supabase setup is required for the `avatars` bucket and policies.
 ## Recommended Development Order
 
 1. Add `client_profiles` migration and profile creation.
-2. Connect public profile services to real `services`.
-3. Implement booking tables and booking flow.
-4. Implement sessions created from bookings.
-5. Implement session access control.
-6. Implement chat, materials, files.
-7. Implement archive.
-8. Add notifications/email.
-9. Add payments after provider decision.
+2. Implement booking tables and booking flow.
+3. Implement sessions created from bookings.
+4. Implement session access control.
+5. Implement chat, materials, files.
+6. Implement archive.
+7. Add notifications/email.
+8. Add payments after provider decision.
 
 ## Common Mistakes To Avoid
 

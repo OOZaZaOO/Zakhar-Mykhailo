@@ -5,7 +5,6 @@ import { PublicLayout } from "@/components/layout/public-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { services } from "@/data/mock";
 import {
   canAccessProfileFeature,
   getProfileCompletion,
@@ -14,6 +13,11 @@ import {
   getPublicSpecialistProfileBySlug,
   getSpecialistProfileBySlug,
 } from "@/lib/profile/service";
+import {
+  formatServicePrice,
+  getActiveServicesForPublicProfile,
+} from "@/lib/services/service";
+import type { Service } from "@/lib/services/types";
 import type { SpecialistProfile } from "@/lib/profile/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -98,8 +102,16 @@ function ProfileOwnerGatedState() {
   );
 }
 
-function PublicProfileContent({ profile }: { profile: SpecialistProfile }) {
+function PublicProfileContent({
+  profile,
+  services,
+}: {
+  profile: SpecialistProfile;
+  services: Service[];
+}) {
   const canBook = profile.is_accepting_bookings;
+  const hasServices = services.length > 0;
+  const canStartBooking = canBook && hasServices;
 
   return (
     <PublicLayout>
@@ -171,12 +183,16 @@ function PublicProfileContent({ profile }: { profile: SpecialistProfile }) {
                 Choose a session type
               </h2>
             </div>
-            {canBook ? (
+            {canStartBooking ? (
               <Button
                 asChild
                 className="rounded-full bg-[#1f5f55] hover:bg-[#174a43]"
               >
                 <Link href={`/profile/${profile.slug}/book`}>Book session</Link>
+              </Button>
+            ) : !hasServices ? (
+              <Button className="rounded-full" disabled>
+                No services yet
               </Button>
             ) : (
               <Button className="rounded-full" disabled>
@@ -187,8 +203,23 @@ function PublicProfileContent({ profile }: { profile: SpecialistProfile }) {
           {!canBook ? (
             <div className="rounded-2xl bg-[#f6ddd4] p-4 text-sm font-medium leading-6 text-[#9a4c2f]">
               This specialist is not accepting new bookings right now. You can
-              still view the public profile and mocked service preview.
+              still view their public profile and services.
             </div>
+          ) : null}
+          {!hasServices ? (
+            <Card className="rounded-3xl border-[#ded5c8] bg-white">
+              <CardContent className="p-6">
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
+                  No services yet
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold text-[#24312f]">
+                  This profile has no active services.
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-[#66736f]">
+                  Services will appear here when the specialist publishes them.
+                </p>
+              </CardContent>
+            </Card>
           ) : null}
           {services.map((service) => (
             <Card
@@ -198,21 +229,21 @@ function PublicProfileContent({ profile }: { profile: SpecialistProfile }) {
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <CardTitle>{service.name}</CardTitle>
+                    <CardTitle>{service.title}</CardTitle>
                     <p className="mt-2 text-sm leading-6 text-[#60706c]">
                       {service.description}
                     </p>
                   </div>
                   <p className="whitespace-nowrap text-sm font-bold text-[#9a4c2f]">
-                    {service.price}
+                    {formatServicePrice(service.price_amount, service.currency)}
                   </p>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-medium text-[#7d8a86]">
-                  {service.duration} · {service.format}
+                  {service.duration_minutes} min · {service.format}
                 </p>
-                {canBook ? (
+                {canStartBooking ? (
                   <Button asChild variant="outline" className="rounded-full">
                     <Link href={`/profile/${profile.slug}/book`}>
                       Select service
@@ -256,7 +287,17 @@ export default async function PublicProfilePage({
       return <ProfileOwnerGatedState />;
     }
 
-    return <PublicProfileContent profile={publicProfile} />;
+    const { data: publicServices } = await getActiveServicesForPublicProfile(
+      supabase,
+      publicProfile.id,
+    );
+
+    return (
+      <PublicProfileContent
+        profile={publicProfile}
+        services={publicServices ?? []}
+      />
+    );
   }
 
   const { data: unavailableProfile } = await getSpecialistProfileBySlug(
