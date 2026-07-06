@@ -108,6 +108,7 @@ export default async function CalendarPage({
         <WeekAvailabilityEditor
           initialIsAcceptingBookings={profile.is_accepting_bookings}
           initialSchedule={initialSchedule}
+          key={formatDateKey(selectedWeekStart)}
           selectedWeekStart={formatDateKey(selectedWeekStart)}
           specialistProfileId={profile.id}
           timezone={profile.timezone}

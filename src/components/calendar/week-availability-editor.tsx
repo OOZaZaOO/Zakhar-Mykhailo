@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { BookingStatusToggle } from "@/components/calendar/booking-status-toggle";
 import { DateAvailabilityRow } from "@/components/calendar/date-availability-row";
@@ -53,7 +53,6 @@ export function WeekAvailabilityEditor({
   specialistProfileId,
   timezone,
 }: WeekAvailabilityEditorProps) {
-  const router = useRouter();
   const weekStart = useMemo(
     () => new Date(`${selectedWeekStart}T00:00:00.000Z`),
     [selectedWeekStart],
@@ -70,8 +69,8 @@ export function WeekAvailabilityEditor({
   const isBeyondPlanningWindow = isWeekBeyondPlanningWindow(weekStart);
   const weekDates = getWeekDates(weekStart);
 
-  function navigateToWeek(nextWeekStart: Date) {
-    router.push(`/dashboard/calendar?week=${formatDateKey(nextWeekStart)}`);
+  function getWeekHref(nextWeekStart: Date) {
+    return `/dashboard/calendar?week=${formatDateKey(nextWeekStart)}`;
   }
 
   function updateDate(
@@ -316,28 +315,29 @@ export function WeekAvailabilityEditor({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap gap-2">
               <Button
+                asChild
                 className="h-11 rounded-full border-[#d9ceb9]"
-                onClick={() => navigateToWeek(addWeeks(weekStart, -1))}
-                type="button"
                 variant="outline"
               >
-                Previous week
+                <Link href={getWeekHref(addWeeks(weekStart, -1))}>
+                  Previous week
+                </Link>
               </Button>
               <Button
+                asChild
                 className="h-11 rounded-full border-[#d9ceb9]"
-                onClick={() => navigateToWeek(getThisWeekStart())}
-                type="button"
                 variant="outline"
               >
-                This week
+                <Link href={getWeekHref(getThisWeekStart())}>This week</Link>
               </Button>
               <Button
+                asChild
                 className="h-11 rounded-full border-[#d9ceb9]"
-                onClick={() => navigateToWeek(addWeeks(weekStart, 1))}
-                type="button"
                 variant="outline"
               >
-                Next week
+                <Link href={getWeekHref(addWeeks(weekStart, 1))}>
+                  Next week
+                </Link>
               </Button>
             </div>
             <p className="text-xl font-semibold text-[#24312f]">
