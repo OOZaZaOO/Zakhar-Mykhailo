@@ -33,16 +33,15 @@ export function getDefaultServiceFormValues(): ServiceFormValues {
     limitActiveBookingsPerClient: false,
     limitOneBookingPerClient: false,
     maxActiveBookingsPerClient: "",
+    maxSessionsPerWeek: "",
     minimumNoticeMinutes: "none",
     packageNotes: "",
-    packageValidityWeeks: "",
     priceAmount: "",
     releaseSlotOnCancellation: true,
     requireSpecialistApproval: false,
     requireSpecialistApprovalForReschedule: false,
     serviceType: "one_time",
     sessionsCount: "",
-    sessionsPerWeek: "",
     sortOrder: 0,
     title: "",
   };
@@ -72,12 +71,13 @@ export function getServiceFormValues(service: Service): ServiceFormValues {
       service.limit_active_bookings_per_client ?? false,
     limitOneBookingPerClient: service.limit_one_booking_per_client ?? false,
     maxActiveBookingsPerClient: service.max_active_bookings_per_client ?? "",
+    maxSessionsPerWeek:
+      service.max_sessions_per_week ?? service.sessions_per_week ?? "",
     minimumNoticeMinutes:
       service.minimum_notice_minutes === null
         ? "none"
         : String(service.minimum_notice_minutes),
     packageNotes: service.package_notes ?? "",
-    packageValidityWeeks: service.package_validity_weeks ?? "",
     priceAmount: service.price_amount === 0 ? "" : (service.price_amount / 100).toString(),
     releaseSlotOnCancellation: service.release_slot_on_cancellation ?? true,
     requireSpecialistApproval: service.require_specialist_approval ?? false,
@@ -85,7 +85,6 @@ export function getServiceFormValues(service: Service): ServiceFormValues {
       service.reschedule_requires_approval ?? false,
     serviceType: service.service_type ?? "one_time",
     sessionsCount: service.sessions_count ?? "",
-    sessionsPerWeek: service.sessions_per_week ?? "",
     sortOrder: service.sort_order,
     title: service.title,
   };
@@ -132,15 +131,16 @@ export function validateServiceFormFields(
 
   if (values.serviceType === "package") {
     const sessionsCount = values.sessionsCount;
-    const sessionsPerWeek = values.sessionsPerWeek;
-    const packageValidityWeeks = values.isMonthlySubscription
-      ? 4
-      : values.packageValidityWeeks;
+    const maxSessionsPerWeek = values.maxSessionsPerWeek;
 
     if (sessionsCount === "" || sessionsCount < 1) {
       fieldErrors.sessionsCount = values.isMonthlySubscription
         ? "Monthly packages need at least one session per month."
         : "Packages need at least two sessions.";
+    }
+
+    if (sessionsCount !== "" && !Number.isInteger(sessionsCount)) {
+      fieldErrors.sessionsCount = "Number of sessions must be a whole number.";
     }
 
     if (
@@ -151,40 +151,35 @@ export function validateServiceFormFields(
       fieldErrors.sessionsCount = "One-off packages need at least two sessions.";
     }
 
-    if (sessionsPerWeek === "" || sessionsPerWeek < 1) {
-      fieldErrors.sessionsPerWeek = "Sessions per week must be at least 1.";
+    if (maxSessionsPerWeek === "" || maxSessionsPerWeek < 1) {
+      fieldErrors.maxSessionsPerWeek =
+        "Maximum sessions per week must be at least 1.";
     }
 
     if (
-      sessionsPerWeek !== "" &&
-      sessionsCount !== "" &&
-      sessionsPerWeek > sessionsCount
+      maxSessionsPerWeek !== "" &&
+      !Number.isInteger(maxSessionsPerWeek)
     ) {
-      fieldErrors.sessionsPerWeek =
-        "Sessions per week cannot be greater than the number of sessions.";
-    }
-
-    if (packageValidityWeeks === "" || packageValidityWeeks < 1) {
-      fieldErrors.packageValidityWeeks = "Package duration must be at least 1 week.";
+      fieldErrors.maxSessionsPerWeek =
+        "Maximum sessions per week must be a whole number.";
     }
 
     if (
-      values.isMonthlySubscription &&
+      maxSessionsPerWeek !== "" &&
       sessionsCount !== "" &&
-      sessionsPerWeek !== "" &&
-      sessionsCount > sessionsPerWeek * 4
+      maxSessionsPerWeek > sessionsCount
     ) {
-      fieldErrors.sessionsCount =
-        "Monthly subscription sessions must fit within a 4-week month.";
-    } else if (
-      !values.isMonthlySubscription &&
-      packageValidityWeeks !== "" &&
-      sessionsPerWeek !== "" &&
+      fieldErrors.maxSessionsPerWeek =
+        "Maximum sessions per week cannot exceed total sessions.";
+    }
+
+    if (
       sessionsCount !== "" &&
-      packageValidityWeeks * sessionsPerWeek < sessionsCount
+      maxSessionsPerWeek !== "" &&
+      sessionsCount > maxSessionsPerWeek * 4
     ) {
-      fieldErrors.packageValidityWeeks =
-        "Package duration should be long enough for the selected session pace.";
+      fieldErrors.maxSessionsPerWeek =
+        "Maximum sessions per week is too low for a 4-week package.";
     }
   }
 
@@ -230,15 +225,14 @@ function getServicePayload(values: ServiceFormValues) {
     limit_one_booking_per_client:
       values.serviceType === "one_time" ? values.limitOneBookingPerClient : false,
     max_active_bookings_per_client: maxActiveBookingsPerClient,
+    max_sessions_per_week: isPackage
+      ? values.maxSessionsPerWeek === ""
+        ? null
+        : values.maxSessionsPerWeek
+      : null,
     minimum_notice_minutes: minimumNoticeMinutes,
     package_notes: isPackage ? values.packageNotes.trim() : "",
-    package_validity_weeks: isPackage
-      ? isMonthlySubscription
-        ? 4
-        : values.packageValidityWeeks === ""
-          ? null
-          : values.packageValidityWeeks
-      : null,
+    package_validity_weeks: isPackage ? 4 : null,
     price_amount: values.priceAmount === "" ? 0 : Math.round(parseFloat(values.priceAmount.replace(",", ".")) * 100),
     release_slot_on_cancellation: values.releaseSlotOnCancellation,
     require_specialist_approval: values.requireSpecialistApproval,
@@ -251,9 +245,9 @@ function getServicePayload(values: ServiceFormValues) {
         : values.sessionsCount
       : null,
     sessions_per_week: isPackage
-      ? values.sessionsPerWeek === ""
+      ? values.maxSessionsPerWeek === ""
         ? null
-        : values.sessionsPerWeek
+        : values.maxSessionsPerWeek
       : null,
     sort_order: values.sortOrder === "" ? 0 : values.sortOrder,
     title: values.title.trim(),
@@ -282,7 +276,8 @@ function isServicePackageSchemaCacheError(error: ServiceMutationError) {
     error?.message?.includes("schema cache") ||
     error?.message?.includes("allow_reschedule") ||
     error?.message?.includes("service_type") ||
-    error?.message?.includes("is_monthly_subscription")
+    error?.message?.includes("is_monthly_subscription") ||
+    error?.message?.includes("max_sessions_per_week")
   );
 }
 
@@ -438,9 +433,11 @@ export async function duplicateService(
     location_details: service.location_details,
     max_active_bookings_per_client:
       service.max_active_bookings_per_client ?? null,
+    max_sessions_per_week:
+      service.max_sessions_per_week ?? service.sessions_per_week ?? null,
     minimum_notice_minutes: service.minimum_notice_minutes ?? null,
     package_notes: service.package_notes ?? "",
-    package_validity_weeks: service.package_validity_weeks,
+    package_validity_weeks: service.service_type === "package" ? 4 : null,
     price_amount: service.price_amount,
     release_slot_on_cancellation: service.release_slot_on_cancellation ?? true,
     require_specialist_approval: service.require_specialist_approval ?? false,
@@ -448,7 +445,7 @@ export async function duplicateService(
       service.reschedule_requires_approval ?? false,
     service_type: service.service_type ?? "one_time",
     sessions_count: service.sessions_count,
-    sessions_per_week: service.sessions_per_week,
+    sessions_per_week: service.max_sessions_per_week ?? service.sessions_per_week,
     sort_order: sortOrder,
     specialist_profile_id: specialistProfileId,
     title: `${service.title} Copy`,

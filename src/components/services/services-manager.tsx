@@ -252,10 +252,8 @@ function getServiceSummary(service: Service) {
   }
 
   const sessionsCount = service.sessions_count ?? 0;
-  const sessionsPerWeek = service.sessions_per_week ?? 0;
-  const validityWeeks = service.is_monthly_subscription
-    ? 4
-    : service.package_validity_weeks ?? 0;
+  const maxSessionsPerWeek =
+    service.max_sessions_per_week ?? service.sessions_per_week ?? 0;
   const perSession =
     sessionsCount > 0
       ? formatPrice(Math.round(service.price_amount / sessionsCount), service.currency)
@@ -263,15 +261,15 @@ function getServiceSummary(service: Service) {
 
   return {
     detail: service.is_monthly_subscription
-      ? `${sessionsCount} sessions/month · ${sessionsPerWeek}/week · 4-week schedule`
-      : `${sessionsCount} sessions · ${sessionsPerWeek}/week · ${validityWeeks} weeks`,
+      ? `${sessionsCount} sessions/month · max ${maxSessionsPerWeek}/week · 4 weeks`
+      : `${sessionsCount} sessions · max ${maxSessionsPerWeek}/week · 4 weeks`,
     priceLabel: service.is_monthly_subscription ? `${price}/month` : `${price} total`,
     stats: [
       {
         label: service.is_monthly_subscription ? "Monthly" : "Package",
         value: `${sessionsCount} sessions`,
       },
-      { label: "Pace", value: `${sessionsPerWeek}/week` },
+      { label: "Max/week", value: `${maxSessionsPerWeek}` },
       {
         label: "Per session",
         value: perSession,
@@ -304,14 +302,9 @@ export function ServicesManager({
   const priceAmountRef = useRef<HTMLInputElement | null>(null);
   const currencyRef = useRef<HTMLInputElement | null>(null);
   const sessionsCountRef = useRef<HTMLInputElement | null>(null);
-  const sessionsPerWeekRef = useRef<HTMLInputElement | null>(null);
-  const packageValidityWeeksRef = useRef<HTMLInputElement | null>(null);
+  const maxSessionsPerWeekRef = useRef<HTMLInputElement | null>(null);
 
-  const advancedSettingsFields = new Set<ServiceFormFieldName>([
-    "packageValidityWeeks",
-    "sessionsCount",
-    "sessionsPerWeek",
-  ]);
+  const advancedSettingsFields = new Set<ServiceFormFieldName>([]);
 
   function getFieldErrorClass(hasError: boolean) {
     return hasError
@@ -331,10 +324,8 @@ export function ServicesManager({
         return currencyRef.current;
       case "sessionsCount":
         return sessionsCountRef.current;
-      case "sessionsPerWeek":
-        return sessionsPerWeekRef.current;
-      case "packageValidityWeeks":
-        return packageValidityWeeksRef.current;
+      case "maxSessionsPerWeek":
+        return maxSessionsPerWeekRef.current;
       default:
         return null;
     }
@@ -390,17 +381,11 @@ export function ServicesManager({
       ...currentValues,
       isMonthlySubscription:
         serviceType === "package" ? currentValues.isMonthlySubscription : false,
-      packageValidityWeeks:
-        serviceType === "package"
-          ? currentValues.isMonthlySubscription
-            ? 4
-            : currentValues.packageValidityWeeks
-          : "",
       serviceType,
       sessionsCount:
         serviceType === "package" ? currentValues.sessionsCount : "",
-      sessionsPerWeek:
-        serviceType === "package" ? currentValues.sessionsPerWeek : "",
+      maxSessionsPerWeek:
+        serviceType === "package" ? currentValues.maxSessionsPerWeek : "",
     }));
   }
 
@@ -408,11 +393,6 @@ export function ServicesManager({
     setFormValues((currentValues) => ({
       ...currentValues,
       isMonthlySubscription,
-      packageValidityWeeks: isMonthlySubscription
-        ? 4
-        : currentValues.packageValidityWeeks === 4
-          ? ""
-      : currentValues.packageValidityWeeks,
     }));
   }
 
@@ -901,6 +881,113 @@ export function ServicesManager({
                   ))}
                 </div>
               </div>
+
+              {formValues.serviceType === "package" ? (
+                <div className="space-y-4 rounded-3xl border border-[#ded5c8] bg-white p-4 sm:col-span-2">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-[#24312f]">
+                        Package settings
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-[#66736f]">
+                        Set the total sessions and weekly booking limit.
+                      </p>
+                    </div>
+                    <label className="flex items-center gap-3 rounded-full bg-[#f7f3ec] px-4 py-3 text-sm font-semibold text-[#24312f]">
+                      <input
+                        checked={formValues.isMonthlySubscription}
+                        className="size-4 accent-[#1f5f55]"
+                        onChange={(event) =>
+                          updateMonthlySubscription(event.target.checked)
+                        }
+                        type="checkbox"
+                      />
+                      Monthly subscription
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <Label htmlFor="service-sessions-count">
+                        {formValues.isMonthlySubscription
+                          ? "Sessions per month"
+                          : "Number of sessions"}
+                      </Label>
+                      <Input
+                        className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.sessionsCount))}`}
+                        id="service-sessions-count"
+                        min={formValues.isMonthlySubscription ? 1 : 2}
+                        onChange={(event) =>
+                          updateFormValue(
+                            "sessionsCount",
+                            event.target.value === ""
+                              ? ""
+                              : Number(event.target.value),
+                          )
+                        }
+                        placeholder={formValues.isMonthlySubscription ? "8" : "10"}
+                        ref={sessionsCountRef}
+                        type="number"
+                        value={formValues.sessionsCount}
+                      />
+                      {fieldErrors.sessionsCount ? (
+                        <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                          {fieldErrors.sessionsCount}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div>
+                      <Label htmlFor="service-max-sessions-week">
+                        Maximum sessions per week
+                      </Label>
+                      <Input
+                        className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.maxSessionsPerWeek))}`}
+                        id="service-max-sessions-week"
+                        min={1}
+                        onChange={(event) =>
+                          updateFormValue(
+                            "maxSessionsPerWeek",
+                            event.target.value === ""
+                              ? ""
+                              : Number(event.target.value),
+                          )
+                        }
+                        placeholder="2"
+                        ref={maxSessionsPerWeekRef}
+                        type="number"
+                        value={formValues.maxSessionsPerWeek}
+                      />
+                      {fieldErrors.maxSessionsPerWeek ? (
+                        <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                          {fieldErrors.maxSessionsPerWeek}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="rounded-2xl border border-dashed border-[#d9ceb9] bg-[#faf7f1] p-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
+                        Package duration
+                      </p>
+                      <p className="mt-2 text-lg font-semibold text-[#24312f]">
+                        4 weeks
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="service-package-notes">Package notes</Label>
+                    <Textarea
+                      className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
+                      id="service-package-notes"
+                      onChange={(event) =>
+                        updateFormValue("packageNotes", event.target.value)
+                      }
+                      placeholder="Add anything clients should know about this package."
+                      value={formValues.packageNotes}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
               <div className="sm:col-span-2">
                 <Label htmlFor="service-title">Title</Label>
                 <Input
@@ -1051,163 +1138,6 @@ export function ServicesManager({
                   <div className="mt-4 space-y-4">
                     <Card className="rounded-3xl border-[#ded5c8] bg-white">
                       <CardHeader className="space-y-2">
-                        <CardTitle className="text-lg">Package settings</CardTitle>
-                        <p className="text-sm leading-6 text-[#66736f]">
-                          Configure one-off packages and monthly package options
-                          here.
-                        </p>
-                      </CardHeader>
-                      <CardContent className="space-y-4 pt-0">
-                        {formValues.serviceType === "package" ? (
-                          <div ref={firstAdvancedSettingRef} className="space-y-4">
-                            <label className="flex items-center gap-3 rounded-full bg-[#f7f3ec] px-4 py-3 text-sm font-semibold text-[#24312f]">
-                              <input
-                                checked={formValues.isMonthlySubscription}
-                                className="size-4 accent-[#1f5f55]"
-                                onChange={(event) =>
-                                  updateMonthlySubscription(event.target.checked)
-                                }
-                                type="checkbox"
-                              />
-                              Monthly subscription
-                            </label>
-
-                            {formValues.isMonthlySubscription ? (
-                              <p className="rounded-2xl bg-[#eef5f3] px-4 py-3 text-sm font-medium leading-6 text-[#1f5f55]">
-                                Monthly subscriptions are planned within a 4-week month.
-                              </p>
-                            ) : null}
-
-                            <div className="grid gap-4 sm:grid-cols-3">
-                              <div>
-                                <Label htmlFor="service-sessions-count">
-                                  {formValues.isMonthlySubscription
-                                    ? "Sessions per month"
-                                    : "Number of sessions"}
-                                </Label>
-                                <Input
-                                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.sessionsCount))}`}
-                                  id="service-sessions-count"
-                                  min={formValues.isMonthlySubscription ? 1 : 2}
-                                  onChange={(event) =>
-                                    updateFormValue(
-                                      "sessionsCount",
-                                      event.target.value === ""
-                                        ? ""
-                                        : Number(event.target.value),
-                                    )
-                                  }
-                                  placeholder={
-                                    formValues.isMonthlySubscription ? "8" : "10"
-                                  }
-                                  ref={sessionsCountRef}
-                                  type="number"
-                                  value={formValues.sessionsCount}
-                                />
-                                {fieldErrors.sessionsCount ? (
-                                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
-                                    {fieldErrors.sessionsCount}
-                                  </p>
-                                ) : null}
-                              </div>
-                              <div>
-                                <Label htmlFor="service-sessions-week">
-                                  Sessions per week
-                                </Label>
-                                <Input
-                                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.sessionsPerWeek))}`}
-                                  id="service-sessions-week"
-                                  min={1}
-                                  onChange={(event) =>
-                                    updateFormValue(
-                                      "sessionsPerWeek",
-                                      event.target.value === ""
-                                        ? ""
-                                        : Number(event.target.value),
-                                    )
-                                  }
-                                  placeholder="2"
-                                  ref={sessionsPerWeekRef}
-                                  type="number"
-                                  value={formValues.sessionsPerWeek}
-                                />
-                                {fieldErrors.sessionsPerWeek ? (
-                                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
-                                    {fieldErrors.sessionsPerWeek}
-                                  </p>
-                                ) : null}
-                              </div>
-                              <div>
-                                <Label htmlFor="service-validity">
-                                  Valid for / duration
-                                </Label>
-                                <Input
-                                  className={`mt-2 h-11 rounded-xl disabled:bg-[#f7f3ec] disabled:text-[#7b8884] ${getFieldErrorClass(Boolean(fieldErrors.packageValidityWeeks))}`}
-                                  disabled={formValues.isMonthlySubscription}
-                                  id="service-validity"
-                                  min={1}
-                                  onChange={(event) =>
-                                    updateFormValue(
-                                      "packageValidityWeeks",
-                                      event.target.value === ""
-                                        ? ""
-                                        : Number(event.target.value),
-                                    )
-                                  }
-                                  placeholder="6"
-                                  type="number"
-                                  value={
-                                    formValues.isMonthlySubscription
-                                      ? 4
-                                      : formValues.packageValidityWeeks
-                                  }
-                                  ref={packageValidityWeeksRef}
-                                />
-                                {fieldErrors.packageValidityWeeks ? (
-                                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
-                                    {fieldErrors.packageValidityWeeks}
-                                  </p>
-                                ) : null}
-                                <p className="mt-2 text-xs font-medium text-[#66736f]">
-                                  Weeks
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="grid gap-4 sm:grid-cols-2">
-                              <div>
-                                <Label htmlFor="service-package-notes">
-                                  Package notes
-                                </Label>
-                                <Textarea
-                                  className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
-                                  id="service-package-notes"
-                                  onChange={(event) =>
-                                    updateFormValue("packageNotes", event.target.value)
-                                  }
-                                  placeholder="Add anything clients should know about this package."
-                                  value={formValues.packageNotes}
-                                />
-                              </div>
-                              <div className="rounded-2xl border border-dashed border-[#d9ceb9] bg-[#faf7f1] p-4 text-sm leading-6 text-[#66736f]">
-                                Package settings will stay here as the form grows.
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            ref={firstAdvancedSettingRef}
-                            className="rounded-2xl border border-dashed border-[#d9ceb9] bg-[#faf7f1] p-4 text-sm leading-6 text-[#66736f]"
-                          >
-                            Package settings will appear here when you switch to
-                            Package.
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <Card className="rounded-3xl border-[#ded5c8] bg-white">
-                      <CardHeader className="space-y-2">
                         <CardTitle className="text-lg">Booking rules</CardTitle>
                         <p className="text-sm leading-6 text-[#66736f]">
                           Configure approval, booking limits, timing, and client
@@ -1215,7 +1145,7 @@ export function ServicesManager({
                         </p>
                       </CardHeader>
                       <CardContent className="space-y-4 pt-0">
-                        <div className="space-y-2">
+                        <div ref={firstAdvancedSettingRef} className="space-y-2">
                           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
                             Booking approval
                           </p>

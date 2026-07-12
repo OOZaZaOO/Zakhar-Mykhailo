@@ -1,4 +1,7 @@
-import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import {
+  Breadcrumbs,
+  type BreadcrumbItem,
+} from "@/components/layout/breadcrumbs";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { getNavigationItems, getNavigationRole } from "@/lib/navigation";
@@ -8,7 +11,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function DashboardLayout({
   children,
+  breadcrumbs,
 }: {
+  breadcrumbs?: BreadcrumbItem[];
   children: React.ReactNode;
 }) {
   const supabase = await createSupabaseServerClient();
@@ -37,7 +42,7 @@ export async function DashboardLayout({
         <Sidebar items={navigationItems} />
         <section className="px-5 py-8 sm:px-8">
           <div className="mx-auto max-w-6xl">
-            <Breadcrumbs />
+            <Breadcrumbs items={breadcrumbs} />
             {children}
           </div>
         </section>

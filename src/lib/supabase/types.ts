@@ -124,6 +124,7 @@ export type Database = {
           limit_one_booking_per_client: boolean;
           location_details: string | null;
           max_active_bookings_per_client: number | null;
+          max_sessions_per_week: number | null;
           minimum_notice_minutes: number | null;
           package_notes: string;
           package_validity_weeks: number | null;
@@ -158,6 +159,7 @@ export type Database = {
           limit_one_booking_per_client?: boolean;
           location_details?: string | null;
           max_active_bookings_per_client?: number | null;
+          max_sessions_per_week?: number | null;
           minimum_notice_minutes?: number | null;
           package_notes?: string;
           package_validity_weeks?: number | null;
@@ -192,6 +194,7 @@ export type Database = {
           limit_one_booking_per_client?: boolean;
           location_details?: string | null;
           max_active_bookings_per_client?: number | null;
+          max_sessions_per_week?: number | null;
           minimum_notice_minutes?: number | null;
           package_notes?: string;
           package_validity_weeks?: number | null;

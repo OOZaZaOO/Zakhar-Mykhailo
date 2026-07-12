@@ -20,7 +20,7 @@ export default async function DashboardPage() {
     : { data: null };
   const completion = getProfileCompletion(profile);
   const publicProfileHref = profile?.slug
-    ? `/profile/${profile.slug}`
+    ? `/profile/${profile.slug}?from=dashboard`
     : "/dashboard/profile";
 
   return (

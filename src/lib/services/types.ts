@@ -26,16 +26,15 @@ export type ServiceFormValues = {
   limitActiveBookingsPerClient: boolean;
   limitOneBookingPerClient: boolean;
   maxActiveBookingsPerClient: number | "";
+  maxSessionsPerWeek: number | "";
   minimumNoticeMinutes: string;
   packageNotes: string;
-  packageValidityWeeks: number | "";
   priceAmount: string;
   releaseSlotOnCancellation: boolean;
   requireSpecialistApproval: boolean;
   requireSpecialistApprovalForReschedule: boolean;
   serviceType: ServiceType;
   sessionsCount: number | "";
-  sessionsPerWeek: number | "";
   sortOrder: number | "";
   title: string;
 };
@@ -43,10 +42,9 @@ export type ServiceFormValues = {
 export type ServiceFormFieldName =
   | "currency"
   | "durationMinutes"
-  | "packageValidityWeeks"
+  | "maxSessionsPerWeek"
   | "priceAmount"
   | "sessionsCount"
-  | "sessionsPerWeek"
   | "title";
 
 export type ServiceFormErrors = Partial<Record<ServiceFormFieldName, string>>;
