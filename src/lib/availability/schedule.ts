@@ -29,6 +29,7 @@ export const allDayNumbers: DayOfWeek[] = [1, 2, 3, 4, 5, 6, 0];
 export function createAvailabilityRange(
   startTime = "09:00",
   endTime = "17:00",
+  serviceId: string | null = null,
 ): AvailabilityRange {
   return {
     endTime,
@@ -36,6 +37,7 @@ export function createAvailabilityRange(
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    serviceId,
     startTime,
   };
 }
@@ -76,6 +78,7 @@ export function createScheduleFromAvailabilityBlocks(
           createAvailabilityRange(
             normalizeDatabaseTime(block.start_time),
             normalizeDatabaseTime(block.end_time),
+            null,
           ),
         ]),
       };
@@ -103,6 +106,7 @@ export function getComparableSchedule(schedule: WeeklyAvailabilitySchedule) {
     ranges: schedule[dayOfWeek].enabled
       ? sortRanges(schedule[dayOfWeek].ranges).map((range) => ({
           endTime: range.endTime,
+          serviceId: range.serviceId,
           startTime: range.startTime,
         }))
       : [],

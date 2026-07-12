@@ -15,6 +15,7 @@ import {
   getProfileCompletion,
 } from "@/lib/profile/completion";
 import { getOwnSpecialistProfile } from "@/lib/profile/service";
+import { getActiveServicesForSpecialistProfile } from "@/lib/services/service";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type CalendarPageProps = {
@@ -68,6 +69,10 @@ export default async function CalendarPage({
     timezone: profile.timezone,
     weekStart: selectedWeekStart,
   });
+  const { data: activeServices } = await getActiveServicesForSpecialistProfile(
+    supabase,
+    profile.id,
+  );
 
   return (
     <DashboardLayout>
@@ -106,6 +111,7 @@ export default async function CalendarPage({
         </div>
       ) : (
         <WeekAvailabilityEditor
+          activeServices={activeServices ?? []}
           initialIsAcceptingBookings={profile.is_accepting_bookings}
           initialSchedule={initialSchedule}
           key={formatDateKey(selectedWeekStart)}

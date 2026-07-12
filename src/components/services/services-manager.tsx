@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Copy, Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,10 +19,12 @@ import {
   updateService,
   updateServiceActiveStatus,
   updateServicesSortOrder,
-  validateServiceForm,
+  validateServiceFormFields,
 } from "@/lib/services/service";
 import type {
   Service,
+  ServiceFormErrors,
+  ServiceFormFieldName,
   ServiceFormat,
   ServiceFormValues,
   ServiceType,
@@ -43,6 +45,95 @@ const serviceTypes: { label: string; value: ServiceType }[] = [
   { label: "One-time service", value: "one_time" },
   { label: "Package", value: "package" },
 ];
+const minimumNoticeOptions = [
+  { label: "None", value: "none" },
+  { label: "30 minutes", value: "30" },
+  { label: "1 hour", value: "60" },
+  { label: "2 hours", value: "120" },
+  { label: "4 hours", value: "240" },
+  { label: "8 hours", value: "480" },
+  { label: "12 hours", value: "720" },
+  { label: "24 hours", value: "1440" },
+  { label: "48 hours", value: "2880" },
+];
+const rescheduleNoticeOptions = [
+  { label: "1 hour", value: "60" },
+  { label: "2 hours", value: "120" },
+  { label: "4 hours", value: "240" },
+  { label: "8 hours", value: "480" },
+  { label: "12 hours", value: "720" },
+  { label: "24 hours", value: "1440" },
+  { label: "48 hours", value: "2880" },
+  { label: "72 hours", value: "4320" },
+];
+const cancellationNoticeOptions = [
+  { label: "Anytime", value: "anytime" },
+  { label: "1 hour", value: "60" },
+  { label: "2 hours", value: "120" },
+  { label: "4 hours", value: "240" },
+  { label: "8 hours", value: "480" },
+  { label: "12 hours", value: "720" },
+  { label: "24 hours", value: "1440" },
+  { label: "48 hours", value: "2880" },
+  { label: "72 hours", value: "4320" },
+];
+
+function getScrollContainer(element: HTMLElement) {
+  let currentElement = element.parentElement;
+
+  while (currentElement) {
+    const styles = window.getComputedStyle(currentElement);
+    const overflowY = styles.overflowY;
+
+    if (
+      (overflowY === "auto" || overflowY === "scroll") &&
+      currentElement.scrollHeight > currentElement.clientHeight
+    ) {
+      return currentElement;
+    }
+
+    currentElement = currentElement.parentElement;
+  }
+
+  return null;
+}
+
+function smoothScrollWithinContainer(
+  container: HTMLElement,
+  targetScrollTop: number,
+) {
+  const startScrollTop = container.scrollTop;
+  const distance = targetScrollTop - startScrollTop;
+
+  if (Math.abs(distance) < 1) {
+    return () => {};
+  }
+
+  const duration = 280;
+  const startTime = performance.now();
+  let frameId = 0;
+
+  const easeInOutCubic = (progress: number) =>
+    progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+  const animate = (currentTime: number) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easeInOutCubic(progress);
+
+    container.scrollTop = startScrollTop + distance * easedProgress;
+
+    if (progress < 1) {
+      frameId = window.requestAnimationFrame(animate);
+    }
+  };
+
+  frameId = window.requestAnimationFrame(animate);
+
+  return () => window.cancelAnimationFrame(frameId);
+}
 
 function formatPrice(amount: number, currency: string) {
   const value = amount / 100;
@@ -114,6 +205,28 @@ function getPriceHelperText(values: ServiceFormValues) {
     : "Total price for the full package.";
 }
 
+function BookingRuleRow({
+  children,
+  description,
+  label,
+}: {
+  children: ReactNode;
+  description?: string;
+  label: string;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl bg-[#f7f3ec] p-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="max-w-xl">
+        <p className="text-sm font-semibold text-[#24312f]">{label}</p>
+        {description ? (
+          <p className="mt-1 text-sm leading-6 text-[#66736f]">{description}</p>
+        ) : null}
+      </div>
+      <div className="sm:ml-6 sm:min-w-[180px] sm:self-center">{children}</div>
+    </div>
+  );
+}
+
 function getServiceBadge(service: Service) {
   if (service.is_monthly_subscription) {
     return "Monthly";
@@ -167,44 +280,13 @@ function getServiceSummary(service: Service) {
   };
 }
 
-function getFormSummary(values: ServiceFormValues) {
-  const parsedPrice = parseFloat(values.priceAmount.replace(",", "."));
-  const priceAmount = Number.isFinite(parsedPrice)
-    ? Math.round(parsedPrice * 100)
-    : 0;
-  const currency = /^[A-Z]{3}$/.test(values.currency.trim().toUpperCase())
-    ? values.currency.trim().toUpperCase()
-    : "EUR";
-  const price = formatPrice(priceAmount, currency);
-
-  if (values.serviceType === "one_time") {
-    return `${price} per session`;
-  }
-
-  const sessionsCount = values.sessionsCount === "" ? 0 : values.sessionsCount;
-  const sessionsPerWeek =
-    values.sessionsPerWeek === "" ? 0 : values.sessionsPerWeek;
-  const validityWeeks = values.isMonthlySubscription
-    ? 4
-    : values.packageValidityWeeks === ""
-      ? 0
-      : values.packageValidityWeeks;
-  const perSession =
-    sessionsCount > 0
-      ? formatPrice(Math.round(priceAmount / sessionsCount), currency)
-      : price;
-
-  return values.isMonthlySubscription
-    ? `${price}/month · ${sessionsCount} sessions/month · ${perSession} per session · ${sessionsPerWeek}/week · Planned over 4 weeks`
-    : `${price} total · ${sessionsCount} sessions · ${perSession} per session · ${sessionsPerWeek}/week · Estimated duration: ${validityWeeks} weeks`;
-}
-
 export function ServicesManager({
   initialServices,
   specialistProfileId,
 }: ServicesManagerProps) {
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ServiceFormErrors>({});
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [formValues, setFormValues] = useState<ServiceFormValues>(
     getDefaultServiceFormValues(),
@@ -212,19 +294,65 @@ export function ServicesManager({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
+  const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState(false);
   const [pendingServiceId, setPendingServiceId] = useState<string | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
   const [services, setServices] = useState(sortServices(initialServices));
+  const firstAdvancedSettingRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLInputElement | null>(null);
+  const durationMinutesRef = useRef<HTMLInputElement | null>(null);
+  const priceAmountRef = useRef<HTMLInputElement | null>(null);
+  const currencyRef = useRef<HTMLInputElement | null>(null);
+  const sessionsCountRef = useRef<HTMLInputElement | null>(null);
+  const sessionsPerWeekRef = useRef<HTMLInputElement | null>(null);
+  const packageValidityWeeksRef = useRef<HTMLInputElement | null>(null);
+
+  const advancedSettingsFields = new Set<ServiceFormFieldName>([
+    "packageValidityWeeks",
+    "sessionsCount",
+    "sessionsPerWeek",
+  ]);
+
+  function getFieldErrorClass(hasError: boolean) {
+    return hasError
+      ? "border-[#c85d4c] ring-1 ring-[#c85d4c] focus-visible:ring-[#c85d4c]"
+      : "border-[#d9ceb9]";
+  }
+
+  function getFieldElement(field: ServiceFormFieldName) {
+    switch (field) {
+      case "title":
+        return titleRef.current;
+      case "durationMinutes":
+        return durationMinutesRef.current;
+      case "priceAmount":
+        return priceAmountRef.current;
+      case "currency":
+        return currencyRef.current;
+      case "sessionsCount":
+        return sessionsCountRef.current;
+      case "sessionsPerWeek":
+        return sessionsPerWeekRef.current;
+      case "packageValidityWeeks":
+        return packageValidityWeeksRef.current;
+      default:
+        return null;
+    }
+  }
 
   function openCreateForm() {
     setFormError(null);
+    setFieldErrors({});
     setFormValues(getDefaultServiceFormValues());
+    setIsAdvancedSettingsOpen(false);
     setFormMode({ type: "create" });
   }
 
   function openEditForm(service: Service) {
     setFormError(null);
+    setFieldErrors({});
     setFormValues(getServiceFormValues(service));
+    setIsAdvancedSettingsOpen(false);
     setFormMode({ service, type: "edit" });
   }
 
@@ -233,8 +361,10 @@ export function ServicesManager({
       return;
     }
 
+    setIsAdvancedSettingsOpen(false);
     setFormMode(null);
     setFormError(null);
+    setFieldErrors({});
   }
 
   function updateFormValue<Key extends keyof ServiceFormValues>(
@@ -245,6 +375,14 @@ export function ServicesManager({
       ...currentValues,
       [key]: value,
     }));
+
+    if (key in fieldErrors) {
+      setFieldErrors((currentErrors) => {
+        const nextErrors = { ...currentErrors };
+        delete nextErrors[key as ServiceFormFieldName];
+        return nextErrors;
+      });
+    }
   }
 
   function updateServiceType(serviceType: ServiceType) {
@@ -274,17 +412,98 @@ export function ServicesManager({
         ? 4
         : currentValues.packageValidityWeeks === 4
           ? ""
-          : currentValues.packageValidityWeeks,
+      : currentValues.packageValidityWeeks,
     }));
   }
+
+  useEffect(() => {
+    if (!isAdvancedSettingsOpen || !firstAdvancedSettingRef.current) {
+      return;
+    }
+
+    const element = firstAdvancedSettingRef.current;
+    const scrollContainer = getScrollContainer(element);
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    let firstFrameId = 0;
+    let secondFrameId = 0;
+    let stopSmoothScroll = () => {};
+
+    firstFrameId = window.requestAnimationFrame(() => {
+      secondFrameId = window.requestAnimationFrame(() => {
+        const bounds = element.getBoundingClientRect();
+        const containerBounds = scrollContainer
+          ? scrollContainer.getBoundingClientRect()
+          : { bottom: window.innerHeight, top: 0 };
+        const isFullyVisible =
+          bounds.top >= containerBounds.top && bounds.bottom <= containerBounds.bottom;
+
+        if (isFullyVisible) {
+          return;
+        }
+
+        if (!scrollContainer || prefersReducedMotion) {
+          element.scrollIntoView({
+            behavior: prefersReducedMotion ? "auto" : "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+          return;
+        }
+
+        const elementOffsetTop = element.offsetTop;
+        const targetScrollTop =
+          elementOffsetTop -
+          scrollContainer.clientHeight / 2 +
+          element.clientHeight / 2;
+        const maxScrollTop =
+          scrollContainer.scrollHeight - scrollContainer.clientHeight;
+        const nextScrollTop = Math.max(0, Math.min(targetScrollTop, maxScrollTop));
+
+        stopSmoothScroll = smoothScrollWithinContainer(
+          scrollContainer,
+          nextScrollTop,
+        );
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrameId);
+      window.cancelAnimationFrame(secondFrameId);
+      stopSmoothScroll();
+    };
+  }, [isAdvancedSettingsOpen]);
 
   async function handleSaveService(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const validationError = validateServiceForm(formValues);
+    const nextFieldErrors = validateServiceFormFields(formValues);
+    const firstErrorField = Object.keys(nextFieldErrors)[0] as
+      | ServiceFormFieldName
+      | undefined;
 
-    if (validationError) {
-      setFormError(validationError);
+    if (firstErrorField) {
+      setFieldErrors(nextFieldErrors);
+      setFormError(null);
+
+      if (advancedSettingsFields.has(firstErrorField)) {
+        setIsAdvancedSettingsOpen(true);
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const firstInvalidField = getFieldElement(firstErrorField);
+          firstInvalidField?.focus();
+          firstInvalidField?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+        });
+      });
       return;
     }
 
@@ -294,6 +513,7 @@ export function ServicesManager({
 
     setError(null);
     setFormError(null);
+    setFieldErrors({});
     setIsSaving(true);
 
     const supabase = createSupabaseBrowserClient();
@@ -328,6 +548,7 @@ export function ServicesManager({
       return sortServices(nextServices);
     });
     setIsSaving(false);
+    setIsAdvancedSettingsOpen(false);
     setFormMode(null);
   }
 
@@ -683,14 +904,20 @@ export function ServicesManager({
               <div className="sm:col-span-2">
                 <Label htmlFor="service-title">Title</Label>
                 <Input
-                  className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.title))}`}
                   id="service-title"
                   onChange={(event) =>
                     updateFormValue("title", event.target.value)
                   }
                   placeholder="Individual Therapy"
+                  ref={titleRef}
                   value={formValues.title}
                 />
+                {fieldErrors.title ? (
+                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                    {fieldErrors.title}
+                  </p>
+                ) : null}
               </div>
               <div className="sm:col-span-2">
                 <Label htmlFor="service-description">Description</Label>
@@ -707,7 +934,7 @@ export function ServicesManager({
               <div>
                 <Label htmlFor="service-duration">Duration minutes</Label>
                 <Input
-                  className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.durationMinutes))}`}
                   id="service-duration"
                   min={1}
                   onChange={(event) =>
@@ -717,21 +944,33 @@ export function ServicesManager({
                     )
                   }
                   placeholder="60"
+                  ref={durationMinutesRef}
                   type="number"
                   value={formValues.durationMinutes}
                 />
+                {fieldErrors.durationMinutes ? (
+                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                    {fieldErrors.durationMinutes}
+                  </p>
+                ) : null}
               </div>
               <div>
                 <Label htmlFor="service-price">Price amount</Label>
                 <Input
-                  className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.priceAmount))}`}
                   id="service-price"
                   inputMode="decimal"
                   onChange={(event) => updateFormValue("priceAmount", event.target.value)}
                   placeholder="50.00"
+                  ref={priceAmountRef}
                   type="text"
                   value={formValues.priceAmount}
                 />
+                {fieldErrors.priceAmount ? (
+                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                    {fieldErrors.priceAmount}
+                  </p>
+                ) : null}
                 <p className="mt-2 text-xs font-medium text-[#66736f]">
                   {getPriceHelperText(formValues)}
                 </p>
@@ -739,7 +978,7 @@ export function ServicesManager({
               <div>
                 <Label htmlFor="service-currency">Currency</Label>
                 <Input
-                  className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
+                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.currency))}`}
                   id="service-currency"
                   maxLength={3}
                   onChange={(event) =>
@@ -749,8 +988,14 @@ export function ServicesManager({
                     )
                   }
                   placeholder="EUR"
+                  ref={currencyRef}
                   value={formValues.currency}
                 />
+                {fieldErrors.currency ? (
+                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                    {fieldErrors.currency}
+                  </p>
+                ) : null}
               </div>
               <div>
                 <Label htmlFor="service-format">Format</Label>
@@ -769,160 +1014,6 @@ export function ServicesManager({
                   ))}
                 </select>
               </div>
-              {formValues.serviceType === "package" ? (
-                <div className="space-y-4 rounded-3xl border border-[#ded5c8] bg-white p-4 sm:col-span-2">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm font-bold text-[#24312f]">
-                        Package settings
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-[#66736f]">
-                        Configure a one-off package or a recurring monthly
-                        client package.
-                      </p>
-                    </div>
-                    <label className="flex items-center gap-3 rounded-full bg-[#f7f3ec] px-4 py-3 text-sm font-semibold text-[#24312f]">
-                      <input
-                        checked={formValues.isMonthlySubscription}
-                        className="size-4 accent-[#1f5f55]"
-                        onChange={(event) =>
-                          updateMonthlySubscription(event.target.checked)
-                        }
-                        type="checkbox"
-                      />
-                      Monthly subscription
-                    </label>
-                  </div>
-
-                  {formValues.isMonthlySubscription ? (
-                    <p className="rounded-2xl bg-[#eef5f3] px-4 py-3 text-sm font-medium leading-6 text-[#1f5f55]">
-                      Monthly subscriptions are planned within a 4-week month.
-                    </p>
-                  ) : null}
-
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div>
-                      <Label htmlFor="service-sessions-count">
-                        {formValues.isMonthlySubscription
-                          ? "Sessions per month"
-                          : "Number of sessions"}
-                      </Label>
-                      <Input
-                        className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                        id="service-sessions-count"
-                        min={formValues.isMonthlySubscription ? 1 : 2}
-                        onChange={(event) =>
-                          updateFormValue(
-                            "sessionsCount",
-                            event.target.value === ""
-                              ? ""
-                              : Number(event.target.value),
-                          )
-                        }
-                        placeholder={formValues.isMonthlySubscription ? "8" : "10"}
-                        type="number"
-                        value={formValues.sessionsCount}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="service-sessions-week">
-                        Sessions per week
-                      </Label>
-                      <Input
-                        className="mt-2 h-11 rounded-xl border-[#d9ceb9]"
-                        id="service-sessions-week"
-                        min={1}
-                        onChange={(event) =>
-                          updateFormValue(
-                            "sessionsPerWeek",
-                            event.target.value === ""
-                              ? ""
-                              : Number(event.target.value),
-                          )
-                        }
-                        placeholder="2"
-                        type="number"
-                        value={formValues.sessionsPerWeek}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="service-validity">
-                        Valid for / duration
-                      </Label>
-                      <Input
-                        className="mt-2 h-11 rounded-xl border-[#d9ceb9] disabled:bg-[#f7f3ec] disabled:text-[#7b8884]"
-                        disabled={formValues.isMonthlySubscription}
-                        id="service-validity"
-                        min={1}
-                        onChange={(event) =>
-                          updateFormValue(
-                            "packageValidityWeeks",
-                            event.target.value === ""
-                              ? ""
-                              : Number(event.target.value),
-                          )
-                        }
-                        placeholder="6"
-                        type="number"
-                        value={
-                          formValues.isMonthlySubscription
-                            ? 4
-                            : formValues.packageValidityWeeks
-                        }
-                      />
-                      <p className="mt-2 text-xs font-medium text-[#66736f]">
-                        Weeks
-                      </p>
-                    </div>
-                  </div>
-
-                  <label className="flex items-center gap-3 rounded-2xl bg-[#f7f3ec] p-4 text-sm font-semibold text-[#24312f]">
-                    <input
-                      checked={formValues.allowReschedule}
-                      className="size-4 accent-[#1f5f55]"
-                      onChange={(event) =>
-                        updateFormValue("allowReschedule", event.target.checked)
-                      }
-                      type="checkbox"
-                    />
-                    Allow rescheduling
-                  </label>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label htmlFor="service-cancellation">
-                        Cancellation policy
-                      </Label>
-                      <Textarea
-                        className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
-                        id="service-cancellation"
-                        onChange={(event) =>
-                          updateFormValue("cancellationPolicy", event.target.value)
-                        }
-                        placeholder="Clients can reschedule up to 24 hours before a session."
-                        value={formValues.cancellationPolicy}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="service-package-notes">
-                        Package notes
-                      </Label>
-                      <Textarea
-                        className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
-                        id="service-package-notes"
-                        onChange={(event) =>
-                          updateFormValue("packageNotes", event.target.value)
-                        }
-                        placeholder="Add anything clients should know about this package."
-                        value={formValues.packageNotes}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              <div className="rounded-2xl bg-[#f7f3ec] px-4 py-3 text-sm font-semibold leading-6 text-[#24312f] sm:col-span-2">
-                {getFormSummary(formValues)}
-              </div>
               <label className="flex items-center gap-3 rounded-2xl bg-white p-4 text-sm font-semibold text-[#24312f]">
                 <input
                   checked={formValues.isActive}
@@ -934,6 +1025,504 @@ export function ServicesManager({
                 />
                 Active service
               </label>
+
+              <div className="sm:col-span-2">
+                <button
+                  className="flex w-full items-center justify-between rounded-2xl border border-dashed border-[#d9ceb9] bg-white px-4 py-3 text-left transition-colors hover:bg-[#f7f3ec]"
+                  onClick={() =>
+                    setIsAdvancedSettingsOpen((currentValue) => !currentValue)
+                  }
+                  type="button"
+                >
+                  <div>
+                    <p className="text-sm font-bold text-[#24312f]">
+                      Advanced settings
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-[#66736f]">
+                      Optional service options and future-ready sections.
+                    </p>
+                  </div>
+                  <span className="text-sm font-semibold text-[#1f5f55]">
+                    {isAdvancedSettingsOpen ? "Hide" : "Show"}
+                  </span>
+                </button>
+
+                {isAdvancedSettingsOpen ? (
+                  <div className="mt-4 space-y-4">
+                    <Card className="rounded-3xl border-[#ded5c8] bg-white">
+                      <CardHeader className="space-y-2">
+                        <CardTitle className="text-lg">Package settings</CardTitle>
+                        <p className="text-sm leading-6 text-[#66736f]">
+                          Configure one-off packages and monthly package options
+                          here.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4 pt-0">
+                        {formValues.serviceType === "package" ? (
+                          <div ref={firstAdvancedSettingRef} className="space-y-4">
+                            <label className="flex items-center gap-3 rounded-full bg-[#f7f3ec] px-4 py-3 text-sm font-semibold text-[#24312f]">
+                              <input
+                                checked={formValues.isMonthlySubscription}
+                                className="size-4 accent-[#1f5f55]"
+                                onChange={(event) =>
+                                  updateMonthlySubscription(event.target.checked)
+                                }
+                                type="checkbox"
+                              />
+                              Monthly subscription
+                            </label>
+
+                            {formValues.isMonthlySubscription ? (
+                              <p className="rounded-2xl bg-[#eef5f3] px-4 py-3 text-sm font-medium leading-6 text-[#1f5f55]">
+                                Monthly subscriptions are planned within a 4-week month.
+                              </p>
+                            ) : null}
+
+                            <div className="grid gap-4 sm:grid-cols-3">
+                              <div>
+                                <Label htmlFor="service-sessions-count">
+                                  {formValues.isMonthlySubscription
+                                    ? "Sessions per month"
+                                    : "Number of sessions"}
+                                </Label>
+                                <Input
+                                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.sessionsCount))}`}
+                                  id="service-sessions-count"
+                                  min={formValues.isMonthlySubscription ? 1 : 2}
+                                  onChange={(event) =>
+                                    updateFormValue(
+                                      "sessionsCount",
+                                      event.target.value === ""
+                                        ? ""
+                                        : Number(event.target.value),
+                                    )
+                                  }
+                                  placeholder={
+                                    formValues.isMonthlySubscription ? "8" : "10"
+                                  }
+                                  ref={sessionsCountRef}
+                                  type="number"
+                                  value={formValues.sessionsCount}
+                                />
+                                {fieldErrors.sessionsCount ? (
+                                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                                    {fieldErrors.sessionsCount}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div>
+                                <Label htmlFor="service-sessions-week">
+                                  Sessions per week
+                                </Label>
+                                <Input
+                                  className={`mt-2 h-11 rounded-xl ${getFieldErrorClass(Boolean(fieldErrors.sessionsPerWeek))}`}
+                                  id="service-sessions-week"
+                                  min={1}
+                                  onChange={(event) =>
+                                    updateFormValue(
+                                      "sessionsPerWeek",
+                                      event.target.value === ""
+                                        ? ""
+                                        : Number(event.target.value),
+                                    )
+                                  }
+                                  placeholder="2"
+                                  ref={sessionsPerWeekRef}
+                                  type="number"
+                                  value={formValues.sessionsPerWeek}
+                                />
+                                {fieldErrors.sessionsPerWeek ? (
+                                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                                    {fieldErrors.sessionsPerWeek}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div>
+                                <Label htmlFor="service-validity">
+                                  Valid for / duration
+                                </Label>
+                                <Input
+                                  className={`mt-2 h-11 rounded-xl disabled:bg-[#f7f3ec] disabled:text-[#7b8884] ${getFieldErrorClass(Boolean(fieldErrors.packageValidityWeeks))}`}
+                                  disabled={formValues.isMonthlySubscription}
+                                  id="service-validity"
+                                  min={1}
+                                  onChange={(event) =>
+                                    updateFormValue(
+                                      "packageValidityWeeks",
+                                      event.target.value === ""
+                                        ? ""
+                                        : Number(event.target.value),
+                                    )
+                                  }
+                                  placeholder="6"
+                                  type="number"
+                                  value={
+                                    formValues.isMonthlySubscription
+                                      ? 4
+                                      : formValues.packageValidityWeeks
+                                  }
+                                  ref={packageValidityWeeksRef}
+                                />
+                                {fieldErrors.packageValidityWeeks ? (
+                                  <p className="mt-2 text-xs font-medium text-[#c85d4c]">
+                                    {fieldErrors.packageValidityWeeks}
+                                  </p>
+                                ) : null}
+                                <p className="mt-2 text-xs font-medium text-[#66736f]">
+                                  Weeks
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <div>
+                                <Label htmlFor="service-package-notes">
+                                  Package notes
+                                </Label>
+                                <Textarea
+                                  className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
+                                  id="service-package-notes"
+                                  onChange={(event) =>
+                                    updateFormValue("packageNotes", event.target.value)
+                                  }
+                                  placeholder="Add anything clients should know about this package."
+                                  value={formValues.packageNotes}
+                                />
+                              </div>
+                              <div className="rounded-2xl border border-dashed border-[#d9ceb9] bg-[#faf7f1] p-4 text-sm leading-6 text-[#66736f]">
+                                Package settings will stay here as the form grows.
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            ref={firstAdvancedSettingRef}
+                            className="rounded-2xl border border-dashed border-[#d9ceb9] bg-[#faf7f1] p-4 text-sm leading-6 text-[#66736f]"
+                          >
+                            Package settings will appear here when you switch to
+                            Package.
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="rounded-3xl border-[#ded5c8] bg-white">
+                      <CardHeader className="space-y-2">
+                        <CardTitle className="text-lg">Booking rules</CardTitle>
+                        <p className="text-sm leading-6 text-[#66736f]">
+                          Configure approval, booking limits, timing, and client
+                          self-service behavior.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4 pt-0">
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
+                            Booking approval
+                          </p>
+                          <BookingRuleRow
+                            description="Bookings must be manually approved before becoming confirmed."
+                            label="Require specialist approval"
+                          >
+                            <Switch
+                              checked={formValues.requireSpecialistApproval}
+                              className="data-[state=checked]:bg-[#1f5f55]"
+                              onCheckedChange={(checked) =>
+                                updateFormValue("requireSpecialistApproval", checked)
+                              }
+                            />
+                          </BookingRuleRow>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
+                            Booking limits
+                          </p>
+                          {formValues.serviceType === "one_time" ? (
+                            <BookingRuleRow
+                              description="A client can only have one active booking for this service at a time. They can book it again after the previous booking is completed or cancelled."
+                              label="Limit to one booking per client"
+                            >
+                              <Switch
+                                checked={formValues.limitOneBookingPerClient}
+                                className="data-[state=checked]:bg-[#1f5f55]"
+                                onCheckedChange={(checked) =>
+                                  updateFormValue("limitOneBookingPerClient", checked)
+                                }
+                              />
+                            </BookingRuleRow>
+                          ) : null}
+                          <BookingRuleRow
+                            description="Enable a cap on how many active bookings one client can hold for this service."
+                            label="Maximum active bookings per client"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex justify-end">
+                                <Switch
+                                  checked={formValues.limitActiveBookingsPerClient}
+                                  className="data-[state=checked]:bg-[#1f5f55]"
+                                  onCheckedChange={(checked) => {
+                                    updateFormValue(
+                                      "limitActiveBookingsPerClient",
+                                      checked,
+                                    );
+                                    if (!checked) {
+                                      updateFormValue("maxActiveBookingsPerClient", "");
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <Input
+                                className="h-11 rounded-xl border-[#d9ceb9] bg-white disabled:bg-[#f3ede2]"
+                                disabled={!formValues.limitActiveBookingsPerClient}
+                                min={1}
+                                onChange={(event) =>
+                                  updateFormValue(
+                                    "maxActiveBookingsPerClient",
+                                    event.target.value === ""
+                                      ? ""
+                                      : Number(event.target.value),
+                                  )
+                                }
+                                placeholder="Unlimited"
+                                type="number"
+                                value={formValues.maxActiveBookingsPerClient}
+                              />
+                            </div>
+                          </BookingRuleRow>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
+                            Booking timing
+                          </p>
+                          <BookingRuleRow
+                            description="Control how close to the session clients are allowed to book."
+                            label="Minimum notice before booking"
+                          >
+                            <select
+                              className="h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm font-medium text-[#24312f]"
+                              onChange={(event) =>
+                                updateFormValue("minimumNoticeMinutes", event.target.value)
+                              }
+                              value={formValues.minimumNoticeMinutes}
+                            >
+                              {minimumNoticeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </BookingRuleRow>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
+                            Rescheduling
+                          </p>
+                          <BookingRuleRow
+                            description="Let clients request a new time for an existing booking."
+                            label="Allow client rescheduling"
+                          >
+                            <Switch
+                              checked={formValues.allowClientRescheduling}
+                              className="data-[state=checked]:bg-[#1f5f55]"
+                              onCheckedChange={(checked) => {
+                                updateFormValue("allowClientRescheduling", checked);
+                                if (!checked) {
+                                  updateFormValue(
+                                    "requireSpecialistApprovalForReschedule",
+                                    false,
+                                  );
+                                  updateFormValue("latestRescheduleMinutes", "1440");
+                                }
+                              }}
+                            />
+                          </BookingRuleRow>
+                          {formValues.allowClientRescheduling ? (
+                            <div className="space-y-3 rounded-2xl bg-[#f9f5ee] p-3">
+                              <BookingRuleRow
+                                description="Reschedule requests must be manually approved before they become final."
+                                label="Require specialist approval for reschedule"
+                              >
+                                <Switch
+                                  checked={formValues.requireSpecialistApprovalForReschedule}
+                                  className="data-[state=checked]:bg-[#1f5f55]"
+                                  onCheckedChange={(checked) =>
+                                    updateFormValue(
+                                      "requireSpecialistApprovalForReschedule",
+                                      checked,
+                                    )
+                                  }
+                                />
+                              </BookingRuleRow>
+                              <BookingRuleRow
+                                description="Control how close to the session clients are allowed to request a change."
+                                label="Latest reschedule before session"
+                              >
+                                <select
+                                  className="h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm font-medium text-[#24312f]"
+                                  onChange={(event) =>
+                                    updateFormValue(
+                                      "latestRescheduleMinutes",
+                                      event.target.value,
+                                    )
+                                  }
+                                  value={formValues.latestRescheduleMinutes}
+                                >
+                                  {rescheduleNoticeOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </BookingRuleRow>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9a4c2f]">
+                            Cancellation
+                          </p>
+                          <BookingRuleRow
+                            description="Let clients cancel their booking without contacting you first."
+                            label="Allow client cancellation"
+                          >
+                            <Switch
+                              checked={formValues.allowClientCancellation}
+                              className="data-[state=checked]:bg-[#1f5f55]"
+                              onCheckedChange={(checked) => {
+                                updateFormValue("allowClientCancellation", checked);
+                                if (!checked) {
+                                  updateFormValue("latestCancellationMinutes", "anytime");
+                                  updateFormValue("releaseSlotOnCancellation", true);
+                                }
+                              }}
+                            />
+                          </BookingRuleRow>
+                          {formValues.allowClientCancellation ? (
+                            <div className="space-y-3 rounded-2xl bg-[#f9f5ee] p-3">
+                              <BookingRuleRow
+                                description="Define how close to the session clients are still allowed to cancel."
+                                label="Latest cancellation before session"
+                              >
+                                <select
+                                  className="h-11 w-full rounded-xl border border-[#d9ceb9] bg-white px-3 text-sm font-medium text-[#24312f]"
+                                  onChange={(event) =>
+                                    updateFormValue(
+                                      "latestCancellationMinutes",
+                                      event.target.value,
+                                    )
+                                  }
+                                  value={formValues.latestCancellationMinutes}
+                                >
+                                  {cancellationNoticeOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </BookingRuleRow>
+                              <BookingRuleRow
+                                description="Open the timeslot again automatically when a client cancels."
+                                label="Automatically release the slot after cancellation"
+                              >
+                                <Switch
+                                  checked={formValues.releaseSlotOnCancellation}
+                                  className="data-[state=checked]:bg-[#1f5f55]"
+                                  onCheckedChange={(checked) =>
+                                    updateFormValue("releaseSlotOnCancellation", checked)
+                                  }
+                                />
+                              </BookingRuleRow>
+                              <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-[#d9ceb9] bg-[#faf7f1] p-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="text-sm font-semibold text-[#24312f]">
+                                    Cancellation fee
+                                  </p>
+                                  <p className="mt-1 text-sm leading-6 text-[#66736f]">
+                                    Coming soon.
+                                  </p>
+                                </div>
+                                <span className="rounded-full bg-[#efe6d8] px-3 py-1 text-xs font-semibold text-[#8a6d58]">
+                                  Coming soon
+                                </span>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="rounded-3xl border-[#ded5c8] bg-white">
+                      <CardHeader className="space-y-2">
+                        <CardTitle className="text-lg">
+                          Cancellation & rescheduling
+                        </CardTitle>
+                        <p className="text-sm leading-6 text-[#66736f]">
+                          Configure package rescheduling and cancellation policy
+                          here.
+                        </p>
+                      </CardHeader>
+                      <CardContent className="space-y-4 pt-0">
+                        {formValues.serviceType === "package" ? (
+                          <>
+                            <label className="flex items-center gap-3 rounded-2xl bg-[#f7f3ec] p-4 text-sm font-semibold text-[#24312f]">
+                              <input
+                                checked={formValues.allowReschedule}
+                                className="size-4 accent-[#1f5f55]"
+                                onChange={(event) =>
+                                  updateFormValue(
+                                    "allowReschedule",
+                                    event.target.checked,
+                                  )
+                                }
+                                type="checkbox"
+                              />
+                              Allow rescheduling
+                            </label>
+
+                            <div>
+                              <Label htmlFor="service-cancellation">
+                                Cancellation policy
+                              </Label>
+                              <Textarea
+                                className="mt-2 min-h-24 rounded-xl border-[#d9ceb9]"
+                                id="service-cancellation"
+                                onChange={(event) =>
+                                  updateFormValue(
+                                    "cancellationPolicy",
+                                    event.target.value,
+                                  )
+                                }
+                                placeholder="Clients can reschedule up to 24 hours before a session."
+                                value={formValues.cancellationPolicy}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="rounded-2xl border border-dashed border-[#d9ceb9] bg-[#faf7f1] p-4 text-sm leading-6 text-[#66736f]">
+                            Cancellation and rescheduling options will be added
+                            here later.
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="rounded-3xl border-[#ded5c8] bg-white">
+                      <CardHeader className="space-y-2">
+                        <CardTitle className="text-lg">
+                          Visibility & automation
+                        </CardTitle>
+                        <p className="text-sm leading-6 text-[#66736f]">
+                          Visibility and automation settings will be added here
+                          later.
+                        </p>
+                      </CardHeader>
+                    </Card>
+                  </div>
+                ) : null}
+              </div>
 
               {formError ? (
                 <p className="rounded-2xl bg-[#f6ddd4] px-4 py-3 text-sm font-medium leading-6 text-[#9a4c2f] sm:col-span-2">

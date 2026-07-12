@@ -6,12 +6,14 @@ import { TimeRangeInput } from "@/components/calendar/time-range-input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { getDateLabel } from "@/lib/availability/week";
+import type { Service } from "@/lib/services/types";
 import type {
   AvailabilityRange,
   DateAvailability,
 } from "@/lib/availability/types";
 
 type DateAvailabilityRowProps = {
+  activeServices: Pick<Service, "id" | "title">[];
   dateAvailability: DateAvailability;
   disabled?: boolean;
   errors?: string[];
@@ -23,6 +25,7 @@ type DateAvailabilityRowProps = {
 };
 
 export function DateAvailabilityRow({
+  activeServices,
   dateAvailability,
   disabled = false,
   errors = [],
@@ -62,6 +65,7 @@ export function DateAvailabilityRow({
         <div className="mt-4 space-y-3">
           {dateAvailability.ranges.map((range) => (
             <TimeRangeInput
+              activeServices={activeServices}
               canRemove={dateAvailability.ranges.length > 1 && !disabled}
               disabled={disabled}
               key={range.id}

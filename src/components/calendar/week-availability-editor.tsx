@@ -31,6 +31,7 @@ import {
   replaceWeekAvailabilityExceptions,
 } from "@/lib/availability/service";
 import { getQuarterHourTimeOptions } from "@/lib/availability/time-options";
+import type { Service } from "@/lib/services/types";
 import type {
   AvailabilityRange,
   DateAvailabilityValidationErrors,
@@ -40,6 +41,7 @@ import type {
 const weekAvailabilityFormId = "week-availability-form";
 
 type WeekAvailabilityEditorProps = {
+  activeServices: Pick<Service, "id" | "title">[];
   initialIsAcceptingBookings: boolean;
   initialSchedule: WeekAvailabilitySchedule;
   selectedWeekStart: string;
@@ -48,6 +50,7 @@ type WeekAvailabilityEditorProps = {
 };
 
 export function WeekAvailabilityEditor({
+  activeServices,
   initialIsAcceptingBookings,
   initialSchedule,
   selectedWeekStart,
@@ -175,7 +178,11 @@ export function WeekAvailabilityEditor({
         date: currentDate,
         enabled: previousSchedule[previousDate].enabled,
         ranges: previousSchedule[previousDate].ranges.map((range) =>
-          createAvailabilityRange(range.startTime, range.endTime),
+          createAvailabilityRange(
+            range.startTime,
+            range.endTime,
+            range.serviceId ?? null,
+          ),
         ),
       };
     });
@@ -232,7 +239,11 @@ export function WeekAvailabilityEditor({
           date: targetDate,
           enabled: schedule[sourceDate].enabled,
           ranges: schedule[sourceDate].ranges.map((range) =>
-            createAvailabilityRange(range.startTime, range.endTime),
+            createAvailabilityRange(
+              range.startTime,
+              range.endTime,
+              range.serviceId ?? null,
+            ),
           ),
         };
       });
@@ -418,6 +429,7 @@ export function WeekAvailabilityEditor({
 
             return (
               <DateAvailabilityRow
+                activeServices={activeServices}
                 dateAvailability={schedule[dateKey]}
                 disabled={isDateInPast(dateKey)}
                 errors={validationErrors[dateKey]}

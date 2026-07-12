@@ -165,7 +165,11 @@ export function createWeekScheduleFromAvailabilityExceptions({
         enabled: true,
         ranges: [
           ...schedule[startsAt.date].ranges,
-          createAvailabilityRange(startsAt.time, endsAt.time),
+          createAvailabilityRange(
+            startsAt.time,
+            endsAt.time,
+            exception.service_id ?? null,
+          ),
         ],
       });
     });
@@ -194,9 +198,10 @@ export function getComparableWeekSchedule(schedule: WeekAvailabilitySchedule) {
       enabled: day.enabled,
       ranges: day.enabled
         ? sortDateRanges(day).ranges.map((range) => ({
-            endTime: range.endTime,
-            startTime: range.startTime,
-          }))
+          endTime: range.endTime,
+          serviceId: range.serviceId,
+          startTime: range.startTime,
+        }))
         : [],
     }));
 }
@@ -246,6 +251,10 @@ export function validateWeekAvailabilitySchedule(
 
       if (compareTimes(range.startTime, range.endTime) >= 0) {
         dayErrors.push("Start time must be before end time.");
+      }
+
+      if (range.serviceId === undefined) {
+        dayErrors.push("Choose all services or select one specific service.");
       }
 
       const previousRange = sortedRanges[index - 1];
@@ -310,6 +319,7 @@ export function createAvailabilityExceptionPayload({
         }).toISOString(),
         exception_type: "available" as const,
         is_active: true,
+        service_id: range.serviceId,
         specialist_profile_id: specialistProfileId,
         starts_at: zonedDateTimeToUtc({
           date: day.date,

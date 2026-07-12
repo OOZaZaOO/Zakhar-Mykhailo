@@ -60,6 +60,7 @@ export type Database = {
           exception_type: "available" | "unavailable";
           id: string;
           is_active: boolean;
+          service_id: string | null;
           specialist_profile_id: string;
           starts_at: string;
           updated_at: string;
@@ -70,6 +71,7 @@ export type Database = {
           exception_type: "available" | "unavailable";
           id?: string;
           is_active?: boolean;
+          service_id?: string | null;
           specialist_profile_id: string;
           starts_at: string;
           updated_at?: string;
@@ -80,11 +82,19 @@ export type Database = {
           exception_type?: "available" | "unavailable";
           id?: string;
           is_active?: boolean;
+          service_id?: string | null;
           specialist_profile_id?: string;
           starts_at?: string;
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "availability_exceptions_service_id_fkey";
+            columns: ["service_id"];
+            isOneToOne: false;
+            referencedRelation: "services";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "availability_exceptions_specialist_profile_id_fkey";
             columns: ["specialist_profile_id"];
@@ -103,13 +113,24 @@ export type Database = {
           format: "online" | "offline" | "async";
           id: string;
           allow_reschedule: boolean;
+          allow_client_cancellation: boolean;
+          allow_client_rescheduling: boolean;
           cancellation_policy: string;
           is_monthly_subscription: boolean;
           is_active: boolean;
+          latest_cancellation_minutes: number | null;
+          latest_reschedule_minutes: number | null;
+          limit_active_bookings_per_client: boolean;
+          limit_one_booking_per_client: boolean;
           location_details: string | null;
+          max_active_bookings_per_client: number | null;
+          minimum_notice_minutes: number | null;
           package_notes: string;
           package_validity_weeks: number | null;
           price_amount: number;
+          release_slot_on_cancellation: boolean;
+          require_specialist_approval: boolean;
+          reschedule_requires_approval: boolean;
           service_type: "one_time" | "package";
           sessions_count: number | null;
           sessions_per_week: number | null;
@@ -120,6 +141,8 @@ export type Database = {
         };
         Insert: {
           allow_reschedule?: boolean;
+          allow_client_cancellation?: boolean;
+          allow_client_rescheduling?: boolean;
           cancellation_policy?: string;
           created_at?: string;
           currency?: string;
@@ -129,10 +152,19 @@ export type Database = {
           id?: string;
           is_monthly_subscription?: boolean;
           is_active?: boolean;
+          latest_cancellation_minutes?: number | null;
+          latest_reschedule_minutes?: number | null;
+          limit_active_bookings_per_client?: boolean;
+          limit_one_booking_per_client?: boolean;
           location_details?: string | null;
+          max_active_bookings_per_client?: number | null;
+          minimum_notice_minutes?: number | null;
           package_notes?: string;
           package_validity_weeks?: number | null;
           price_amount?: number;
+          release_slot_on_cancellation?: boolean;
+          require_specialist_approval?: boolean;
+          reschedule_requires_approval?: boolean;
           service_type?: "one_time" | "package";
           sessions_count?: number | null;
           sessions_per_week?: number | null;
@@ -143,6 +175,8 @@ export type Database = {
         };
         Update: {
           allow_reschedule?: boolean;
+          allow_client_cancellation?: boolean;
+          allow_client_rescheduling?: boolean;
           cancellation_policy?: string;
           created_at?: string;
           currency?: string;
@@ -152,10 +186,19 @@ export type Database = {
           id?: string;
           is_monthly_subscription?: boolean;
           is_active?: boolean;
+          latest_cancellation_minutes?: number | null;
+          latest_reschedule_minutes?: number | null;
+          limit_active_bookings_per_client?: boolean;
+          limit_one_booking_per_client?: boolean;
           location_details?: string | null;
+          max_active_bookings_per_client?: number | null;
+          minimum_notice_minutes?: number | null;
           package_notes?: string;
           package_validity_weeks?: number | null;
           price_amount?: number;
+          release_slot_on_cancellation?: boolean;
+          require_specialist_approval?: boolean;
+          reschedule_requires_approval?: boolean;
           service_type?: "one_time" | "package";
           sessions_count?: number | null;
           sessions_per_week?: number | null;
