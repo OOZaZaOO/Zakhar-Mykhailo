@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -16,6 +16,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectedFrom = searchParams.get("redirectedFrom");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -42,9 +44,6 @@ export default function LoginPage() {
       return;
     }
 
-    const redirectedFrom = new URLSearchParams(window.location.search).get(
-      "redirectedFrom",
-    );
     const accountPath = getLoginPathForAccountType(
       data.user.user_metadata.account_type,
     );
@@ -150,7 +149,14 @@ export default function LoginPage() {
             </Button>
             <p className="text-center text-sm text-[#66736f]">
               New here?{" "}
-              <Link className="font-semibold text-[#1f5f55]" href="/register">
+              <Link
+                className="font-semibold text-[#1f5f55]"
+                href={
+                  redirectedFrom
+                    ? `/register?redirectedFrom=${encodeURIComponent(redirectedFrom)}`
+                    : "/register"
+                }
+              >
                 Create account
               </Link>
             </p>

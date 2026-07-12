@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -122,6 +122,8 @@ function getPasswordStrength(password: string) {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectedFrom = searchParams.get("redirectedFrom");
   const [accountType, setAccountType] = useState<AccountType>("specialist");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -199,8 +201,13 @@ export default function RegisterPage() {
       return;
     }
 
+    const redirectPath =
+      redirectedFrom?.startsWith("/") && !redirectedFrom.startsWith("//")
+        ? redirectedFrom
+        : getDashboardPathForAccountType(accountType);
+
     setSuccess("Account created. Opening your workspace...");
-    router.replace(getDashboardPathForAccountType(accountType));
+    router.replace(redirectPath);
     router.refresh();
   }
 
@@ -387,7 +394,14 @@ export default function RegisterPage() {
             </Button>
             <p className="text-center text-sm text-[#66736f]">
               Already have an account?{" "}
-              <Link className="font-semibold text-[#1f5f55]" href="/login">
+              <Link
+                className="font-semibold text-[#1f5f55]"
+                href={
+                  redirectedFrom
+                    ? `/login?redirectedFrom=${encodeURIComponent(redirectedFrom)}`
+                    : "/login"
+                }
+              >
                 Log in
               </Link>
             </p>

@@ -76,7 +76,7 @@ export function getNavigationItems({
 
     const href =
       item.feature === "publicProfile" && profileSlug
-        ? `/profile/${profileSlug}?from=dashboard`
+        ? "/dashboard/public-profile"
         : item.href;
     const isDisabled =
       role === "specialist" &&

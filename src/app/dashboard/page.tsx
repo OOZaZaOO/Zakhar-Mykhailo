@@ -19,9 +19,7 @@ export default async function DashboardPage() {
     ? await getOwnSpecialistProfile(supabase, user.id)
     : { data: null };
   const completion = getProfileCompletion(profile);
-  const publicProfileHref = profile?.slug
-    ? `/profile/${profile.slug}?from=dashboard`
-    : "/dashboard/profile";
+  const publicProfileHref = "/dashboard/public-profile";
 
   return (
     <DashboardLayout>

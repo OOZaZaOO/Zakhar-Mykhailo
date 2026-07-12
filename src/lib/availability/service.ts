@@ -9,9 +9,12 @@ import type {
   WeeklyAvailabilitySchedule,
 } from "@/lib/availability/types";
 import {
+  addWeeks,
   createAvailabilityExceptionPayload,
+  getThisWeekStart,
   getWeekUtcRange,
 } from "@/lib/availability/week";
+import { zonedDateTimeToUtc } from "@/lib/availability/timezone";
 import type { Database } from "@/lib/supabase/types";
 
 type AvailabilityClient = SupabaseClient<Database>;
@@ -109,6 +112,38 @@ export async function getAvailableExceptionsForSpecialistWeek({
     .eq("is_active", true)
     .lt("starts_at", weekEndUtc.toISOString())
     .gt("ends_at", weekStartUtc.toISOString())
+    .order("starts_at", { ascending: true });
+}
+
+export async function getBookingAvailabilityExceptionsForSpecialistProfile({
+  specialistProfileId,
+  supabase,
+  timezone,
+}: {
+  specialistProfileId: string;
+  supabase: AvailabilityClient;
+  timezone: string;
+}) {
+  const weekStart = getThisWeekStart();
+  const bookingWindowEnd = addWeeks(weekStart, 8);
+  const bookingWindowStartUtc = zonedDateTimeToUtc({
+    date: weekStart.toISOString().slice(0, 10),
+    time: "00:00",
+    timezone,
+  });
+  const bookingWindowEndUtc = zonedDateTimeToUtc({
+    date: bookingWindowEnd.toISOString().slice(0, 10),
+    time: "00:00",
+    timezone,
+  });
+
+  return supabase
+    .from("availability_exceptions")
+    .select("*")
+    .eq("specialist_profile_id", specialistProfileId)
+    .eq("is_active", true)
+    .gte("ends_at", bookingWindowStartUtc.toISOString())
+    .lt("starts_at", bookingWindowEndUtc.toISOString())
     .order("starts_at", { ascending: true });
 }
 
